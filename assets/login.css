@@ -1,0 +1,118 @@
+/* GENERAL PAGE STYLING */
+body {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: #EAF0F6; /* Light background */
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* MAIN CONTAINER: Creates the two-column layout */
+.container {
+    display: flex;
+    width: 900px;
+    height: 500px;
+    border-radius: 10px;
+    overflow: hidden; /* Ensures smooth edges */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* LEFT SECTION: Welcome message & background */
+    .left-section {
+        width: 40%;
+        background-color: #2F5597; /* Dark blue background */
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .left-section p{
+        text-align: left;
+        
+    }
+
+/* Welcome Text Styling */
+.welcome-text {
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+    color: red;
+}
+
+.welcome-text span {
+    color: white; /* Highlights certain text "Back" in red */
+}
+
+/* Right Section: Login Form */
+.form-section {
+    width: 60%;
+    background: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+}
+
+
+/* Logo Styling */
+.logo img {
+    display: block;
+    margin: 0 auto 10px;
+    width: 150px;
+}
+
+/* INPUT FIELDS */
+input[type="text"], input[type="password"] {
+    width: 94%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 15px;
+
+    
+}
+
+/* LOGIN BUTTON */
+button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #2F5597; /* Blue login button */
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #1E3E75; /* Slightly darker on hover */
+}
+
+/* Links for signup and job browsing */
+p {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+p a {
+    color: #2F5597;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
+
+.signup-link ,.browse-link {
+    color: yellow;
+}

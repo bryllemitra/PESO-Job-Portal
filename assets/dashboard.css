@@ -1,0 +1,247 @@
+      /* General Reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f9fafb;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+        background: #ffffff;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease-in-out;
+    }
+    .sidebar.hidden {
+        transform: translateX(-100%);
+    }
+    .sidebar h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #4a90e2;
+    }
+    .sidebar ul {
+        list-style: none;
+    }
+    .sidebar ul li {
+        margin-bottom: 15px;
+    }
+    .sidebar ul li a {
+        text-decoration: none;
+        color: #333;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        transition: background 0.3s, color 0.3s;
+    }
+    .sidebar ul li a:hover,
+    .sidebar ul li a.active {
+        background: #eaf4ff;
+        color: #4a90e2;
+    }
+    .sidebar .toggle-btn {
+        position: absolute;
+        top: 20px;
+        right: -40px;
+        background: #4a90e2;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .sidebar .toggle-btn i {
+        color: #fff;
+        font-size: 1.2rem;
+    }
+
+    /* Main Content */
+    .main-content {
+        margin-left: 250px;
+        padding: 20px;
+        transition: margin-left 0.3s ease-in-out;
+    }
+    .main-content.hidden {
+        margin-left: 0;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        font-size: 2rem;
+        color: #4a90e2;
+    }
+
+    /* Cards */
+    .card {
+        background: #ffffff;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+    .card-header {
+        background: linear-gradient(135deg, #4a90e2, #1cc88a);
+        color: #fff;
+        border-radius: 15px 15px 0 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .chart-container {
+        width: 100%;
+        height: 300px;
+    }
+    .stats-card {
+        background: #ffffff;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+    .stats-card .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .stats-card .card-text {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4a90e2;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+        .main-content {
+            margin-left: 0;
+        }
+    }
+
+
+    
+/* Custom button styling */
+.btn-minimal {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ccc; /* Subtle border */
+    border-radius: 50%; /* Make the button circular */
+    padding: 8px 10px; /* Adjust padding for the icon */
+    width: 30px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-light.dropdown-toggle::after {
+    display: none;
+}
+
+
+.btn-minimal:hover {
+    background-color: #e2e6ea; /* Slightly darker background on hover */
+    border-color: #bbb; /* Darker border on hover */
+}
+
+.btn-minimal:focus {
+    box-shadow: none; /* Remove focus box-shadow */
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    min-width: 80px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.dropdown-menu li {
+    display: block;
+    width: 100%;
+}
+
+/* Dropdown Item Styling */
+.dropdown-item {
+    color: #343a40; /* Dark text */
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0.25rem 0;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #4c6ef5;
+    background:none;
+    transform: scale(1.05); /* Slight zoom effect */
+    
+}
+
+/* General Reset */
+.dropdown {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Delete Button Specific Styling */
+.dropdown-item.btn-delete {
+    color: #343a40; /* Dark text */
+}
+
+.dropdown-item.btn-delete:hover,
+.dropdown-item.btn-delete:focus {
+    color: #dc3545;
+    background:none;
+}
+
+
+
+/* Positioning Adjustments */
+.dropdown.position-absolute {
+    z-index: 1000; /* Ensure it appears above other elements */
+}
+

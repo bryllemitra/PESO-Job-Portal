@@ -1,0 +1,182 @@
+        /* Custom Styles */
+        .announcement-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            position: relative; /* For positioning the triple-dot menu */
+        }
+
+        .announcement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .announcement-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        .announcement-date {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .announcement-content {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        /* Triple-Dot Menu Styling */
+        .action-buttons {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 1.5rem;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .down {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .down:hover {
+            background-color: #f3f4f6;
+        }
+
+        .down.text-danger {
+            color: #ef4444;
+        }
+
+        .down.text-danger:hover {
+            background-color: #fee2e2;
+        }
+
+        h4{
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #ff6700;
+            border:none;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 103, 0, 0.3);
+        
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff4500;
+            transform: scale(1.05); /* Slightly enlarge button on hover */
+        
+        }
+
+
+
+/* Custom button styling */
+.btn-minimal {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ccc; /* Subtle border */
+    border-radius: 50%; /* Make the button circular */
+    padding: 8px 10px; /* Adjust padding for the icon */
+    width: 30px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-light.dropdown-toggle::after {
+    display: none;
+}
+
+
+.btn-minimal:hover {
+    background-color: #e2e6ea; /* Slightly darker background on hover */
+    border-color: #bbb; /* Darker border on hover */
+}
+
+.btn-minimal:focus {
+    box-shadow: none; /* Remove focus box-shadow */
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    min-width: 80px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.dropdown-menu li {
+    display: block;
+    width: 100%;
+}
+
+/* Dropdown Item Styling */
+.dropdown-item {
+    color: #343a40; /* Dark text */
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0.25rem 0;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #4c6ef5;
+    background:none;
+    transform: scale(1.05); /* Slight zoom effect */
+    
+}
+
+/* General Reset */
+.dropdown {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Delete Button Specific Styling */
+.dropdown-item.btn-delete {
+    color: #343a40; /* Dark text */
+}
+
+.dropdown-item.btn-delete:hover,
+.dropdown-item.btn-delete:focus {
+    color: #dc3545;
+    background:none;
+}
+
+
+
+/* Positioning Adjustments */
+.dropdown.position-absolute {
+    z-index: 1000; /* Ensure it appears above other elements */
+}
+
+       

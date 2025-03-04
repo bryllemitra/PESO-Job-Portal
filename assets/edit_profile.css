@@ -1,0 +1,175 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+
+.container {
+    max-width: 1200px;
+    padding-bottom: 20px;
+}
+
+h1 {
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.form-control {
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Auto-Expanding Textarea */
+.auto-expand {
+    resize: none; /* Disable manual resizing */
+    overflow: hidden; /* Hide scrollbar */
+    min-height: 38px; /* Default height */
+}
+
+.auto-expand:focus {
+    outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+    }
+}
+
+
+/* Custom button styling */
+.btn-minimal {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ccc; /* Subtle border */
+    border-radius: 50%; /* Make the button circular */
+    padding: 8px 10px; /* Adjust padding for the icon */
+    width: 30px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-light.dropdown-toggle::after {
+    display: none;
+}
+
+
+.btn-minimal:hover {
+    background-color: #e2e6ea; /* Slightly darker background on hover */
+    border-color: #bbb; /* Darker border on hover */
+}
+
+.btn-minimal:focus {
+    box-shadow: none; /* Remove focus box-shadow */
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    min-width: 80px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.dropdown-menu li {
+    display: block;
+    width: 100%;
+}
+
+/* Dropdown Item Styling */
+.dropdown-item {
+    color: #343a40; /* Dark text */
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0.25rem 0;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #4c6ef5;
+    background:none;
+    transform: scale(1.05); /* Slight zoom effect */
+    
+}
+
+/* General Reset */
+.dropdown {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Delete Button Specific Styling */
+.dropdown-item.btn-delete {
+    color: #343a40; /* Dark text */
+}
+
+.dropdown-item.btn-delete:hover,
+.dropdown-item.btn-delete:focus {
+    color: #dc3545;
+    background:none;
+}
+
+
+
+/* Positioning Adjustments */
+.dropdown.position-absolute {
+    z-index: 1000; /* Ensure it appears above other elements */
+}
+

@@ -1,0 +1,250 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.container {
+    max-width: 1200px;
+}
+
+.message-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    position: relative;
+}
+
+.message-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(105, 230, 183, 0.1));
+}
+
+.message-header {
+    margin-right:30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.message-header h4 {
+    font-size: 1.4rem;
+    margin: 0;
+    color: #333;
+}
+
+.message-header small {
+    color: #777;
+}
+
+.message-body {
+    margin: 15px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: white;
+    color: black;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.delete-btn:hover {
+    background: linear-gradient(135deg, #d73838, #ff3333);
+    transform: scale(1.1);
+}
+
+.delete-btn i {
+    font-size: 1.0rem;
+}
+
+.search-sort-container {
+    display: flex;
+    justify-content: center;
+    gap: 0px;
+    margin-bottom: 30px;
+}
+
+
+
+.search-bar input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sorting select {
+    padding: 8px 15px;
+    width: 200px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+}
+
+/* Sorting Dropdown Hover Effect */
+.sorting select:hover {
+    border-color: rgba(59, 130, 246, 0.8); /* Semi-transparent blue border */
+    box-shadow: 0 0 3px rgba(59, 130, 246, 0.5); /* Subtle glowing effect */
+    transform: scale(1.02); /* Slightly enlarge */
+    transition: all 0.3s ease; /* Smooth transition */
+}
+
+/* Search Bar Input Hover Effect */
+.search-bar input:hover {
+    border-color: rgba(59, 130, 246, 0.8); /* Semi-transparent blue border */
+    box-shadow: 0 0 3px rgba(59, 130, 246, 0.5); /* Subtle glowing effect */
+    transform: scale(1.02); /* Slightly enlarge */
+    transition: all 0.3s ease; /* Smooth transition */
+}
+
+.sorting select, .search-bar input {
+    font-size: 0.9rem;
+}
+
+.message-footer {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-sort-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-bar input,
+    .sorting select {
+        max-width: 100%;
+    }
+
+    .message-card {
+        padding: 15px;
+    }
+
+    .dropdown {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+h1{
+    color:cornflowerblue;
+}
+
+
+/* General Button Styles (on profile.php or elsewhere) */
+.btn {
+    font-size: 0.8rem;
+    padding: 0.6rem 1.5rem;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+
+/* Custom button styling */
+.btn-minimal {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ccc; /* Subtle border */
+    border-radius: 50%; /* Make the button circular */
+    padding: 8px 10px; /* Adjust padding for the icon */
+    width: 30px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-light.dropdown-toggle::after {
+    display: none;
+}
+
+
+.btn-minimal:hover {
+    background-color: #e2e6ea; /* Slightly darker background on hover */
+    border-color: #bbb; /* Darker border on hover */
+}
+
+.btn-minimal:focus {
+    box-shadow: none; /* Remove focus box-shadow */
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    min-width: 80px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.dropdown-menu li {
+    display: block;
+    width: 100%;
+}
+
+/* Dropdown Item Styling */
+.dropdown-item {
+    color: #343a40; /* Dark text */
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0.25rem 0;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #4c6ef5;
+    background:none;
+    transform: scale(1.05); /* Slight zoom effect */
+    
+}
+
+/* General Reset */
+.dropdown {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Delete Button Specific Styling */
+.dropdown-item.btn-delete {
+    color: #343a40; /* Dark text */
+}
+
+.dropdown-item.btn-delete:hover {
+
+    color: #dc3545;
+    background:none;
+}
+
+
+
+/* Positioning Adjustments */
+.dropdown.position-absolute {
+    z-index: 1000; /* Ensure it appears above other elements */
+}
+
