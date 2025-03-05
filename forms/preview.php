@@ -58,6 +58,7 @@ $data = [
     'profile' => trim($_GET['profile'] ?? ''),
     'tin' => trim($_GET['tin'] ?? ''),
     'disability' => trim($_GET['disability'] ?? ''),
+    'house_number' => trim($_GET['house_number'] ?? ''),
     // New fields
     'disability' => trim($_GET['disability'] ?? ''),
     'employment_status' => trim($_GET['employment_status'] ?? ''),
@@ -224,6 +225,10 @@ $_SESSION['resume_data'] = $data;
                 <tr>
                     <th>4Ps Beneficiary</th>
                     <td><?php echo htmlspecialchars($data['4ps_beneficiary']); ?></td>
+                </tr>
+                <tr>
+                    <th>Household ID No.</th>
+                    <td><?php echo htmlspecialchars($data['house_number']); ?></td>
                 </tr>
             </table>
         </div>
