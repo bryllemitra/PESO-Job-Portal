@@ -62,8 +62,20 @@ unset($_SESSION['errors']);
                 <div class="section-content" id="basic-info">
                     <div class="form-grid">
                         <div>
-                            <label for="name">Full Name:</label>
-                            <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($data['name'] ?? ''); ?>" required>
+                            <label for="surname">Surname</label>
+                            <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($data['surname'] ?? ''); ?>" required>
+                        </div>
+                        <div>
+                            <label for="first_name">First name</label>
+                            <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($data['first_name'] ?? ''); ?>" required>
+                        </div>
+                        <div>
+                            <label for="middle_name">Middle name</label>
+                            <input type="text" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($data['middle_name'] ?? ''); ?>" required>
+                        </div>
+                        <div>
+                            <label for="suffix">Suffix</label>
+                            <input type="text" id="suffix" name="suffix" value="<?php echo htmlspecialchars($data['suffix'] ?? ''); ?>" required>
                         </div>
                         <div>
                             <label for="email">Email:</label>
@@ -76,6 +88,10 @@ unset($_SESSION['errors']);
                         <div>
                             <label for="address">Address:</label>
                             <input type="text" id="address" name="address" value="<?php echo htmlspecialchars($data['address'] ?? ''); ?>" required>
+                        </div>
+                        <div>
+                             <label for="tin">Tin:</label>
+                             <input type="number" id="tin" name="tin" value="<?php echo htmlspecialchars($data['tin'] ?? ''); ?>" required>
                         </div>
                     </div>
                 </div>
@@ -142,6 +158,19 @@ unset($_SESSION['errors']);
                 <div class="section-content" id="professional-summary">
                     <label for="profile">Profile:</label>
                     <textarea id="profile" name="profile" rows="4" placeholder="Provide a brief description of yourself..." required><?php echo htmlspecialchars($data['profile'] ?? ''); ?></textarea>
+                </div>
+            </div>
+
+            <!-- Disabilityy -->
+            <div class="collapsible-section">
+                <div class="section-header" onclick="toggleSection('disability')">Disability</div>
+                <div class="section-content" id="disability">
+                    <div class="form-grid">
+                        <div>
+                            <label for="disability">Disability</label>
+                            <textarea id="languages_proficiency" name="disability" rows="2" placeholder="ex: Visual, Speech, Mental, Hearing, Physical, etc..." required><?php echo htmlspecialchars($data['Disability'] ?? ''); ?></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
 
