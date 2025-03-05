@@ -392,7 +392,7 @@ unset($_SESSION['errors']);
             <!-- Centered Preview Button -->
             <button type="submit">Preview Resume</button>
         </form>
-        <button style="background-color: gray;" onclick="window.location.href='<?php echo ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer') ? '/PESO-Job-Portal/employers/profile.php' : '/PESO-Job-Portal/pages/profile.php'; ?>';">
+        <button style="background-color: gray;" onclick="window.location.href='<?php echo ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer') ? '/JOB/employers/profile.php' : '/JOB/pages/profile.php'; ?>';">
     Back
 </button>
 
