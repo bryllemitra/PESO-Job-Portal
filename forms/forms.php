@@ -34,6 +34,29 @@ $errors = $_SESSION['errors'] ?? [];
 unset($_SESSION['errors']);
 ?>
 
+<script>
+    function toggleEmploymentDetails() {
+        const employmentStatus = document.getElementById('employment_status').value;
+        const employedDetails = document.getElementById('employed-details');
+        const unemployedDetails = document.getElementById('unemployed-details');
+
+        if (employmentStatus === 'Employed') {
+            employedDetails.style.display = 'block';
+            unemployedDetails.style.display = 'none';
+        } else if (employmentStatus === 'Unemployed') {
+            employedDetails.style.display = 'none';
+            unemployedDetails.style.display = 'block';
+        } else {
+            employedDetails.style.display = 'none';
+            unemployedDetails.style.display = 'none';
+        }
+    }
+
+    // Initial call to set the correct display based on the current selection
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleEmploymentDetails();
+    });
+</script>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -181,13 +204,15 @@ unset($_SESSION['errors']);
         <div class="form-grid">
             <div>
                 <label for="employment_status">Employment Status:</label>
-                <select id="employment_status" name="employment_status" required>
+                <select id="employment_status" name="employment_status" required onchange="toggleEmploymentDetails()">
                     <option value="" disabled selected>Select an option</option>
                     <option value="Employed" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Employed' ? 'selected' : ''; ?>>Employed</option>
                     <option value="Unemployed" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Unemployed' ? 'selected' : ''; ?>>Unemployed</option>
                     <option value="Others" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Others' ? 'selected' : ''; ?>>Others</option>
                 </select>
             </div>
+
+            <!-- Employed Details -->
             <div id="employed-details" style="display: none;">
                 <label for="employed_type">Type of Employment:</label>
                 <select id="employed_type" name="employed_type">
@@ -204,6 +229,8 @@ unset($_SESSION['errors']);
                     <option value="Other" <?php echo isset($data['employed_type']) && $data['employed_type'] === 'Other' ? 'selected' : ''; ?>>Other</option>
                 </select>
             </div>
+
+            <!-- Unemployed Details -->
             <div id="unemployed-details" style="display: none;">
                 <label for="unemployed_reason">Reason for Unemployment:</label>
                 <select id="unemployed_reason" name="unemployed_reason">
@@ -217,6 +244,8 @@ unset($_SESSION['errors']);
                     <option value="Terminated/Laid off (abroad)" <?php echo isset($data['unemployed_reason']) && $data['unemployed_reason'] === 'Terminated/Laid off (abroad)' ? 'selected' : ''; ?>>Terminated/Laid off (abroad)</option>
                 </select>
             </div>
+
+            <!-- Other Employment Details -->
             <div>
                 <label for="ofw_status">Are you an OFW?</label>
                 <select id="ofw_status" name="ofw_status" required>
@@ -240,6 +269,10 @@ unset($_SESSION['errors']);
                     <option value="Yes" <?php echo isset($data['4ps_beneficiary']) && $data['4ps_beneficiary'] === 'Yes' ? 'selected' : ''; ?>>Yes</option>
                     <option value="No" <?php echo isset($data['4ps_beneficiary']) && $data['4ps_beneficiary'] === 'No' ? 'selected' : ''; ?>>No</option>
                 </select>
+            </div>
+            <div>
+                <label for="house_number">Household ID No.:</label>
+                <input type="number" id="house_number" name="house_number" placeholder="if you are a 4ps beneficiary" value="<?php echo htmlspecialchars($data['house_number'] ?? ''); ?>">
             </div>
         </div>
     </div>
