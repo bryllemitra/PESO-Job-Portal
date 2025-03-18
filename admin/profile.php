@@ -2,10 +2,8 @@
 include '../includes/header.php'; // This already includes session_start()
 include '../includes/config.php'; // Include DB connection
 
-
-
-// Restrict access: Show modal and redirect if not logged in
-if (!isset($_SESSION['user_id'])) {
+// Restrict access to admins and employers only
+if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin')) {
     echo "
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>
     <div class='modal fade show' id='errorModal' tabindex='-1' aria-labelledby='errorModalLabel' aria-hidden='false' style='display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;'>
@@ -13,18 +11,24 @@ if (!isset($_SESSION['user_id'])) {
             <div class='modal-content'>
                 <div class='modal-header'>
                     <h5 class='modal-title' id='errorModalLabel'>Access Denied</h5>
+                    <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
                 </div>
                 <div class='modal-body'>
-                    You must be logged in to view this page.
+                    You do not have permission to access this page.
                 </div>
                 <div class='modal-footer'>
-                    <button type='button' class='btn btn-primary' onclick=\"window.location.href='login.php'\">OK</button>
+                    <button type='button' class='btn btn-primary' id='redirectBtn'>OK</button>
                 </div>
             </div>
         </div>
     </div>
     <div class='modal-backdrop fade show' style='position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998;'></div>
     <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js'></script>
+    <script type='text/javascript'>
+        document.getElementById('redirectBtn').addEventListener('click', function() {
+            window.location.href = '../index.php'; // Redirect to the home page when the button is clicked
+        });
+    </script>
     ";
     exit();
 }
@@ -32,58 +36,11 @@ if (!isset($_SESSION['user_id'])) {
 // Now safe to use $_SESSION['user_id']
 $user_role = $_SESSION['role'] ?? 'guest'; 
 
-// Check if the user is an Employer or Admin accessing their own profile
-if ($user_role === 'employer') {
-    // Redirect the employer to their own profile if they access pages/profile.php directly
-    if (!isset($_GET['id'])) {
-        echo "<script>window.location.href = '/JOB/employers/profile.php';</script>";
-        exit();
-    }
-
-    // Employers can view applicants' profiles they have applied to
-    if (isset($_GET['id'])) {
-        $viewed_user_id = (int)$_GET['id'];
-        // Check if the employer has the applicant applied to one of their jobs
-        $query_check_applicant = "
-            SELECT COUNT(*) AS applicant_count
-            FROM applications
-            WHERE job_id IN (SELECT id FROM jobs WHERE employer_id = ?) AND user_id = ?
-        ";
-        $stmt_check = $conn->prepare($query_check_applicant);
-        $stmt_check->bind_param("ii", $_SESSION['user_id'], $viewed_user_id);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        $check_data = $result_check->fetch_assoc();
-
-        if ($check_data['applicant_count'] === 0) {
-            // If the employer hasn't posted a job that the applicant has applied to, redirect or show error
-            echo "<script>window.location.href = '/JOB/index.php';</script>";
-            exit();
-        } else {
-            // Allow the employer to view the applicant's profile
-            $user_id = $viewed_user_id;
-        }
-    }
-} elseif ($user_role === 'admin') {
-    // Redirect the admin to their own profile if they access pages/profile.php directly
-    if (!isset($_GET['id'])) {
-        echo "<script>window.location.href = '/JOB/admin/profile.php';</script>";
-        exit();
-    }
-
-    // Admin can view any profile, no restrictions
-    if (isset($_GET['id'])) {
-        $user_id = (int)$_GET['id'];
-    }
+// Determine user profile based on role
+if ($user_role === 'admin') {
+    $user_id = isset($_GET['id']) ? (int)$_GET['id'] : $_SESSION['user_id'];
 } else {
-    // Default for user (applicant): They can only view their own profile
-    $user_id = $_SESSION['user_id'];
-
-    // Redirect to the user's own profile if 'id' is not their own ID
-    if (isset($_GET['id']) && $_GET['id'] != $user_id) {
-        echo "<script>window.location.href = '/JOB/pages/profile.php';</script>"; // Or any error page you prefer
-        exit();
-    }
+    $user_id = $_SESSION['user_id']; 
 }
 
 // Validate $user_id
@@ -254,25 +211,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
 }
 
 
-// Handle work experience, skills, LinkedIn, and portfolio updates
+// Handle profile updates for employers/admins
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    // Sanitize inputs
+    // Sanitize inputs for both user and employer-specific data
     $work_experience = trim($_POST['work_experience']);
     $skills = trim($_POST['skills']);
     $linkedin_profile = trim($_POST['linkedin_profile']);
     $portfolio_url = trim($_POST['portfolio_url']);
 
-    // Update query
-    $update_query = "UPDATE users 
-                     SET work_experience = ?, 
-                         skills = ?, 
-                         linkedin_profile = ?, 
-                         portfolio_url = ? 
-                     WHERE id = ?";
-    $stmt = $conn->prepare($update_query);
-    $stmt->bind_param("ssssi", $work_experience, $skills, $linkedin_profile, $portfolio_url, $user_id);
+    // Employer-specific fields
+    $company_name = trim($_POST['company_name']);
+    $company_description = trim($_POST['company_description']);
+    $company_website = trim($_POST['company_website']);
+    $location = trim($_POST['location']);
 
-    if ($stmt->execute()) {
+    // Update query for the user's basic information
+    $update_user_query = "UPDATE users 
+                          SET work_experience = ?, 
+                              skills = ?, 
+                              linkedin_profile = ?, 
+                              portfolio_url = ? 
+                          WHERE id = ?";
+
+    // Prepare and bind the statement for the users table
+    $stmt_user = $conn->prepare($update_user_query);
+    $stmt_user->bind_param("ssssi", $work_experience, $skills, $linkedin_profile, $portfolio_url, $user_id);
+
+    // Update query for the employer-specific information
+    $update_employer_query = "UPDATE employers 
+                              SET company_name = ?, 
+                                  company_description = ?, 
+                                  company_website = ?, 
+                                  location = ? 
+                              WHERE user_id = ?";
+
+    // Prepare and bind the statement for the employers table
+    $stmt_employer = $conn->prepare($update_employer_query);
+    $stmt_employer->bind_param("ssssi", $company_name, $company_description, $company_website, $location, $user_id);
+
+    // Execute both queries
+    $stmt_user_result = $stmt_user->execute();
+    $stmt_employer_result = $stmt_employer->execute();
+
+    // Check if both updates were successful
+    if ($stmt_user_result && $stmt_employer_result) {
         echo "<div class='alert alert-success'>Profile updated successfully.</div>";
         header("Location: profile.php?id=$user_id");
         exit();
@@ -280,6 +262,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         echo "<div class='alert alert-danger'>Failed to update profile.</div>";
     }
 }
+
+// Fetch employer data (if user is an employer)
+$employer_query = "SELECT * FROM employers WHERE user_id = ?";
+$employer_stmt = $conn->prepare($employer_query);
+$employer_stmt->bind_param("i", $user_id);
+$employer_stmt->execute();
+$employer_result = $employer_stmt->get_result();
+$employer = $employer_result->fetch_assoc();
 
 // Handle resume upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
@@ -357,6 +347,110 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result_jobs = $stmt->get_result();
 
+// Total Users Count (by Gender)
+$total_users_query = "SELECT gender, COUNT(*) as total FROM users GROUP BY gender";
+$total_users_result = mysqli_query($conn, $total_users_query);
+$user_gender_data = [];
+while ($row = mysqli_fetch_assoc($total_users_result)) {
+    $user_gender_data[$row['gender']] = $row['total'];
+}
+
+// Total Jobs Count (by Status)
+$total_jobs_query = "SELECT status, COUNT(*) as total FROM jobs GROUP BY status";
+$total_jobs_result = mysqli_query($conn, $total_jobs_query);
+$job_status_data = [];
+while ($row = mysqli_fetch_assoc($total_jobs_result)) {
+    $job_status_data[$row['status']] = $row['total'];
+}
+
+// Total Applicants Count (by Status)
+$total_applicants_query = "SELECT status, COUNT(*) as total FROM applications GROUP BY status";
+$total_applicants_result = mysqli_query($conn, $total_applicants_query);
+$applicant_status_data = [];
+while ($row = mysqli_fetch_assoc($total_applicants_result)) {
+    $applicant_status_data[$row['status']] = $row['total'];
+}
+
+// Total Jobs Posted (With and Without Applicants)
+$total_jobs_posted_query = "SELECT jobs.id, COUNT(applications.id) as applicants_count 
+                            FROM jobs 
+                            LEFT JOIN applications ON jobs.id = applications.job_id 
+                            GROUP BY jobs.id";
+$total_jobs_posted_result = mysqli_query($conn, $total_jobs_posted_query);
+
+$jobs_with_applicants = 0;
+$jobs_without_applicants = 0;
+
+while ($row = mysqli_fetch_assoc($total_jobs_posted_result)) {
+    if ($row['applicants_count'] > 0) {
+        $jobs_with_applicants++;
+    } else {
+        $jobs_without_applicants++;
+    }
+}
+
+// Store the total counts for output
+$total_users = array_sum($user_gender_data);
+$total_jobs = array_sum($job_status_data);
+$total_applicants = array_sum($applicant_status_data);
+
+
+// Fetch user data
+$user_id = $_SESSION['user_id'];  // Assuming session contains the user id
+$query = "SELECT * FROM users WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+
+
+// Handle form submission to update name
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name']) && isset($_POST['last_name'])) {
+    $new_first_name = $_POST['first_name'];
+    $new_last_name = $_POST['last_name'];
+
+    // Update first and last name in the database
+    $update_query = "UPDATE users SET first_name = ?, last_name = ? WHERE id = ?";
+    $update_stmt = $conn->prepare($update_query);
+    $update_stmt->bind_param('ssi', $new_first_name, $new_last_name, $user_id);
+    $update_stmt->execute();
+
+    // Refresh the user data after update
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+}
+
+// Query to get total applications per week
+$query_applications = "SELECT WEEK(applied_at) AS week_number, COUNT(*) AS total_applications 
+                        FROM applications 
+                        GROUP BY week_number 
+                        ORDER BY week_number";
+$result_applications = $conn->query($query_applications);
+
+// Fetch data for applications
+$applications_data = [];
+if ($result_applications->num_rows > 0) {
+    while ($row = $result_applications->fetch_assoc()) {
+        $applications_data[] = $row;
+    }
+}
+
+// Query to get total jobs per week
+$query_jobs = "SELECT WEEK(created_at) AS week_number, COUNT(*) AS total_jobs 
+               FROM jobs 
+               GROUP BY week_number 
+               ORDER BY week_number";
+$result_jobs = $conn->query($query_jobs);
+
+// Fetch data for jobs
+$jobs_data = [];
+if ($result_jobs->num_rows > 0) {
+    while ($row = $result_jobs->fetch_assoc()) {
+        $jobs_data[] = $row;
+    }
+}
+
+
 ?>
 
 
@@ -375,6 +469,102 @@ $result_jobs = $stmt->get_result();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/JOB/assets/profile.css">
+    <style>
+        .dashboard-container {
+        padding: 40px;
+    }
+
+/* Cards (for Statistics) */
+.card {
+    background: rgba(255, 255, 255, 0.8); /* Light semi-transparent background */
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1); /* Light glowing shadow */
+    transition: all 0.3s ease-in-out;
+    backdrop-filter: blur(8px); /* Slight frosted glass effect */
+}
+
+.card:hover {
+    transform: translateY(-10px); /* Hover effect for cards */
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3); /* Enhanced glow effect */
+}
+
+    .card-body {
+        padding: 30px;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .card-statistics {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .card-text {
+        color: #777;
+    }
+
+    .row {
+        margin-top: 20px;
+    }
+
+    .col-md-4 {
+        margin-bottom: 20px;
+    }
+
+    .col-md-6 {
+        margin-bottom: 20px;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+
+    .custom-card {
+        border-radius: 12px;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .custom-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-statistics {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .card-text {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Glassmorphism Backgrounds */
+.glass-bg {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    padding: 30px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+    </style>
 </head>
 <body>
 <?php $isOwnProfile = ($user_id == $_SESSION['user_id']); // Check if it's the user's own profile ?>
@@ -387,10 +577,7 @@ $result_jobs = $stmt->get_result();
         <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Applications</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Documents</button>
+        <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Management</button>
     </li>
 </ul>
 
@@ -423,8 +610,12 @@ $result_jobs = $stmt->get_result();
     <img src="<?php echo $user['uploaded_file'] ? $user['uploaded_file'] : '../uploads/default/default_profile.png'; ?>" alt="Profile Picture" class="rounded-circle shadow-sm" style="width: 200px; height: 200px; object-fit: cover; border: 4px solid #fff;">
 </div>
 
-                                <!-- User Name -->
-                                <h2><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h2>
+                                <!-- User Name (Clickable) -->
+                                <h2>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#nameModal" class="text-decoration-none text-dark fw-semibold">
+                                        <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?>
+                                    </a>
+                                </h2>
                                 <!-- Caption -->
                                 <p class="text-muted caption-text" id="bio-display">
                                     <?php echo !empty($user['caption']) ? htmlspecialchars($user['caption']) : 'No caption set'; ?>
@@ -442,71 +633,103 @@ $result_jobs = $stmt->get_result();
                             </div>
                         </div>
 
-                    <!-- Personal Information -->
-                    <div class="profile-card p-4 mb-4 fade-in">
-                        <h3 class="section-title">Personal Information</h3>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong><i style="color:gray;" class="fas fa-envelope"></i> Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-venus-mars"></i> Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-birthday-cake"></i> Birth Date:</strong> <?php echo htmlspecialchars($user['birth_date']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-hourglass-half"></i> Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong><i style="color:gray;" class="fas fa-ring"></i> Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-phone"></i>  Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-map-marker-alt"> </i>  Address:</strong> <?php echo htmlspecialchars($user['street_address'] . ', ' . $user['barangay'] . ', ' . $user['city']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-map-pin"></i> Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
-                            </div>
-                        </div>
-                    </div>
+<!-- Dashboard Container -->
+<div class="dashboard-container mt-5">
+    <h1 class="text-center mb-4" style="font-family: 'Roboto', sans-serif; color: #333;">Dashboard</h1>
 
-                                            <!-- Educational Background -->
-                                            <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Educational Background</h3>
-                            <p><strong><i style="color:gray;" class="fas fa-graduation-cap"></i> Education Level:</strong> <?php echo htmlspecialchars($user['education_level']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-school"></i> School:</strong> <?php echo htmlspecialchars($user['school_name']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-calendar-check"></i> Completion Year:</strong> <?php echo htmlspecialchars($user['completion_year']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Inclusive Years:</strong> <?php echo htmlspecialchars($user['inclusive_years']); ?></p>
-                        </div>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm rounded">
+                <div class="card-body">
+                    <h5 class="card-title text-center"><i class="fas fa-user-check me-2"></i> Active Users</h5>
+                    <h2 style="color:#4a90e2;" class="card-statistics text-center">
+                        <?= array_sum($user_gender_data) ?>
+                    </h2>
+                    <p class="card-text ">Users in the system</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm rounded">
+                <div class="card-body">
+                    <h5 class="card-title text-center"><i class="fas fa-briefcase me-2 text-dark"></i> Total Jobs</h5>
+                    <h2 style="color:#4a90e2;" class="card-statistics text-center">
+                        <?= array_sum($job_status_data) ?>
+                    </h2>
+                    <p class="card-text">Jobs posted in the system</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm rounded">
+                <div class="card-body text-center">
+                    <h5 class="card-title"><i class="fas fa-users me-2"></i> Total Applicants</h5>
+                    <h2 style="color:#4a90e2;" class="card-statistics text-center">
+                        <?= array_sum($applicant_status_data) ?>
+                    </h2>
+                    <p class="card-text">Applicants who have applied</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        <!-- Work Experience -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Work Experience</h3>
-                            <p class="no-data"><?php echo !empty($user['work_experience']) ? htmlspecialchars($user['work_experience']) : 'No work experience added yet.'; ?></p>
-                        </div>
+    <!-- Graphs Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded custom-card">
+                <div class="card-body">
+                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Total Users</h5>
+                    <canvas id="userGenderChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded custom-card">
+                <div class="card-body">
+                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Total Job Postings</h5>
+                    <canvas id="totalJobPostedChart"></canvas>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Skills -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Skills</h3>
-                            <p class="no-data"><?php echo !empty($user['skills']) ? htmlspecialchars($user['skills']) : 'No skills added yet.'; ?></p>
-                        </div>
+    </div>
 
-                        <!-- LinkedIn Profile -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">LinkedIn Profile</h3>
-                            <p class="no-data">
-                                <?php if (!empty($user['linkedin_profile'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill"><i class="fab fa-linkedin"></i> View LinkedIn</a>
-                                <?php else: ?>
-                                    No LinkedIn profile added.
-                                <?php endif; ?>
-                            </p>
-                        </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+        <div class="card shadow-lg rounded custom-card">
+                <div class="card-body">
+                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Jobs Status</h5>
+                    <canvas id="jobStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded custom-card">
+                <div class="card-body">
+                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Applicant Status</h5>
+                    <canvas id="applicantStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Portfolio -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Portfolio</h3>
-                            <p class="no-data">
-                                <?php if (!empty($user['portfolio_url'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-success btn-sm rounded-pill"><i class="fas fa-globe"></i> View Portfolio</a>
-                                <?php else: ?>
-                                    No portfolio added.
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        </div>
-                        </div>
+    </div>
+
+    <!-- New Line Chart for Total Applications -->
+<div class="row mb-4">
+<div class="col-md-12">
+            <div class="card shadow-lg rounded custom-card">
+                <div class="card-body">
+                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Total Applications per Week</h5>
+                    <canvas id="totalApplicationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 
@@ -613,35 +836,56 @@ $result_jobs = $stmt->get_result();
 <!-- Applications Tab -->
 <div class="tab-pane fade" id="applications" role="tabpanel" aria-labelledby="applications-tab">
     <div class="container mt-4">
-        <h4 class="text-center">My Applications</h4><Br>
+        <h4 class="text-center"><?php echo isset($_SESSION['role']) && $_SESSION['role'] === 'admin' ? 'Pending Applications' : 'Managing Jobs'; ?></h4><Br>
         <?php
-        // Check if the current user is an admin or viewing their own profile
+        // Check if the current user is an admin or employer
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        $isOwnProfile = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $user_id;
-        // Only allow admins or the profile owner to view applications
-        if ($isAdmin || $isOwnProfile): 
-            // Fetch applied jobs for the user with status
+        $isEmployer = isset($_SESSION['role']) && $_SESSION['role'] === 'employer';
+
+        if ($isAdmin): 
+            // Fetch jobs with pending applications for admin
             $query_jobs = "
-            SELECT 
-                jobs.title, 
-                categories.name AS category, 
-                jobs.location, 
-                jobs.id AS job_id, 
-                applications.status, 
-                applications.applied_at, 
-                applications.resume_file, 
-                applications.status_updated_at 
-            FROM applications 
-            JOIN jobs ON applications.job_id = jobs.id 
-            JOIN job_categories ON jobs.id = job_categories.job_id 
-            JOIN categories ON job_categories.category_id = categories.id
-            WHERE applications.user_id = ?
-        ";
-        $stmt = $conn->prepare($query_jobs);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result_jobs = $stmt->get_result();
-        
+                SELECT 
+                    jobs.id AS job_id, 
+                    jobs.title, 
+                    categories.name AS category, 
+                    jobs.location, 
+                    jobs.created_at AS posted_date, 
+                    COUNT(applications.id) AS pending_applicants
+                FROM jobs
+                LEFT JOIN applications ON jobs.id = applications.job_id AND applications.status = 'pending'
+                LEFT JOIN job_categories ON jobs.id = job_categories.job_id
+                LEFT JOIN categories ON job_categories.category_id = categories.id
+                WHERE jobs.status != 'rejected' 
+                GROUP BY jobs.id
+                HAVING COUNT(applications.id) > 0"; // Only jobs with pending applications
+        elseif ($isEmployer):
+            // Fetch jobs posted by the employer, whether they have applicants or not
+            $query_jobs = "
+                SELECT 
+                    jobs.id AS job_id, 
+                    jobs.title, 
+                    categories.name AS category, 
+                    jobs.location, 
+                    jobs.created_at AS posted_date, 
+                    COUNT(applications.id) AS pending_applicants
+                FROM jobs
+                LEFT JOIN applications ON jobs.id = applications.job_id AND applications.status = 'pending'
+                LEFT JOIN job_categories ON jobs.id = job_categories.job_id
+                LEFT JOIN categories ON job_categories.category_id = categories.id
+                WHERE jobs.employer_id = ?
+                GROUP BY jobs.id"; // All jobs posted by this employer
+        endif;
+
+        // Execute query for admin or employer
+        if ($isAdmin || $isEmployer): 
+            $stmt = $conn->prepare($query_jobs);
+            if ($isEmployer) {
+                $stmt->bind_param("i", $_SESSION['user_id']);
+            }
+            $stmt->execute();
+            $result_jobs = $stmt->get_result();
+
             // Display content based on conditions
             if ($result_jobs->num_rows > 0): ?>
                 <div class="job-list">
@@ -651,13 +895,9 @@ $result_jobs = $stmt->get_result();
                                 <!-- Job Header -->
                                 <div class="d-flex justify-content-between align-items-center">
                                     <strong class="text-primary"><?php echo htmlspecialchars($job['title']); ?></strong>
-                                    <!-- Display status badge -->
-                                    <span class="badge 
-                                        <?php if ($job['status'] === 'pending'): ?>bg-warning text-dark
-                                        <?php elseif ($job['status'] === 'accepted'): ?>bg-success
-                                        <?php elseif ($job['status'] === 'rejected'): ?>bg-danger
-                                        <?php endif; ?>">
-                                        <?php echo ucfirst($job['status']); ?>
+                                    <!-- Pending Applicants Count -->
+                                    <span class="badge bg-warning text-dark">
+                                        <?php echo $job['pending_applicants'] . ' Pending'; ?>
                                     </span>
                                 </div>
 
@@ -665,22 +905,12 @@ $result_jobs = $stmt->get_result();
                                 <div class="job-details mt-3">
                                     <p class="mb-1"><i class="fas fa-briefcase me-2"></i><?php echo htmlspecialchars($job['category']); ?></p>
                                     <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i><?php echo htmlspecialchars($job['location']); ?></p>
-                                    <p class="mb-1"><i class="fas fa-clock me-2"></i>Applied on: <?php echo date('M d, Y', strtotime($job['applied_at'])); ?></p>
-                                    <p class="mb-1"><i class="fas fa-file-alt me-2"></i>Resume: 
-                                        <?php if (!empty($job['resume_file'])): ?>
-                                            <a href="javascript:void(0);" onclick="viewResume('<?php echo htmlspecialchars($job['resume_file']); ?>')" class="text-info text-decoration-none me-2">
-                                                <i class="fas fa-eye me-1"></i> View Resume
-                                            </a>
-                                        <?php else: ?>
-                                            <span class="text-muted">No resume uploaded</span>
-                                        <?php endif; ?>
-                                    </p>
-                                    <p class="mb-1"><i class="fas fa-calendar-check me-2"></i>Status Updated: <?php echo date('M d, Y', strtotime($job['status_updated_at'])); ?></p>
+                                    <p class="mb-1"><i class="fas fa-calendar-alt me-2"></i>Posted on: <?php echo date('M d, Y', strtotime($job['posted_date'])); ?></p>
                                 </div>
 
                                 <!-- View Details Button -->
                                 <div class="job-actions mt-3">
-                                    <a href="job.php?id=<?php echo $job['job_id']; ?>" class="btn btn-primary btn-sm rounded-pill">
+                                    <a href="/JOB/pages/job.php?id=<?php echo $job['job_id']; ?>" class="btn btn-primary btn-sm rounded-pill">
                                         View Details
                                     </a>
                                 </div>
@@ -689,7 +919,7 @@ $result_jobs = $stmt->get_result();
                     <?php endwhile; ?>
                 </div>
             <?php else: ?>
-                <p class="text-center text-muted"><?php echo $isAdmin ? "This user has not applied for any jobs yet." : "You have not applied for any jobs yet."; ?></p>
+                <p class="text-center text-muted"><?php echo $isAdmin ? "No pending applications for any job." : "You have not posted any jobs yet."; ?></p>
             <?php endif; ?>
         <?php endif; ?>
     </div>
@@ -697,67 +927,14 @@ $result_jobs = $stmt->get_result();
 
 
 
-<!-- Documents Tab -->
-<div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-        <div class="profile-cardop-4 mb-4">
-        <h4 class="text-center mb-4 mt-4">My Documents</h4>
-<!-- Resume Section -->
-<div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title resume-section">Resume</h3>
-    <p class="no-data">
-        <?php if (!empty($user['resume_file'])): ?>
-            <!-- Download Resume Button -->
-            <a href="<?php echo htmlspecialchars($user['resume_file']); ?>" 
-                class="btn btn-download-resume me-2" 
-                download>
-                    <i class="fas fa-download"></i> Download Resume
-            </a>
 
-            <!-- View Resume Button -->
-            <button onclick="viewResume('<?php echo htmlspecialchars($user['resume_file']); ?>')" class="btn btn-view-resume me-2">
-                <i class="fas fa-eye"></i> View Resume
-            </button>
 
-            <!-- Remove Resume Button -->
-            <?php if ($isOwnProfile): ?>
-                <button id="remove-resume-button" class="btn btn-remove-resume" data-user-id="<?php echo $user_id; ?>">
-                    <i class="fas fa-trash"></i> Remove Resume
-                </button>
-            <?php endif; ?>
-        <?php else: ?>
-            No resume uploaded yet.
-        <?php endif; ?>
-    </p>
-    
-    <?php if ($isOwnProfile): ?>
-        <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mt-3">
-            <label for="resume" class="form-label fw-bold">Upload/Replace Resume</label>
-            <input type="file" name="resume" id="resume" class="form-control rounded-pill my-3" accept=".pdf,.doc,.docx">
-
-            <!-- Upload/Replace Resume Button -->
-            <button type="submit" class="btn btn-upload-resume me-2">
-                <i class="fas fa-upload"></i> Upload/Replace Resume
-            </button>
-
-            <!-- Create Resume Button -->
-            <a href="resume.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Resume
-            </a>
-            <a href="/JOB/forms/forms.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Application form
-            </a>
-        </form>
-    <?php endif; ?>
-</div>
-        </div>
-    </div>
-</div>
 
 <!-- Edit Profile Button -->
 <?php if ($isOwnProfile): ?>
     <div id="edit-profile-button" style="margin-bottom: 30px;" class="text-center fade-in">
-        <a href="edit_profile.php" class="btn btn-custom rounded-pill px-4">
-            <i class="fas fa-edit"></i> Edit Profile
+        <a href="admin.php" class="btn btn-custom rounded-pill px-4">
+            <i class="fas fa-tachometer-alt"></i> Admin Panel
         </a>
     </div>
 <?php endif; ?>
@@ -875,9 +1052,35 @@ $result_jobs = $stmt->get_result();
     </div>
 </div>
 
+<!-- Modal for Editing Name -->
+<div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nameModalLabel">Edit Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Name Edit Form -->
+                <form action="profile.php?id=<?php echo $user_id; ?>" method="POST">
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 <script>
 
@@ -1078,6 +1281,122 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+});
+
+
+//CHARTS AND Graphs
+  // Example chart setup
+  var ctx1 = document.getElementById('userGenderChart').getContext('2d');
+    var userGenderChart = new Chart(ctx1, {
+        type: 'pie',
+        data: {
+            labels: ['Male', 'Female', 'Non-Binary', 'Other'],
+            datasets: [{
+                data: [
+                    <?= isset($user_gender_data['Male']) ? $user_gender_data['Male'] : 0 ?>,
+                    <?= isset($user_gender_data['Female']) ? $user_gender_data['Female'] : 0 ?>,
+                    <?= isset($user_gender_data['Non-Binary']) ? $user_gender_data['Non-Binary'] : 0 ?>,
+                    <?= isset($user_gender_data['Other']) ? $user_gender_data['Other'] : 0 ?>
+                ],
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#ff6f61'],
+            }]
+        }
+    });
+
+    var ctx2 = document.getElementById('applicantStatusChart').getContext('2d');
+    var applicantStatusChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: ['Pending', 'Accepted', 'Rejected'],
+            datasets: [{
+                label: 'Applicants Status',
+                data: [
+                    <?= isset($applicant_status_data['pending']) ? $applicant_status_data['pending'] : 0 ?>,
+                    <?= isset($applicant_status_data['accepted']) ? $applicant_status_data['accepted'] : 0 ?>,
+                    <?= isset($applicant_status_data['rejected']) ? $applicant_status_data['rejected'] : 0 ?>
+                ],
+                backgroundColor: ['#f6c23e', '#1cc88a', '#e74a3b'],
+            }]
+        }
+    });
+
+ // Bar chart for Job Status
+ var ctx3 = document.getElementById('jobStatusChart').getContext('2d');
+    var jobStatusChart = new Chart(ctx3, {
+        type: 'bar', // Change this to 'bar' for a bar graph
+        data: {
+            labels: ['Pending', 'Approved', 'Rejected'], // Labels for the job statuses
+            datasets: [{
+                label: 'Job Status',
+                data: [
+                    <?= isset($job_status_data['pending']) ? $job_status_data['pending'] : 0 ?>, // Pending jobs count
+                    <?= isset($job_status_data['approved']) ? $job_status_data['approved'] : 0 ?>, // Approved jobs count
+                    <?= isset($job_status_data['rejected']) ? $job_status_data['rejected'] : 0 ?> // Rejected jobs count
+                ],
+                backgroundColor: [
+                    '#f6c23e', // Color for Pending jobs
+                    '#1cc88a', // Color for Approved jobs
+                    '#e74a3b'  // Color for Rejected jobs
+                ],
+                borderColor: [
+                    '#f6c23e', '#1cc88a', '#e74a3b' // Border colors for each bar
+                ],
+                borderWidth: 1 // Border width for the bars
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true // Ensures the Y-axis starts at 0
+                }
+            }
+        }
+    });
+
+    var ctx4 = document.getElementById('totalJobPostedChart').getContext('2d');
+    var totalJobPostedChart = new Chart(ctx4, {
+        type: 'doughnut',
+        data: {
+            labels: ['With Applicants', 'Without Applicants'],
+            datasets: [{
+                data: [<?= $jobs_with_applicants ?>, <?= $jobs_without_applicants ?>],
+                backgroundColor: ['#ff6f61', '#f6c23e'],
+            }]
+        }
+    });
+
+    // Existing chart configurations (for Total Users, Jobs, etc.)
+
+// Line chart for Total Applications per Week
+var ctx5 = document.getElementById('totalApplicationsChart').getContext('2d');
+var totalApplicationsChart = new Chart(ctx5, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'], // Weekly labels
+        datasets: [{
+            label: 'Total Applications', // Chart label
+            data: [
+                <?= isset($total_applications[1]) ? $total_applications[1] : 0 ?>, // Week 1 data
+                <?= isset($total_applications[2]) ? $total_applications[2] : 0 ?>, // Week 2 data
+                <?= isset($total_applications[3]) ? $total_applications[3] : 0 ?>, // Week 3 data
+                <?= isset($total_applications[4]) ? $total_applications[4] : 0 ?>, // Week 4 data
+                <?= isset($total_applications[5]) ? $total_applications[5] : 0 ?>  // Week 5 data
+            ],
+            backgroundColor: 'rgba(28, 200, 138, 0.2)', // Light green color
+            borderColor: '#1cc88a', // Dark green color for the line
+            fill: false,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
 });
 </script>
 

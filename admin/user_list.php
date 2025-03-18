@@ -128,10 +128,25 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
         <div class="user-item">
             <div><?= htmlspecialchars($user['id']) ?></div>
             <div class="username">
-                <a href="../pages/profile.php?id=<?= $user['id'] ?>" class="text-decoration-none text-primary fw-semibold">
-                    <?= htmlspecialchars($user['username']) ?>
-                </a>
-            </div>
+    <?php if ($_SESSION['role'] === 'admin'): ?>
+        <a href="
+            <?php 
+                // Check the role of the user and redirect accordingly
+                if ($user['role'] === 'employer') {
+                    echo "../employers/profile.php?id=" . $user['id']; // Redirect to employer profile
+                } else {
+                    echo "../pages/profile.php?id=" . $user['id']; // Regular user profile
+                }
+            ?>
+        " class="text-decoration-none text-primary fw-semibold">
+            <?= htmlspecialchars($user['username']) ?>
+        </a>
+    <?php else: ?>
+        <!-- If not admin, just show the username as it is, no link -->
+        <span class="text-primary fw-semibold"><?= htmlspecialchars($user['username']) ?></span>
+    <?php endif; ?>
+</div>
+
             <div><?= htmlspecialchars($user['first_name']) ?></div>
             <div><?= htmlspecialchars($user['last_name']) ?></div>
             <div><?= htmlspecialchars($user['email']) ?></div>

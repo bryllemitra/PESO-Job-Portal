@@ -26,7 +26,9 @@ $stmt = $conn->prepare("
         j.created_at, 
         j.photo, 
         j.thumbnail,
-        j.employer_id -- Include employer_id to identify the employer who posted the job
+        j.employer_id, -- Include employer_id to identify the employer who posted the job
+        j.status,       -- Include job status
+        j.remarks      -- Include job remarks for rejected jobs
     FROM jobs j
     LEFT JOIN job_categories jc ON j.id = jc.job_id
     LEFT JOIN categories c ON jc.category_id = c.id
@@ -100,7 +102,7 @@ if ($user_applied) {
         FROM application_positions ap
         JOIN job_positions jp ON ap.position_id = jp.id
         JOIN applications a ON ap.application_id = a.id
-        WHERE a.job_id = ? AND a.user_id = ?
+        WHERE a.job_id = ? AND a.user_id = ? 
     ";
     $stmt = $conn->prepare($applied_positions_query);
     $stmt->bind_param("ii", $id, $user_id);
@@ -111,22 +113,10 @@ if ($user_applied) {
     }
 }
 
-// Fetch job details, including the remarks for rejected job posts
-$jobQuery = "SELECT * FROM jobs WHERE id = ?";
-$stmt = $conn->prepare($jobQuery);
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-$job = $result->fetch_assoc();
+// Use the job data that was fetched in the first query
+$job_status = $job['status'] ?? null;
+$job_remarks = $job['remarks'] ?? '';
 
-if (!$job) {
-    echo "<div class='alert alert-danger text-center'>Job not found.</div>";
-    exit();
-}
-
-// Check if the job is rejected and if the remarks field exists
-$job_status = $job['status'] ?? null;  // Assuming status is in the jobs table
-$job_remarks = $job['remarks'] ?? '';  // Remarks for rejected jobs
 ?>
 
 
@@ -163,14 +153,15 @@ $job_remarks = $job['remarks'] ?? '';  // Remarks for rejected jobs
 
             <!-- Job Overview -->
             <div class="job-overview mb-4 text-center">
-                <p class="text-muted">
-                    <i class="fas fa-briefcase me-2"></i>
-                    <strong>Category:</strong> <?= htmlspecialchars($job['categories'] ?? 'Not specified') ?>
-                </p>
-                <p class="text-muted">
-                    <i class="fas fa-user-tie me-2"></i>
-                    <strong>Position:</strong> <?= htmlspecialchars($job['positions'] ?? 'Not specified') ?>
-                </p>
+<p class="text-muted">
+    <i class="fas fa-briefcase me-2"></i>
+    <strong>Category:</strong> <?= htmlspecialchars($job['categories'] ?? 'No categories specified') ?>
+</p>
+<p class="text-muted">
+    <i class="fas fa-user-tie me-2"></i>
+    <strong>Position:</strong> <?= htmlspecialchars($job['positions'] ?? 'No positions specified') ?>
+</p>
+
                 <p class="text-muted">
         <i class="fas fa-map-marker-alt me-2"></i>
         <strong>Location:</strong> 
@@ -240,36 +231,41 @@ $job_remarks = $job['remarks'] ?? '';  // Remarks for rejected jobs
 
 <!-- Action Buttons -->
 <div class="text-center mt-4">
-<?php if ($user_role === 'admin'): ?>
+    <?php if ($user_role === 'admin'): ?>
         <!-- Admin View - Can see all applicants for any job -->
         <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
         <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
             <i class="fas fa-users me-2"></i> View Applicants
         </a>
-    <?php elseif ($user_id): ?>
+    <?php elseif ($user_role === 'employer' && $user_id === $job['employer_id']): ?>
         <!-- Employer View - Only for the job they posted -->
-        <?php if ($user_id === $job['employer_id']): ?>
-            <?php if ($job['status'] !== 'rejected'): ?> <!-- Check if the job is not rejected -->
-                <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
-                <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
-                    <i class="fas fa-users me-2"></i> Manage Applicants
-                </a>
+        <?php if (($job['status'] ?? '') !== 'rejected'): ?> <!-- Check if the job is not rejected -->
+            <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
+            <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
+                <i class="fas fa-users me-2"></i> Manage Applicants
+            </a>
+        <?php endif; ?>
+        
+        <!-- Show rejection remarks if the job is rejected -->
+        <?php if (isset($job['status']) && $job['status'] === 'rejected'): ?>
+            <div class="alert alert-danger mt-3">
+                <strong>Job Status:</strong> Rejected
+            </div>
+            <?php if (!empty($job['remarks'])): ?>
+                <div class="alert alert-danger">
+                    <strong>Employer's Remark:</strong> <?= htmlspecialchars($job['remarks']) ?>
+                </div>
             <?php endif; ?>
-<!-- Show rejection remarks if the job is rejected -->
-<?php if (isset($job['status']) && $job['status'] === 'rejected'): ?>
-    <div class="alert alert-danger mt-3">
-        <strong>Job Status:</strong> Rejected
-    </div>
-    <?php if (!empty($job['remarks'])): ?>
-        <div class="alert alert-danger">
-            <strong>Employer's Remark:</strong> <?= htmlspecialchars($job['remarks']) ?>
+        <?php endif; ?>
+        
+    <?php elseif ($user_role === 'employer' && $user_id !== $job['employer_id']): ?>
+        <!-- Employer View - If the employer didn't post the job, show a message -->
+        <div class="alert alert-info">
+            You can only manage applicants for your own job postings.
         </div>
-    <?php endif; ?>
-<?php endif; ?>
-
-
-        <?php elseif (!$user_applied): ?>
-            <!-- User View - If not applied yet, show apply form -->
+    <?php elseif ($user_role === 'user'): ?>
+        <!-- User (Applicant) View - If not applied yet, show apply form -->
+        <?php if (!$user_applied): ?>
             <form action="apply.php" method="POST" enctype="multipart/form-data" class="d-inline" id="applyForm">
                 <input type="hidden" name="job_id" value="<?= $id ?>">
 

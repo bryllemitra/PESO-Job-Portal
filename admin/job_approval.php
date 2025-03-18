@@ -134,7 +134,7 @@ $result = $conn->query($query);
 
                 <!-- Employer Name -->
                 <div class="employer-name">
-                    <a href="../pages/profile.php?id=<?= $row['employer_id'] ?>" class="text-decoration-none text-primary fw-semibold">
+                    <a href="../employers/profile.php?id=<?= $row['employer_id'] ?>" class="text-decoration-none text-primary fw-semibold">
                         <?= htmlspecialchars($row['employer_name']) ?>
                     </a>
                 </div>

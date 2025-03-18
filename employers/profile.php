@@ -36,11 +36,53 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['ro
 // Now safe to use $_SESSION['user_id']
 $user_role = $_SESSION['role'] ?? 'guest'; 
 
-// Determine user profile based on role
+// Check if the admin is trying to access employer profile directly
 if ($user_role === 'admin') {
+    // Admin should be redirected to their own profile if accessing employers/profile.php directly
+    if (!isset($_GET['id'])) {
+        echo "<script>window.location.href = '/JOB/admin/profile.php';</script>";
+        exit();
+    }
+
+    // Admin can view any profile (employer or user)
     $user_id = isset($_GET['id']) ? (int)$_GET['id'] : $_SESSION['user_id'];
+} elseif ($user_role === 'employer') {
+    // Employers should be able to view only their own profile or applicants
+    if (!isset($_GET['id'])) {
+        // If it's the employer's own profile, set $user_id to the logged-in user's ID
+        $user_id = $_SESSION['user_id'];  // Employer's own profile
+    } else {
+        // Employers can view profiles of applicants who have applied to their jobs
+        $viewed_user_id = (int)$_GET['id'];
+        $query_check_applicant = "
+            SELECT COUNT(*) AS applicant_count
+            FROM applications
+            WHERE job_id IN (SELECT id FROM jobs WHERE employer_id = ?) AND user_id = ?
+        ";
+        $stmt_check = $conn->prepare($query_check_applicant);
+        $stmt_check->bind_param("ii", $_SESSION['user_id'], $viewed_user_id);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result();
+        $check_data = $result_check->fetch_assoc();
+
+        if ($check_data['applicant_count'] === 0) {
+            // If the employer hasn't posted a job that the applicant has applied to, redirect or show error
+            echo "<script>window.location.href = '/JOB/index.php';</script>";
+            exit();
+        } else {
+            // Allow the employer to view the applicant's profile
+            $user_id = $viewed_user_id;
+        }
+    }
 } else {
-    $user_id = $_SESSION['user_id']; 
+    // Default for user (applicant): They can only view their own profile
+    $user_id = $_SESSION['user_id'];
+
+    // Redirect to the user's own profile if 'id' is not their own ID
+    if (isset($_GET['id']) && $_GET['id'] != $user_id) {
+        echo "<script>window.location.href = '/JOB/pages/profile.php';</script>"; // Or any error page you prefer
+        exit();
+    }
 }
 
 // Validate $user_id
@@ -60,6 +102,7 @@ if ($result->num_rows === 0) {
 }
 
 $user = $result->fetch_assoc();
+
 
 
 // Handle Cover Photo Upload
@@ -211,25 +254,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
 }
 
 
-// Handle work experience, skills, LinkedIn, and portfolio updates
+// Handle profile updates for employers/admins
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    // Sanitize inputs
+    // Sanitize inputs for both user and employer-specific data
     $work_experience = trim($_POST['work_experience']);
     $skills = trim($_POST['skills']);
     $linkedin_profile = trim($_POST['linkedin_profile']);
     $portfolio_url = trim($_POST['portfolio_url']);
 
-    // Update query
-    $update_query = "UPDATE users 
-                     SET work_experience = ?, 
-                         skills = ?, 
-                         linkedin_profile = ?, 
-                         portfolio_url = ? 
-                     WHERE id = ?";
-    $stmt = $conn->prepare($update_query);
-    $stmt->bind_param("ssssi", $work_experience, $skills, $linkedin_profile, $portfolio_url, $user_id);
+    // Employer-specific fields
+    $company_name = trim($_POST['company_name']);
+    $company_description = trim($_POST['company_description']);
+    $company_website = trim($_POST['company_website']);
+    $location = trim($_POST['location']);
 
-    if ($stmt->execute()) {
+    // Update query for the user's basic information
+    $update_user_query = "UPDATE users 
+                          SET work_experience = ?, 
+                              skills = ?, 
+                              linkedin_profile = ?, 
+                              portfolio_url = ? 
+                          WHERE id = ?";
+
+    // Prepare and bind the statement for the users table
+    $stmt_user = $conn->prepare($update_user_query);
+    $stmt_user->bind_param("ssssi", $work_experience, $skills, $linkedin_profile, $portfolio_url, $user_id);
+
+    // Update query for the employer-specific information
+    $update_employer_query = "UPDATE employers 
+                              SET company_name = ?, 
+                                  company_description = ?, 
+                                  company_website = ?, 
+                                  location = ? 
+                              WHERE user_id = ?";
+
+    // Prepare and bind the statement for the employers table
+    $stmt_employer = $conn->prepare($update_employer_query);
+    $stmt_employer->bind_param("ssssi", $company_name, $company_description, $company_website, $location, $user_id);
+
+    // Execute both queries
+    $stmt_user_result = $stmt_user->execute();
+    $stmt_employer_result = $stmt_employer->execute();
+
+    // Check if both updates were successful
+    if ($stmt_user_result && $stmt_employer_result) {
         echo "<div class='alert alert-success'>Profile updated successfully.</div>";
         header("Location: profile.php?id=$user_id");
         exit();
@@ -237,6 +305,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         echo "<div class='alert alert-danger'>Failed to update profile.</div>";
     }
 }
+
+// Fetch employer data (if user is an employer)
+$employer_query = "SELECT * FROM employers WHERE user_id = ?";
+$employer_stmt = $conn->prepare($employer_query);
+$employer_stmt->bind_param("i", $user_id);
+$employer_stmt->execute();
+$employer_result = $employer_stmt->get_result();
+$employer = $employer_result->fetch_assoc();
 
 // Handle resume upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
@@ -332,6 +408,15 @@ $result_jobs = $stmt->get_result();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/JOB/assets/profile.css">
+    <style>
+
+
+.hover-link:hover {
+    border-color: #ff6700;
+    color: #ff6700;
+    background-color: transparent;
+}
+</style>
 </head>
 <body>
 <?php $isOwnProfile = ($user_id == $_SESSION['user_id']); // Check if it's the user's own profile ?>
@@ -427,24 +512,49 @@ $result_jobs = $stmt->get_result();
                             <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Inclusive Years:</strong> <?php echo htmlspecialchars($user['inclusive_years']); ?></p>
                         </div>
 
-                        <!-- Work Experience -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Work Experience</h3>
-                            <p class="no-data"><?php echo !empty($user['work_experience']) ? htmlspecialchars($user['work_experience']) : 'No work experience added yet.'; ?></p>
-                        </div>
+                        <!-- Employer Information (Always visible, even if no data exists) -->
 
-                        <!-- Skills -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Skills</h3>
-                            <p class="no-data"><?php echo !empty($user['skills']) ? htmlspecialchars($user['skills']) : 'No skills added yet.'; ?></p>
-                        </div>
+<!-- Company Name -->
+<div class="profile-card p-4 mb-4 fade-in">
+    <h3 class="section-title">Company Name</h3>
+    <p class="no-data"><?php echo !empty($employer['company_name']) ? htmlspecialchars($employer['company_name']) : 'No company name added yet.'; ?></p>
+</div>
+
+<!-- Company Description -->
+<div class="profile-card p-4 mb-4 fade-in">
+    <h3 class="section-title">Company Description</h3>
+    <p class="no-data"><?php echo !empty($employer['company_description']) ? htmlspecialchars($employer['company_description']) : 'No company description added yet.'; ?></p>
+</div>
+
+<!-- Location -->
+<div class="profile-card p-4 mb-4 fade-in">
+    <h3 class="section-title">Location</h3>
+    <p class="no-data"><?php echo !empty($employer['location']) ? htmlspecialchars($employer['location']) : 'No location added yet.'; ?></p>
+</div>
+
+<!-- Company Website -->
+<div class="profile-card p-4 mb-4 fade-in">
+    <h3 class="section-title">Company Website / Social Links</h3>
+    <p class="no-data">
+        <?php if (!empty($employer['company_website'])): ?>
+            <a href="<?php echo htmlspecialchars($employer['company_website']); ?>" target="_blank" class="btn btn-light btn-sm rounded-pill hover-link">
+    <i class="fas fa-globe"></i> Visit Website
+</a>
+
+        <?php else: ?>
+            No website added yet.
+        <?php endif; ?>
+    </p>
+</div>
+
+
 
                         <!-- LinkedIn Profile -->
                         <div class="profile-card p-4 mb-4 fade-in">
                             <h3 class="section-title">LinkedIn Profile</h3>
                             <p class="no-data">
                                 <?php if (!empty($user['linkedin_profile'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill"><i class="fab fa-linkedin"></i> View LinkedIn</a>
+                                    <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill hover-link"><i class="fab fa-linkedin"></i> View LinkedIn</a>
                                 <?php else: ?>
                                     No LinkedIn profile added.
                                 <?php endif; ?>
@@ -456,7 +566,7 @@ $result_jobs = $stmt->get_result();
                             <h3 class="section-title">Portfolio</h3>
                             <p class="no-data">
                                 <?php if (!empty($user['portfolio_url'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-success btn-sm rounded-pill"><i class="fas fa-globe"></i> View Portfolio</a>
+                                    <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-success btn-sm rounded-pill hover-link"><i class="fas fa-globe"></i> View Portfolio</a>
                                 <?php else: ?>
                                     No portfolio added.
                                 <?php endif; ?>
@@ -665,28 +775,28 @@ $result_jobs = $stmt->get_result();
 <!-- Documents Tab -->
 <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
         <div class="profile-cardop-4 mb-4">
-        <h4 class="text-center mb-4 mt-4">My Documents</h4>
+        <h4 class="text-center mb-4 mt-4">Company Documents</h4>
 <!-- Resume Section -->
 <div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title resume-section">Resume</h3>
+    <h3 class="section-title resume-section">Document</h3>
     <p class="no-data">
         <?php if (!empty($user['resume_file'])): ?>
             <!-- Download Resume Button -->
             <a href="<?php echo htmlspecialchars($user['resume_file']); ?>" 
                 class="btn btn-download-resume me-2" 
                 download>
-                    <i class="fas fa-download"></i> Download Resume
+                    <i class="fas fa-download"></i> Download 
             </a>
 
             <!-- View Resume Button -->
             <button onclick="viewResume('<?php echo htmlspecialchars($user['resume_file']); ?>')" class="btn btn-view-resume me-2">
-                <i class="fas fa-eye"></i> View Resume
+                <i class="fas fa-eye"></i> View 
             </button>
 
             <!-- Remove Resume Button -->
             <?php if ($isOwnProfile): ?>
                 <button id="remove-resume-button" class="btn btn-remove-resume" data-user-id="<?php echo $user_id; ?>">
-                    <i class="fas fa-trash"></i> Remove Resume
+                    <i class="fas fa-trash"></i> Remove 
                 </button>
             <?php endif; ?>
         <?php else: ?>
@@ -701,16 +811,10 @@ $result_jobs = $stmt->get_result();
 
             <!-- Upload/Replace Resume Button -->
             <button type="submit" class="btn btn-upload-resume me-2">
-                <i class="fas fa-upload"></i> Upload/Replace Resume
+                <i class="fas fa-upload"></i> Upload/Replace Document
             </button>
 
-            <!-- Create Resume Button -->
-            <a href="/JOB/pages/resume.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Resume
-            </a>
-            <a href="/JOB/forms/forms.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Application form
-            </a>
+
         </form>
     <?php endif; ?>
 </div>

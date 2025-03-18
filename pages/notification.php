@@ -42,11 +42,8 @@ $filter_read_status = isset($_GET['filter_read_status']) ? $_GET['filter_read_st
 
 // Build the base query
 $query_base = "
-    SELECT n.*, 
-           CONCAT(u.first_name, ' ', IFNULL(u.middle_name, ''), ' ', u.last_name) AS applicant_name, 
-           j.title AS job_name, 
-           a.status AS application_status, 
-           j.employer_id
+    SELECT n.*, CONCAT(u.first_name, ' ', IFNULL(u.middle_name, ''), ' ', u.last_name) AS applicant_name, 
+           j.title AS job_name, a.status AS application_status, j.employer_id
     FROM notifications n
     JOIN users u ON n.sender_id = u.id
     JOIN jobs j ON n.job_id = j.id
@@ -90,11 +87,6 @@ $query = $query_base . $search_filter . $read_filter . $query_order . $query_lim
 $result = $conn->query($query);
 $notifications = $result->fetch_all(MYSQLI_ASSOC);
 
-// Add a 'type' key to notifications from the notifications table
-foreach ($notifications as &$notif) {
-    $notif['type'] = 'application'; // Default type for notifications from the notifications table
-}
-
 // Query to fetch total notifications for pagination
 $total_query = "
     SELECT COUNT(*) AS total 
@@ -108,67 +100,6 @@ $total_query = "
 $total_result = $conn->query($total_query);
 $total_notifications = $total_result->fetch_assoc()['total'];
 $total_pages = ceil($total_notifications / $notifications_per_page);
-
-// Fetch job approval requests for admins
-if ($_SESSION['role'] == 'admin') {
-    $job_approval_query = "
-        SELECT 
-            j.id AS job_id, 
-            j.title AS job_name, 
-            CONCAT(u.first_name, ' ', IFNULL(u.middle_name, ''), ' ', u.last_name) AS employer_name, 
-            j.status, 
-            j.created_at
-        FROM jobs j
-        JOIN users u ON j.employer_id = u.id
-        WHERE j.status = 'pending'
-    ";
-    $job_approval_result = $conn->query($job_approval_query);
-    $job_approval_requests = $job_approval_result->fetch_all(MYSQLI_ASSOC);
-
-    // Add job approval requests to the notifications array
-    foreach ($job_approval_requests as $request) {
-        $notifications[] = [
-            'id' => null, // No ID since it's not from the notifications table
-            'type' => 'job_approval_request',
-            'job_id' => $request['job_id'],
-            'job_name' => $request['job_name'],
-            'sender_name' => $request['employer_name'],
-            'message' => "Employer {$request['employer_name']} has requested approval for the job {$request['job_name']}.",
-            'created_at' => $request['created_at'],
-            'is_read' => 0, // Assume unread
-            'status' => $request['status'], // Include the status
-        ];
-    }
-}
-
-// Fetch job status updates for employers
-if ($_SESSION['role'] == 'employer') {
-    $job_status_query = "
-        SELECT 
-            j.id AS job_id, 
-            j.title AS job_name, 
-            j.status, 
-            j.created_at
-        FROM jobs j
-        WHERE j.employer_id = {$_SESSION['user_id']} AND j.status IN ('approved', 'rejected')
-    ";
-    $job_status_result = $conn->query($job_status_query);
-    $job_status_updates = $job_status_result->fetch_all(MYSQLI_ASSOC);
-
-    // Add job status updates to the notifications array
-    foreach ($job_status_updates as $update) {
-        $notifications[] = [
-            'id' => null, // No ID since it's not from the notifications table
-            'type' => 'job_status_update',
-            'job_id' => $update['job_id'],
-            'job_name' => $update['job_name'],
-            'message' => "Your job post '{$update['job_name']}' has been {$update['status']}.",
-            'created_at' => $update['created_at'],
-            'is_read' => 0, // Assume unread
-            'status' => $update['status'], // Include the status
-        ];
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -262,135 +193,145 @@ if ($_SESSION['role'] == 'employer') {
             <div class="card-body d-flex justify-content-between align-items-start">
                 <!-- Notification Content -->
                 <div class="flex-grow-1">
-                    <?php if (isset($notif['type']) && $notif['type'] == 'application'): ?>
-                        <!-- Application notification -->
-                        <?php if ($_SESSION['role'] == 'user'): ?>
-                            <p class="mb-1">
-                                <strong>Your application for</strong> 
-                                <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>
-                                <strong>has been <?php echo $notif['application_status'] == 'accepted' ? '<span class="text-success">accepted</span>' : '<span class="text-danger">rejected</span>'; ?>.</strong>
-                            </p>
-                        <?php elseif ($_SESSION['role'] == 'admin'): ?>
-                            <p class="mb-1">
-                                <strong><?php echo htmlspecialchars($notif['applicant_name']); ?></strong> 
-                                <strong>has applied for</strong> 
-                                <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>.
-                            </p>
-                        <?php elseif ($_SESSION['role'] == 'employer' && $notif['employer_id'] == $_SESSION['user_id']): ?>
-                            <p class="mb-1">
-                                <strong><?php echo htmlspecialchars($notif['applicant_name']); ?></strong> 
-                                <strong>has applied for your job:</strong> 
-                                <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>.
-                            </p>
-                        <?php endif; ?>
-                    <?php elseif (isset($notif['type']) && $notif['type'] == 'job_approval_request'): ?>
-                        <!-- Job approval request notification (for admins) -->
-                        <p class="mb-1">
-                            <strong><?php echo htmlspecialchars($notif['sender_name']); ?></strong> 
-                            <strong>has requested approval for the job</strong> 
-                            <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>.
-                        </p>
-                    <?php elseif (isset($notif['type']) && $notif['type'] == 'job_status_update'): ?>
-                        <!-- Job status update notification (for employers) -->
-                        <p class="mb-1">
-                            <strong>Your job post</strong> 
-                            <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong> 
-                            <strong>has been <?php echo isset($notif['status']) ? $notif['status'] : 'updated'; ?>.</strong>
-                        </p>
-                    <?php endif; ?>
-                    <small class="text-muted"><?php echo date('F j, Y, g:i a', strtotime($notif['created_at'])); ?></small>
-                </div>
-
-      <!-- Dropdown Actions -->
-<div>
-    <div class="dropdown">
-        <button 
-            class="btn btn-sm btn-dark dropdown-toggle" 
-            type="button" 
-            id="dropdownMenuButton" 
-            data-bs-toggle="dropdown" 
-            aria-haspopup="true" 
-            aria-expanded="false"
-            style="border-radius: 30px; padding: 0.5rem 1rem;"
-        >
-            Options
-        </button>
-        <div 
-            class="dropdown-menu dropdown-menu-end p-0" 
-            aria-labelledby="dropdownMenuButton" 
-            style="max-width: 95%; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
-        >
-            <?php if (isset($notif['id'])): ?>
-                <!-- Mark as Read and Delete options for notifications from the notifications table -->
-                <button 
-                    class="dropdown-item mark-read d-flex align-items-center" 
-                    data-id="<?php echo $notif['id']; ?>"
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-check-circle text-success me-2"></i> Mark as Read
-                </button>
-                <button 
-                    class="dropdown-item delete-notif d-flex align-items-center" 
-                    data-id="<?php echo $notif['id']; ?>"
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-trash-alt text-danger me-2"></i> Delete
-                </button>
-            <?php endif; ?>
-
-            <?php if (isset($notif['type']) && $notif['type'] == 'job_approval_request' && $_SESSION['role'] == 'admin'): ?>
-                <!-- Mark as Read, Delete, and View Job options for job approval requests -->
-                <button 
-                    class="dropdown-item mark-read d-flex align-items-center" 
-                    data-id="<?php echo $notif['id']; ?>"
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-check-circle text-success me-2"></i> Mark as Read
-                </button>
-                <button 
-                    class="dropdown-item delete-notif d-flex align-items-center" 
-                    data-id="<?php echo $notif['id']; ?>"
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-trash-alt text-danger me-2"></i> Delete
-                </button>
-
-            <?php endif; ?>
-
-            <?php if ($_SESSION['role'] == 'user'): ?>
-                <!-- View Job option for users -->
-                <a 
-                    class="dropdown-item d-flex align-items-center" 
-                    href="job.php?id=<?php echo $notif['job_id']; ?>" 
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-briefcase me-2"></i> View Job
-                </a>
-            <?php elseif ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'employer'): ?>
-                <!-- View Profile and View Job options for admins and employers -->
-                <?php if (isset($notif['sender_id'])): ?>
-                    <a 
-                        class="dropdown-item d-flex align-items-center" 
-                        href="profile.php?id=<?php echo $notif['sender_id']; ?>" 
-                        style="padding: 0.75rem 1rem;"
-                    >
-                        <i class="fas fa-user me-2"></i> View Profile
-                    </a>
+                <?php if ($_SESSION['role'] == 'user'): ?>
+                    <!-- Notification message for user -->
+                    <p class="mb-1">
+                        <strong>Your application for</strong> 
+                        <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>
+                        <strong>has been <?php echo $notif['application_status'] == 'accepted' ? '<span class="text-success">accepted</span>' : '<span class="text-danger">rejected</span>'; ?>.</strong>
+                    </p>
+                <?php elseif ($_SESSION['role'] == 'admin'): ?>
+                    <!-- Notification message for admin -->
+                    <p class="mb-1">
+                        <strong><?php echo htmlspecialchars($notif['applicant_name']); ?></strong> 
+                        <strong>has applied for</strong> 
+                        <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>.
+                    </p>
+                <?php elseif ($_SESSION['role'] == 'employer' && $notif['employer_id'] == $_SESSION['user_id']): ?>
+                    <!-- Notification message for employer when someone applies to their job -->
+                    <p class="mb-1">
+                        <strong><?php echo htmlspecialchars($notif['applicant_name']); ?></strong> 
+                        <strong>has applied for your job:</strong> 
+                        <strong class="text-primary"><?php echo htmlspecialchars($notif['job_name']); ?></strong>.
+                    </p>
                 <?php endif; ?>
-                <a 
-                    class="dropdown-item d-flex align-items-center" 
-                    href="job.php?id=<?php echo $notif['job_id']; ?>" 
-                    style="padding: 0.75rem 1rem;"
-                >
-                    <i class="fas fa-briefcase me-2"></i> View Job
-                </a>
-            <?php endif; ?>
-        </div>
+                <small class="text-muted"><?php echo date('F j, Y, g:i a', strtotime($notif['created_at'])); ?></small>
+            </div>
+
+                <!-- Dropdown Actions -->
+                <div>
+                <div class="dropdown">
+    <button 
+        class="btn btn-sm btn-dark dropdown-toggle" 
+        type="button" 
+        id="dropdownMenuButton" 
+        data-bs-toggle="dropdown" 
+        aria-haspopup="true" 
+        aria-expanded="false"
+        style="border-radius: 30px; padding: 0.5rem 1rem;"
+    >
+        <!-- The button text can be customized here -->
+        Options
+    </button>
+    <div 
+        class="dropdown-menu dropdown-menu-end p-0" 
+        aria-labelledby="dropdownMenuButton" 
+        style="max-width: 95%; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+    >
+        <button 
+            class="dropdown-item mark-read d-flex align-items-center" 
+            data-id="<?php echo $notif['id']; ?>"
+            style="padding: 0.75rem 1rem;"
+        >
+            <i class="fas fa-check-circle text-success me-2"></i> Mark as Read
+        </button>
+        <button 
+            class="dropdown-item delete-notif d-flex align-items-center" 
+            data-id="<?php echo $notif['id']; ?>"
+            style="padding: 0.75rem 1rem;"
+        >
+            <i class="fas fa-trash-alt text-danger me-2"></i> Delete
+        </button>
+        <?php if ($_SESSION['role'] == 'user'): ?>
+            <!-- Remove "View Profile" option for users -->
+            <a 
+                class="dropdown-item d-flex align-items-center" 
+                href="job.php?id=<?php echo $notif['job_id']; ?>" 
+                style="padding: 0.75rem 1rem;"
+            >
+                <i class="fas fa-briefcase me-2"></i> View Job
+            </a>
+            <?php elseif ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'employer'): ?>
+    <!-- Add "View Profile" option for both admins and employers -->
+    <a 
+        class="dropdown-item d-flex align-items-center" 
+        href="
+            <?php 
+            // If the user is an admin, redirect to the applicant's profile
+            if ($_SESSION['role'] == 'admin'): 
+                echo 'profile.php?id=' . $notif['sender_id']; // Admin can view applicant's profile
+            elseif ($_SESSION['role'] == 'employer'): 
+                // Employers can view applicants' profiles based on job they posted (sender_id represents the applicant)
+                echo 'profile.php?id=' . $notif['sender_id']; // Employer can view the applicant's profile who applied for their job
+            endif; 
+            ?>" 
+        style="padding: 0.75rem 1rem;">
+        <i class="fas fa-user me-2"></i> View Profile
+    </a>
+            <a 
+                class="dropdown-item d-flex align-items-center" 
+                href="job.php?id=<?php echo $notif['job_id']; ?>" 
+                style="padding: 0.75rem 1rem;"
+            >
+                <i class="fas fa-briefcase me-2"></i> View Job
+            </a>
+        <?php endif; ?>
     </div>
+</div>
+
 </div>
             </div>
         </div>
     <?php endforeach; ?>
+
+    <!-- Pagination Controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <?php if ($page > 1): ?>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<?php echo $page - 1; ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                </li>
+            <?php endfor; ?>
+
+            <?php if ($page < $total_pages): ?>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<?php echo $page + 1; ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+        </ul>
+    </nav>
 <?php endif; ?>
 </div>
 

@@ -32,10 +32,15 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/JOB/assets/announcement.css">
+    <style> 
+
+
+
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
 
-    <!-- Back Button -->
+    
     <div class="container mt-6 text-center">
         <?php if ($user_role === 'admin'): ?>
             <button onclick="window.location.href='create_announcement.php'" class="py-2 px-4 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-md shadow-md transition duration-300 ease-in-out">

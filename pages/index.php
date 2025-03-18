@@ -333,8 +333,9 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
             FROM jobs j
             JOIN job_categories jc ON j.id = jc.job_id
             JOIN categories c ON jc.category_id = c.id
-            JOIN job_positions_jobs jpj ON j.id = jpj.job_id  -- Ensure the table name is correct
+            JOIN job_positions_jobs jpj ON j.id = jpj.job_id
             JOIN job_positions p ON jpj.position_id = p.id
+            WHERE j.status = 'approved'  -- Only fetch jobs that are approved
             GROUP BY j.id
             ORDER BY j.created_at DESC 
             LIMIT 5

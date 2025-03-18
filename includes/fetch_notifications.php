@@ -35,9 +35,6 @@ try {
     $total_pages = ceil($total_notifications / $limit); // Calculate total pages
 
     // Prepare query to fetch notifications for the current page
-    $notifications = [];
-
-    // Existing logic for fetching notifications
     if ($role == 'admin') {
         // Admin view: List all applicants for all jobs
         $query = "SELECT n.id, n.job_id, CONCAT(u.first_name, ' ', u.last_name) AS applicant_name, j.title AS job_name, a.status AS application_status, n.is_read, n.created_at, 
@@ -47,8 +44,6 @@ try {
                   JOIN jobs j ON n.job_id = j.id
                   LEFT JOIN applications a ON n.job_id = a.job_id AND a.user_id = n.recipient_id
                   WHERE n.recipient_id = ? ORDER BY n.created_at DESC LIMIT ?, ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('iii', $user_id, $offset, $limit);
 
     } elseif ($role == 'employer') {
         // Employer view: Notifications about applications for their own jobs
@@ -59,8 +54,6 @@ try {
                   JOIN jobs j ON n.job_id = j.id
                   LEFT JOIN applications a ON n.job_id = a.job_id AND a.user_id = n.recipient_id
                   WHERE n.recipient_id = ? AND j.employer_id = ? ORDER BY n.created_at DESC LIMIT ?, ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('iiii', $user_id, $user_id, $offset, $limit);
 
     } else {
         // User view: Notifications about their job applications
@@ -70,72 +63,32 @@ try {
                   JOIN jobs j ON n.job_id = j.id
                   LEFT JOIN applications a ON n.job_id = a.job_id AND a.user_id = n.recipient_id
                   WHERE n.recipient_id = ? ORDER BY n.created_at DESC LIMIT ?, ?";
-        $stmt = $conn->prepare($query);
+    }
+
+    $stmt = $conn->prepare($query);
+
+    // Bind the parameters based on the role
+    if ($role == 'admin') {
+        $stmt->bind_param('iii', $user_id, $offset, $limit);
+    
+    } elseif ($role == 'employer') {
+        $stmt->bind_param('iiii', $user_id, $user_id, $offset, $limit);
+    
+    } else {
         $stmt->bind_param('iii', $user_id, $offset, $limit);
     }
 
     $stmt->execute();
     $result = $stmt->get_result();
 
+    $notifications = [];
     while ($row = $result->fetch_assoc()) {
         $notifications[] = $row;
     }
 
-    // New logic for job approval requests and job post status updates
-    if ($role == 'admin') {
-        // Fetch job approval requests for admins
-        $query = "SELECT j.id AS job_id, j.title AS job_name, CONCAT(u.first_name, ' ', u.last_name) AS employer_name, j.status, j.created_at
-                  FROM jobs j
-                  JOIN users u ON j.employer_id = u.id
-                  WHERE j.status = 'pending'";
-        $stmt = $conn->prepare($query);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = [
-                'id' => null, // No notification ID since this is not from the notifications table
-                'job_id' => $row['job_id'],
-                'job_name' => $row['job_name'],
-                'message' => "Employer {$row['employer_name']} has requested approval for the job {$row['job_name']}",
-                'is_read' => 0, // Assume unread
-                'created_at' => $row['created_at']
-            ];
-        }
-
-    } elseif ($role == 'employer') {
-        // Fetch job post status updates for employers
-        $query = "SELECT j.id AS job_id, j.title AS job_name, j.status, j.created_at
-                  FROM jobs j
-                  WHERE j.employer_id = ? AND j.status IN ('approved', 'rejected')";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('i', $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = [
-                'id' => null, // No notification ID since this is not from the notifications table
-                'job_id' => $row['job_id'],
-                'job_name' => $row['job_name'],
-                'message' => "Your job post '{$row['job_name']}' has been {$row['status']}.",
-                'is_read' => 0, // Assume unread
-                'created_at' => $row['created_at']
-            ];
-        }
-    }
-
-    // Sort notifications by creation date (newest first)
-    usort($notifications, function ($a, $b) {
-        return strtotime($b['created_at']) - strtotime($a['created_at']);
-    });
-
-    // Apply pagination to the combined notifications
-    $paginated_notifications = array_slice($notifications, $offset, $limit);
-
     // Return notifications, total pages, and unread count
     echo json_encode([
-        'notifications' => $paginated_notifications,
+        'notifications' => $notifications,
         'totalPages' => $total_pages,
         'unreadCount' => $unread_count
     ]);

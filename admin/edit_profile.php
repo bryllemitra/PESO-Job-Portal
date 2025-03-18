@@ -108,24 +108,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
 
-// Update employer details
-$employer_stmt = $conn->prepare("
-    UPDATE employers
-    SET company_name = ?, company_description = ?, company_website = ?, location = ?
-    WHERE user_id = ?
-");
+    // Update employer details
+    $employer_stmt = $conn->prepare("
+        INSERT INTO employers (user_id, company_name, company_description, company_website, location)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+            company_name = ?, company_description = ?, company_website = ?, location = ?
+    ");
 
-$employer_stmt->bind_param(
-    "ssssi", 
-    $company_name, $company_description, $company_website, $location, $user_id
-);
+    $employer_stmt->bind_param(
+        "issssssss", 
+        $user_id, $company_name, $company_description, $company_website, $location,
+        $company_name, $company_description, $company_website, $location
+    );
 
-if ($employer_stmt->execute()) {
-    echo "<script>alert('Profile updated successfully!'); window.location.href='profile.php';</script>";
-} else {
-    echo "<script>alert('Error updating employer details: " . htmlspecialchars($employer_stmt->error) . "');</script>";
-}
-
+    if ($employer_stmt->execute()) {
+        echo "<script>alert('Profile updated successfully!'); window.location.href='profile.php';</script>";
+    } else {
+        echo "<script>alert('Error updating employer details: " . htmlspecialchars($employer_stmt->error) . "');</script>";
+    }
 }
 
 $barangay_query = "SELECT name FROM barangay ORDER BY name ASC";
