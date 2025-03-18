@@ -136,35 +136,78 @@ $_SESSION['resume_data'] = $data;
         <!-- Profile Section -->
         <div class="section">
             <div class="section-title">Profile</div>
-            <p><strong>Age:</strong> <?php echo htmlspecialchars($data['age']); ?></p>
-            <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars($data['dob']); ?></p>
-            <p><strong>Place of Birth:</strong> <?php echo htmlspecialchars($data['pob']); ?></p>
-            <p><strong>Gender:</strong> <?php echo htmlspecialchars($data['gender']); ?></p>
-            <p><strong>Marital Status:</strong> <?php echo htmlspecialchars($data['marital_status']); ?></p>
-            <p><strong>Weight:</strong> <?php echo htmlspecialchars($data['weight']); ?> kg</p>
-            <p><strong>Height:</strong> <?php echo htmlspecialchars($data['height']); ?> cm</p>
-            <p><strong>Nationality:</strong> <?php echo htmlspecialchars($data['nationality']); ?></p>
-            <p><strong>Religion:</strong> <?php echo htmlspecialchars($data['religion']); ?></p>
-            <p><strong>Languages:</strong> <?php echo htmlspecialchars($data['languages']); ?></p>
+            <table>
+                <tr>
+                    <th>Age</th>
+                    <td><?php echo htmlspecialchars($data['age']); ?></td>
+                </tr>
+                <tr>
+                    <th>Date of Birth</th>
+                    <td><?php echo htmlspecialchars($data['dob']); ?></td>
+                </tr>
+                <tr>
+                    <th>Place of Birth</th>
+                    <td><?php echo htmlspecialchars($data['pob']); ?></td>
+                </tr>
+                <tr>
+                    <th>Gender</th>
+                    <td><?php echo htmlspecialchars($data['gender']); ?></td>
+                </tr>
+                <tr>
+                    <th>Marital Status</th>
+                    <td><?php echo htmlspecialchars($data['marital_status']); ?></td>
+                </tr>
+                <tr>
+                    <th>Weight</th>
+                    <td><?php echo htmlspecialchars($data['weight']); ?> kg</td>
+                </tr>
+                <tr>
+                    <th>Height</th>
+                    <td><?php echo htmlspecialchars($data['height']); ?> cm</td>
+                </tr>
+                <tr>
+                    <th>Nationality</th>
+                    <td><?php echo htmlspecialchars($data['nationality']); ?></td>
+                </tr>
+                <tr>
+                    <th>Religion</th>
+                    <td><?php echo htmlspecialchars($data['religion']); ?></td>
+                </tr>
+                <tr>
+                    <th>Languages</th>
+                    <td><?php echo htmlspecialchars($data['languages']); ?></td>
+                </tr>
+            </table>
         </div>
-
 
         <!-- Work Experience and Training -->
         <div class="section">
             <div class="section-title">Work Experience and Training</div>
-            <p><?php echo nl2br(htmlspecialchars($data['training'])); ?></p>
+            <table>
+                <tr>
+                    <td><?php echo nl2br(htmlspecialchars($data['training'])); ?></td>
+                </tr>
+            </table>
         </div>
 
         <!-- Achievements -->
         <div class="section">
             <div class="section-title">Achievements</div>
-            <p><?php echo nl2br(htmlspecialchars($data['achievements'])); ?></p>
+            <table>
+                <tr>
+                    <td><?php echo nl2br(htmlspecialchars($data['achievements'])); ?></td>
+                </tr>
+            </table>
         </div>
 
         <!-- Education -->
         <div class="section">
             <div class="section-title">Education</div>
-            <p><?php echo nl2br(htmlspecialchars($data['education'])); ?></p>
+            <table>
+                <tr>
+                    <td><?php echo nl2br(htmlspecialchars($data['education'])); ?></td>
+                </tr>
+            </table>
         </div>
 
         <!-- Skills -->
