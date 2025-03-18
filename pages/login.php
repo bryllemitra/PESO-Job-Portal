@@ -118,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Login Form -->
     <div class="bg-white flex flex-col justify-center px-10 py-8 md:w-3/5">
         <div class="flex justify-center mb-6">
-            <img src="/JOB/uploads/OFFICIAL.png" alt="Logo" class="w-36">
+            <img src="../uploads/OFFICIAL.png" alt="Logo" class="w-36">
         </div>
         <?php if (!empty($error)): ?>
             <p class="text-red-500 text-sm mb-4"><?= htmlspecialchars($error) ?></p>
