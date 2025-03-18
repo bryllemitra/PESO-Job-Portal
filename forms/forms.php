@@ -97,9 +97,9 @@ unset($_SESSION['errors']);
                             <input type="text" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($data['middle_name'] ?? ''); ?>" required>
                         </div>
                         <div>
-                            <label for="suffix">Suffix</label>
-                            <input type="text" id="suffix" name="suffix" value="<?php echo htmlspecialchars($data['suffix'] ?? ''); ?>" required>
-                        </div>
+                    <label for="suffix">Suffix (Leave Blank if None)</label>
+                    <input type="text" id="suffix" name="suffix" value="<?php echo htmlspecialchars($data['suffix'] ?? ''); ?>">
+                </div>
                         <div>
                             <label for="email">Email:</label>
                             <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($data['email'] ?? ''); ?>" required>
@@ -423,7 +423,7 @@ unset($_SESSION['errors']);
 
 
             <!-- Centered Preview Button -->
-            <button type="submit">Preview Resume</button>
+            <button type="submit">Preview Forms</button>
         </form>
         <button style="background-color: gray;" onclick="window.location.href='<?php echo ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer') ? '/JOB/employers/profile.php' : '/JOB/pages/profile.php'; ?>';">
     Back

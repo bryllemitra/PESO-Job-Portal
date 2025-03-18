@@ -235,7 +235,7 @@ $barangay_result = $conn->query($barangay_query);
             <div class="job-item">
                 <div class="title"><?= htmlspecialchars($row['title']) ?></div>
                 <div class="description"><?= htmlspecialchars($row['description']) ?></div>
-                <div class="applicants" onclick="location.href='view_applicants.php?job_id=<?= $row['id'] ?>'">
+                <div class="applicants" onclick="location.href='/JOB/admin/view_applicants.php?job_id=<?= $row['id'] ?>'">
                     👤 <?= $row['total_applicants'] ?> Applicants
                 </div>
                 <div class="date"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($row['created_at']))) ?></div>

@@ -11,19 +11,27 @@ if (isset($_SESSION['user_id'])) {
 // Handle login form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Sanitize input data
-    $username = htmlspecialchars(trim($_POST['username']));
+    $username_or_email = htmlspecialchars(trim($_POST['username']));
     $password = trim($_POST['password']);
     
     // Initialize error message
     $error = '';
 
     // Validate inputs
-    if (empty($username) || empty($password)) {
-        $error = "Please enter both username and password.";
+    if (empty($username_or_email) || empty($password)) {
+        $error = "Please enter both username/email and password.";
     } else {
-        // Secure query to prevent SQL injection
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
-        $stmt->bind_param("s", $username);
+        // Check if the input is an email or username
+        if (filter_var($username_or_email, FILTER_VALIDATE_EMAIL)) {
+            // Input is an email
+            $stmt = $conn->prepare("SELECT id, username, password, role, is_verified FROM users WHERE email = ?");
+            $stmt->bind_param("s", $username_or_email);
+        } else {
+            // Input is a username
+            $stmt = $conn->prepare("SELECT id, username, password, role, is_verified FROM users WHERE username = ?");
+            $stmt->bind_param("s", $username_or_email);
+        }
+        
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -31,28 +39,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows == 1) {
             $user = $result->fetch_assoc();
 
-            // Verify the password
-            if (password_verify($password, $user['password'])) {
-                // Regenerate session ID to prevent session fixation
-                session_regenerate_id(true);
-
-                // Store user details in session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
-
-                // Redirect user to their dashboard
-                header("Location: ../pages/index.php");
-                exit();
+            // Check if email is verified
+            if ($user['is_verified'] == 0) {
+                $error = "You still need to verify your email address. Please check your inbox.";
             } else {
-                $error = "Invalid username or password!";
+                // Verify the password
+                if (password_verify($password, $user['password'])) {
+                    // Regenerate session ID to prevent session fixation
+                    session_regenerate_id(true);
+
+                    // Store user details in session
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role'] = $user['role'];
+
+                    // Set a success message based on the role
+                    $message = '';
+                    if ($_SESSION['role'] == 'admin') {
+                        $message = "Welcome back Admin! Manage and oversee all platform activities from here.";
+                        header("Location: ../admin/admin.php?message=" . urlencode($message));
+                    } elseif ($_SESSION['role'] == 'employer') {
+                        $message = "Welcome " . $user['username'] . "! You may start posting job opportunities and manage your applicants.";
+                        header("Location: ../employers/dashboard.php?message=" . urlencode($message));
+                    } else {
+                        $message = "Welcome " . $user['username'] . "! We’re glad to have you here. You’re now logged in as an applicant. Feel free to browse available positions and take the next step in your career.";
+                        header("Location: ../pages/index.php?message=" . urlencode($message));
+                    }
+                    
+                    exit();
+                } else {
+                    $error = "Invalid username/email or password!";
+                }
             }
         } else {
-            $error = "Invalid username or password!";
+            $error = "Invalid username/email or password!";
         }
     }
 }
 ?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,6 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #F0F8FF !important;
+        }
+    </style>
 </head>
 <body class="flex items-center justify-center bg-gray-100 min-h-screen">
 
@@ -96,25 +128,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php unset($_SESSION['success_message']); ?>
         <?php endif; ?>
         <form method="POST" class="space-y-4">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 items-center">
-                    <i class="fas fa-user mr-2"></i> Username
-                </label>
-                <input type="text" id="username" name="username" required placeholder="Enter your username"
-                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 items-center">
-                    <i class="fas fa-lock mr-2"></i> Password
-                </label>
-                <input type="password" id="password" name="password" required placeholder="Enter your password"
-                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
-            <button type="submit"
-                    class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Login
-            </button>
-        </form>
+    <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 items-center">
+            <i class="fas fa-user mr-2"></i> Username/Email
+        </label>
+        <input type="text" id="username" name="username" required placeholder="Enter your username or email"
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+    </div>
+    <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 items-center">
+            <i class="fas fa-lock mr-2"></i> Password
+        </label>
+        <input type="password" id="password" name="password" required placeholder="Enter your password"
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+    </div>
+    <button type="submit"
+            class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        Login
+    </button>
+</form>
+
     </div>
 </div>
 

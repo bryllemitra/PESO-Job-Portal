@@ -1,15 +1,18 @@
 <?php
 session_start();
 include '../includes/config.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+// Include PHPMailer files (make sure these are included)
+require '../vendor/autoload.php';  // If using Composer, otherwise include manually
 
 // Generate CSRF token if it doesn't exist
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$barangay_query = "SELECT name FROM barangay ORDER BY name ASC";
-$barangay_result = $conn->query($barangay_query);
-
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verify CSRF token
     if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -22,20 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $confirm_password = trim($_POST['confirm_password']);
     $username = trim($_POST['username']);
     $first_name = trim($_POST['first_name']);
-    $middle_name = trim($_POST['middle_name']);
     $last_name = trim($_POST['last_name']);
-    $ext_name = trim($_POST['ext_name']);
-    $gender = trim($_POST['gender']);
-    $birth_date = $_POST['birth_date'];
-    $age = intval($_POST['age']);
-    $phone_number = trim($_POST['phone_number']);
-    $place_of_birth = trim($_POST['place_of_birth']);
-    $civil_status = trim($_POST['civil_status']);
-    $zip_code = trim($_POST['zip_code']);
-    $street_address = trim($_POST['street_address']);
-    $barangay = trim($_POST['barangay']);
-    $city = trim($_POST['city']);
-
+    
     // Validate inputs
     $errors = [];
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -50,12 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
         $errors[] = "Username can only contain letters, numbers, and underscores.";
     }
-    if (!in_array($gender, ['Male', 'Female', 'Non-Binary', 'LGBTQ+', 'Other'])) {
-        $errors[] = "Invalid gender selected.";
-    }
-    if (!preg_match('/^\d{11}$/', $phone_number)) {
-        $errors[] = "Phone number must be exactly 11 digits.";
-    }
 
     // Check if email or username already exists
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
@@ -67,18 +52,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->close();
 
-    // Insert data into the database
+    // Insert data into the database if no errors
     if (empty($errors)) {
+        // Hash the password
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+        $verification_token = bin2hex(random_bytes(16));  // Generate a unique token for email verification
         $stmt = $conn->prepare("INSERT INTO users (
-            email, password, username, first_name, middle_name, last_name, ext_name, gender, birth_date, age, phone_number, place_of_birth, civil_status, zip_code, street_address, barangay, city
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssisssssss", $email, $hashed_password, $username, $first_name, $middle_name, $last_name, $ext_name, $gender, $birth_date, $age, $phone_number, $place_of_birth, $civil_status, $zip_code, $street_address, $barangay, $city);
+            email, password, username, first_name, last_name, verification_token, is_verified
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+        $is_verified = 0; // Account not verified yet
+
+        // Bind the parameters (NULL values are handled automatically for omitted fields)
+        $stmt->bind_param("ssssssi", $email, $hashed_password, $username, $first_name, $last_name, $verification_token, $is_verified);
 
         if ($stmt->execute()) {
-            $_SESSION['success_message'] = "Registration successful! You can now log in.";
-            header("Location: login.php");
-            exit();
+            // Send the confirmation email
+            $mail = new PHPMailer(true);
+            try {
+                // Server settings
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'venardjhoncsalido@gmail.com';  // Your Gmail address
+                $mail->Password = 'kcao mhcd axdw dpda';  // Use the app password here
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 587;
+
+                // Recipients
+                $mail->setFrom('venardjhoncsalido@gmail.com', 'PESO Job Portal');
+                $mail->addAddress($email);  // User email address
+
+                // Construct the verification URL
+                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                $domain = $_SERVER['HTTP_HOST']; // Get the domain (e.g., localhost or your live domain)
+                $verification_url = $protocol . '://' . $domain . '/JOB/pages/verify.php?token=' . $verification_token;
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Email Confirmation';
+                $mail->Body    = 'Hi ' . htmlspecialchars($first_name) . ',<br><br>Please confirm your email address by clicking the link below:<br><a href="' . $verification_url . '">Confirm Email</a>';
+
+                $mail->send();
+                $_SESSION['success_message'] = "Registration successful! Please check your email to confirm your account.";
+                header("Location: login.php");
+                exit();
+            } catch (Exception $e) {
+                error_log("Mailer Error: " . $mail->ErrorInfo);
+                $errors[] = "There was an error sending the confirmation email. Please try again.";
+            }
         } else {
             error_log("Database error: " . $stmt->error);
             $errors[] = "An error occurred while registering. Please try again.";
@@ -87,6 +109,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
+
 
 
 
@@ -101,7 +125,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-
+        body {
+            background-color: #F0F8FF !important;
+        }
     </style>
 </head>
 <!DOCTYPE html>
@@ -149,169 +175,86 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-        <form method="POST" action="" class="space-y-4">
-            <!-- Add CSRF Token for Security -->
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+        <form method="POST" action="" class="space-y-4" id="registrationForm">
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 
-            <!-- Basic Information -->
-            <div class="border-b border-gray-200 pb-4">
-                <h4 class="text-lg font-semibold mb-4">Basic Information</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                        <label for="first_name" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-user mr-2"></i> First Name
-                        </label>
-                        <input type="text" id="first_name" name="first_name" placeholder="First Name" required maxlength="50"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="middle_name" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-user mr-2"></i> Middle Name
-                        </label>
-                        <input type="text" id="middle_name" name="middle_name" placeholder="Middle Name" required maxlength="50"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="last_name" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-user mr-2"></i> Last Name
-                        </label>
-                        <input type="text" id="last_name" name="last_name" placeholder="Last Name" required maxlength="50"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="ext_name" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-user-edit mr-2"></i> Extension Name (e.g., Jr., Sr.)
-                        </label>
-                        <input type="text" id="ext_name" name="ext_name" placeholder="Extension Name" maxlength="10"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    
-                    <div>
-                        <label for="birth_date" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-calendar-alt mr-2"></i> Birth Date
-                        </label>
-                        <input type="date" id="birth_date" name="birth_date" required
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="age" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-sort-numeric-up mr-2"></i> Age
-                        </label>
-                        <input type="number" id="age" name="age" placeholder="Age" min="1" max="120"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-
-                    <div>
-                        <label for="gender" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-venus-mars mr-2"></i> Gender
-                        </label>
-                        <select id="gender" name="gender" required
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Non-Binary">Non-Binary</option>
-                            <option value="LGBTQ+">LGBTQ+</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Details -->
-            <div class="border-b border-gray-200 pb-4">
-                <h4 class="text-lg font-semibold mb-4">Contact Details</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                        <label for="phone_number" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-phone mr-2"></i> Phone Number (11 digits)
-                        </label>
-                        <input type="text" id="phone_number" name="phone_number" placeholder="Phone Number" required maxlength="11"
-                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-envelope mr-2"></i> Email
-                        </label>
-                        <input type="email" id="email" name="email" placeholder="Email" required maxlength="100"
-                            oninput="this.value = this.value.toLowerCase();"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="place_of_birth" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-map-marker-alt mr-2"></i> Place of Birth
-                        </label>
-                        <input type="text" id="place_of_birth" name="place_of_birth" placeholder="Place of Birth" required maxlength="100"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="street_address" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-road mr-2"></i> Street Address
-                        </label>
-                        <input type="text" id="street_address" name="street_address" placeholder="Street Address" required maxlength="255"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="city" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-city mr-2"></i> City
-                        </label>
-                        <input type="text" id="city" name="city" placeholder="City" required maxlength="100"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="zip_code" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-mail-bulk mr-2"></i> ZIP Code
-                        </label>
-                        <input type="text" id="zip_code" name="zip_code" placeholder="ZIP Code" required maxlength="10"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Credentials -->
+    <!-- Basic Information -->
+    <div class="border-b border-gray-200 pb-4">
+        <h4 class="text-lg font-semibold mb-4">Basic Information</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-                <h4 class="text-lg font-semibold mb-4">Account Credentials</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-user-tag mr-2"></i> Username
-                        </label>
-                        <input type="text" id="username" name="username" placeholder="Username" required maxlength="50"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-envelope mr-2"></i> Email
-                        </label>
-                        <input type="email" id="email" name="email" placeholder="Email" required maxlength="100"
-                            oninput="this.value = this.value.toLowerCase();"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-lock mr-2"></i> Password
-                        </label>
-                        <input type="password" id="password" name="password" placeholder="Password" required minlength="8"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="confirm_password" class="block text-sm font-medium text-gray-700">
-                            <i class="fas fa-lock mr-2"></i> Confirm Password
-                        </label>
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required minlength="8"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                </div>
+                <label for="first_name" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-user mr-2"></i> First Name
+                </label>
+                <input type="text" id="first_name" name="first_name" placeholder="First Name" required maxlength="50"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
             </div>
+            <div>
+                <label for="middle_name" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-user mr-2"></i> Middle Name
+                </label>
+                <input type="text" id="middle_name" name="middle_name" placeholder="Middle Name" maxlength="50"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="last_name" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-user mr-2"></i> Last Name
+                </label>
+                <input type="text" id="last_name" name="last_name" placeholder="Last Name" required maxlength="50"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+        </div>
+    </div>
 
-            <button type="submit"
-                class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Register
-            </button>
-        </form>
+    <!-- Account Credentials -->
+    <div>
+        <h4 class="text-lg font-semibold mb-4">Account Credentials</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-user-tag mr-2"></i> Username
+                </label>
+                <input type="text" id="username" name="username" placeholder="Username" required maxlength="50"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-envelope mr-2"></i> Email
+                </label>
+                <input type="email" id="email" name="email" placeholder="Email" required maxlength="100"
+                    oninput="this.value = this.value.toLowerCase();"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <span id="emailError" class="text-red-500 text-sm hidden">Please enter a valid email address.</span>
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-lock mr-2"></i> Password
+                </label>
+                <input type="password" id="password" name="password" placeholder="Password" required minlength="8"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="confirm_password" class="block text-sm font-medium text-gray-700">
+                    <i class="fas fa-lock mr-2"></i> Confirm Password
+                </label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required minlength="8"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Button -->
+    <button type="submit"
+        class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        Register
+    </button>
+</form>
+
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <!-- JavaScript for Age and Birth Date Synchronization -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -345,6 +288,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             });
         });
+
+
+        // JavaScript for front-end email validation
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    const emailField = document.getElementById('email');
+    const emailError = document.getElementById('emailError');
+    const email = emailField.value;
+
+    // Simple email regex for validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+        // Show error message if email is invalid
+        emailError.classList.remove('hidden');
+        e.preventDefault();  // Prevent form submission
+    } else {
+        emailError.classList.add('hidden');
+    }
+});
     </script>
 
     <!-- Bootstrap JS -->

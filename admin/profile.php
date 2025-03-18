@@ -751,10 +751,10 @@ $applicants_per_week_json = json_encode($applicants_per_week);
             <div class="card-header bg-transparent text-white">
                 <i class="fas fa-chart-line me-2"></i> Total Applicants per Week
             </div>
-            <div class="card-body" style="height: 100%;">
+            <div class="card-body" style="height: 90%;">
                 <!-- Dynamic Label -->
                 <h6 id="dynamicLabel" class="text-center mb-3"></h6>
-                <canvas id="totalApplicationsChart" style="height: 95%; width: 100%;"></canvas>
+                <canvas id="totalApplicationsChart" style="height: 90%; width: 100%;"></canvas>
             </div>
         </div>
     </div>
@@ -1441,6 +1441,8 @@ const myChart = new Chart(ctx, {
         }]
     },
     options: {
+        responsive: true, // Make the chart responsive
+        maintainAspectRatio: false, // Allow the aspect ratio to change with container
         scales: {
             y: {
                 beginAtZero: true

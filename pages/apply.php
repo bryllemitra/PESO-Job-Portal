@@ -54,11 +54,11 @@ if ($_POST['resume_option'] === 'existing') {
     $target_dir = "../uploads/resumes/"; // Ensure this directory exists and is writable
     $target_file = $target_dir . basename($_FILES["resume"]["name"]);
     $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    $allowed_types = ['pdf', 'doc', 'docx'];
+    $allowed_types = ['pdf'];
 
     // Validate file type
     if (!in_array($fileType, $allowed_types)) {
-        echo "<div class='alert alert-danger text-center'>Only PDF, DOC, and DOCX files are allowed.</div>";
+        echo "<div class='alert alert-danger text-center'>Only PDF is allowed.</div>";
         exit();
     }
 

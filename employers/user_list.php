@@ -93,6 +93,11 @@ $total_pages = ceil($total_applicants / $limit); // Calculate total pages
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/JOB/assets/user_list_employer.css">
+    <style>
+        body {
+            background-color: #F0F8FF !important;
+        }
+    </style>
 </head>
 <body>
 

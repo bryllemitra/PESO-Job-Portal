@@ -102,14 +102,17 @@ $_SESSION['resume_data'] = $data;
     <div class="resume-container">
         <!-- Header Section -->
         <div class="header">
-            <div class="name-container">
-                <h1><?php echo htmlspecialchars($data['surname']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['first_name']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['middle_name']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['suffix']); ?></h1>
-            </div>
-            <p><?php echo nl2br(htmlspecialchars($data['profile'])); ?></p>
-        </div>
+    <div class="name-container">
+        <h1><?php echo htmlspecialchars($data['surname']); ?></h1>
+        <h1><?php echo htmlspecialchars($data['first_name']); ?></h1>
+        <h1><?php echo htmlspecialchars($data['middle_name']); ?></h1>
+        <?php if (!empty($data['suffix'])): ?>
+            <h1><?php echo htmlspecialchars($data['suffix']); ?></h1>
+        <?php endif; ?>
+    </div>
+    <p><?php echo nl2br(htmlspecialchars($data['profile'])); ?></p>
+</div>
+
 
         <!-- Contact Information -->
         <div class="contact-info">

@@ -239,7 +239,13 @@ $job_remarks = $job['remarks'] ?? '';
         </a>
     <?php elseif ($user_role === 'employer' && $user_id === $job['employer_id']): ?>
         <!-- Employer View - Only for the job they posted -->
-        <?php if (($job['status'] ?? '') !== 'rejected'): ?> <!-- Check if the job is not rejected -->
+        <?php if (($job['status'] ?? '') === 'pending'): ?>
+            <!-- If the job is pending for approval, show a message -->
+            <div class="alert alert-info">
+                Your post is still waiting for approval.
+            </div>
+        <?php elseif (($job['status'] ?? '') !== 'rejected'): ?>
+            <!-- If the job is not rejected and not pending, show the Manage Applicants button -->
             <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
             <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
                 <i class="fas fa-users me-2"></i> Manage Applicants
@@ -289,30 +295,32 @@ $job_remarks = $job['remarks'] ?? '';
                     </select>
                 </div>
 
-                <!-- Resume Selection -->
-                <div class="mb-3">
-                    <label class="form-label text-futuristic"><strong>Select Resume:</strong></label>
-                    <select name="resume_option" id="resume_option" class="form-select form-futuristic mb-2">
-                        <?php if ($has_resume): ?>
-                            <option value="existing">Attach from Profile</option>
-                        <?php else: ?>
-                            <option value="" disabled>No resume available in profile</option>
-                        <?php endif; ?>
-                        <option value="new" <?= !$has_resume ? 'selected' : '' ?>>Upload New Resume</option>
-                    </select>
-                </div>
-                
-                <!-- File Upload Field -->
-                <div id="resume_upload_field" class="mb-3" style="display: <?= !$has_resume ? 'block' : 'none' ?>;">
-                    <label for="resume" class="form-label text-futuristic">Upload Resume</label>
-                    <input type="file" name="resume" id="resume" class="form-control form-futuristic" accept=".pdf,.doc,.docx">
-                </div>
+    <!-- Resume Selection -->
+    <div class="mb-3">
+        <label class="form-label text-futuristic"><strong>Select Resume:</strong></label>
+        <select name="resume_option" id="resume_option" class="form-select form-futuristic mb-2">
+            <?php if ($has_resume): ?>
+                <option value="existing">Attach from Profile</option>
+            <?php else: ?>
+                <option value="" disabled>No resume available in profile</option>
+            <?php endif; ?>
+            <option value="new" <?= !$has_resume ? 'selected' : '' ?>>Upload New Resume</option>
+        </select>
+    </div>
+    
+    <!-- File Upload Field -->
+    <div id="resume_upload_field" class="mb-3" style="display: <?= !$has_resume ? 'block' : 'none' ?>;">
+        <label for="resume" class="form-label text-futuristic">Upload Resume</label>
+        <input type="file" name="resume" id="resume" class="form-control form-futuristic" accept=".pdf">
+        <small class="form-text text-muted">Only PDF files are allowed. Convert your resume into PDF.</small> <!-- Added note here -->
+    </div>
 
-                <!-- Submit Button -->
-                <button type="submit" id="applyButton" class="btn btn-futuristic-success btn-action" disabled>
-                    <i class="fas fa-paper-plane me-2"></i> Apply Now
-                </button>
-            </form>
+    <!-- Submit Button -->
+    <button type="submit" id="applyButton" class="btn btn-futuristic-success btn-action" disabled>
+        <i class="fas fa-paper-plane me-2"></i> Apply Now
+    </button>
+</form>
+
 
         <?php else: ?>
             <!-- If user has already applied, show status and cancellation option -->

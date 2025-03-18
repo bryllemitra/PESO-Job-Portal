@@ -20,7 +20,15 @@ $row = mysqli_fetch_assoc($result);
 $cover_photo = $row ? "/JOB/uploads/" . htmlspecialchars($row['cover_photo']) : "/JOB/uploads/default/COVER.jpg"; // Default if no cover photo is set
 
 
-$user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
+
+
+// Check if there is a login message to display
+if (isset($_SESSION['login_message'])) {
+    $message = $_SESSION['login_message'];
+    unset($_SESSION['login_message']); // Clear the message after displaying it
+} else {
+    $message = '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +41,7 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/JOB/assets/index.css">
     
@@ -450,6 +459,35 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
 
     <!-- JavaScript for Auto-Sliding Ads -->
     <script>
+        // Get the message from the URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+
+        // Display SweetAlert2 notification if there is a message
+        if (message) {
+            Swal.fire({
+                title: "Successfully logged in!",
+                text: message,
+                icon: "success", // You can remove this line if you don't want any icon
+                showConfirmButton: true, // Show the close button
+                confirmButtonText: "Close", // Customize the close button text
+                timer: 5000, // Auto-close after 3 seconds
+                timerProgressBar: true, // Show a progress bar
+                showClass: {
+                    popup: 'swal2-noanimation', // Disable animation for the popup
+                    backdrop: 'swal2-noanimation' // Disable animation for the backdrop
+                },
+                hideClass: {
+                    popup: '', // No special class for hiding the popup
+                    backdrop: '' // No special class for hiding the backdrop
+                }
+            }).then(() => {
+                // Remove the 'message' query parameter from the URL
+                urlParams.delete('message');
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.history.replaceState({}, document.title, newUrl);
+            });
+        }
 
 
 

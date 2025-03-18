@@ -70,6 +70,9 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
     .expanded-button {
         width: auto; /* Let the button width be dynamic based on the content */
     } 
+    body {
+            background-color: #F0F8FF !important;
+        }
     </style>
 </head>
 <body>

@@ -153,13 +153,11 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'employer') {
         $category_filter_my_jobs
         $position_filter_my_jobs
         $location_filter_my_jobs
-        AND j.status = 'approved'  -- Only fetch approved jobs
         ORDER BY j.created_at DESC  -- You can adjust this sorting as needed
     ";
     $stmt = $conn->prepare($query_my_jobs);
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
-    // Now, you can use get_result() here to fetch results.
     $result = $stmt->get_result();
 } else {
     // If not logged in as an employer, show an empty result
@@ -178,7 +176,7 @@ if ($active_tab === 'saved' && $user_id) {
     $result = $conn->query($query_jobs_with_applicants);
 } elseif ($active_tab === 'my_jobs' && isset($_SESSION['role']) && $_SESSION['role'] === 'employer') {
     // Query to fetch only the employer's own jobs with filters applied
-    // Here, `$stmt` is already used, and result is fetched directly from `$stmt->get_result()`
+    // The query is already executed above, and the result is stored in $result
 } else {
     $result = $conn->query($query_all_jobs); // Default to all jobs
 }
@@ -576,10 +574,13 @@ if ($browse_data) {
 
                                 <!-- Save Flag -->
                                 <?php if ($user_id): ?>
-                                    <div class="save-flag" data-job-id="<?= $row['id'] ?>">
-                                        <i class="fas fa-flag"></i>
+                                    <div title="Save job" class="save-flag" data-job-id="<?= $row['id'] ?>">
+                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  
+                                    stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-bookmark">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" /></svg></i>
                                     </div>
                                 <?php endif; ?>
+
                             </div>
 
 <!-- Card Body -->
@@ -622,7 +623,7 @@ if ($browse_data) {
         $new_applicants_result = $conn->query($new_applicants_query);
         $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
         if ($new_applicants_count > 0): ?>
-            <span class="badge bg-primary">New Applicant(s): <?= $new_applicants_count ?></span>
+            <span class="badge bg-primary mb-1">New Applicant(s): <?= $new_applicants_count ?></span>
         <?php endif; ?>
     <?php endif; ?>
 
@@ -644,7 +645,7 @@ if ($browse_data) {
     $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
 
     if ($new_applicants_count > 0): ?>
-        <span class="badge bg-primary">
+        <span class="badge bg-primary mb-1">
             New Applicant(s): <?= $new_applicants_count ?>
         </span>
     <?php endif; ?>
@@ -673,7 +674,7 @@ if ($browse_data) {
 
     <!-- Display the job's approval status only inside the "My Jobs" tab -->
     <?php if (isset($active_tab) && $active_tab === 'my_jobs'): ?>
-        <div class="approval-status">
+        <div class="approval-status mb-1">
             <strong>Approval Status: </strong>
             <?php
             // Display the job's approval status with different badge colors

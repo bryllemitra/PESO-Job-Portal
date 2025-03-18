@@ -146,6 +146,13 @@ $appResult = $stmt->get_result();
 
 
 <link rel="stylesheet" href="/JOB/assets/view_applicants.css">
+<style>
+        body {
+            background-color: #F0F8FF !important;
+        }
+    </style>
+
+    
 <div class="container mt-5">
     <h2 class="text-center mb-4 text-futuristic">📄 Applicants for <span class="text-primary"><?= htmlspecialchars($job['title']) ?></span></h2>
     
@@ -383,45 +390,50 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('confirmActionBtn').setAttribute('data-job-id', jobId);
     });
 
-    // Handle the Confirm button click in the modal
     document.getElementById('confirmActionBtn').addEventListener('click', function () {
-        const action = this.getAttribute('data-action');
-        const userId = this.getAttribute('data-user-id');
-        const jobId = this.getAttribute('data-job-id');
-        const remark = document.getElementById('remarkText').value;
+    const action = this.getAttribute('data-action');
+    const userId = this.getAttribute('data-user-id');
+    const jobId = this.getAttribute('data-job-id');
+    let remark = document.getElementById('remarkText').value;
 
-        // Create a form and submit it to process the action
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = ''; // Stay on the same page
+    // If the action is 'accept' and remark is empty, set the default remark
+    if (action === 'accept' && !remark) {
+        remark = "Your application has been accepted. Kindly await our call for next steps.";
+    }
 
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = action;
-        form.appendChild(actionInput);
+    // Create a form and submit it to process the action
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = ''; // Stay on the same page
 
-        const userIdInput = document.createElement('input');
-        userIdInput.type = 'hidden';
-        userIdInput.name = 'user_id';
-        userIdInput.value = userId;
-        form.appendChild(userIdInput);
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
 
-        const jobIdInput = document.createElement('input');
-        jobIdInput.type = 'hidden';
-        jobIdInput.name = 'job_id';
-        jobIdInput.value = jobId;
-        form.appendChild(jobIdInput);
+    const userIdInput = document.createElement('input');
+    userIdInput.type = 'hidden';
+    userIdInput.name = 'user_id';
+    userIdInput.value = userId;
+    form.appendChild(userIdInput);
 
-        const remarkInput = document.createElement('input');
-        remarkInput.type = 'hidden';
-        remarkInput.name = 'remark';
-        remarkInput.value = remark;
-        form.appendChild(remarkInput);
+    const jobIdInput = document.createElement('input');
+    jobIdInput.type = 'hidden';
+    jobIdInput.name = 'job_id';
+    jobIdInput.value = jobId;
+    form.appendChild(jobIdInput);
 
-        document.body.appendChild(form);
-        form.submit();
-    });
+    const remarkInput = document.createElement('input');
+    remarkInput.type = 'hidden';
+    remarkInput.name = 'remark';
+    remarkInput.value = remark;
+    form.appendChild(remarkInput);
+
+    document.body.appendChild(form);
+    form.submit();
+});
+
 });
 
 const filterApplicants = () => {

@@ -196,12 +196,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['role'])) {
 
         body{
             margin-top:24px;
+            background-color: #F0F8FF !important;
         }
+
+        
+    
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex items-center justify-center p-6">
     
-    <div class="max-w-4xl w-full bg-white p-8 rounded-lg shadow-lg">
+    <div class="mt-4 max-w-4xl w-full bg-white p-8 rounded-lg shadow-lg">
         <h1 class="text-3xl font-bold text-center text-[#1976d2] mb-6">Post a New Job</h1>
         
         <form action="post_job.php" method="POST" enctype="multipart/form-data">

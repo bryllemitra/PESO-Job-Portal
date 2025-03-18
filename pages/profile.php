@@ -290,10 +290,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
         $target_file = $target_dir . basename($_FILES["resume"]["name"]);
         $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
         // Allowed file types
-        $allowed_types = ['pdf', 'doc', 'docx'];
+        $allowed_types = ['pdf'];
         // Check if the file type is allowed
         if (!in_array($fileType, $allowed_types)) {
-            echo "<div class='alert alert-danger'>Only PDF, DOC, and DOCX files are allowed.</div>";
+            echo "<div class='alert alert-danger'>Only PDF files are allowed.</div>";
         } elseif ($_FILES["resume"]["size"] > 5 * 1024 * 1024) { // Limit file size to 5MB
             echo "<div class='alert alert-danger'>File size must not exceed 5MB.</div>";
         } else {
@@ -773,22 +773,25 @@ $result_jobs = $stmt->get_result();
     
     <?php if ($isOwnProfile): ?>
         <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mt-3">
-            <label for="resume" class="form-label fw-bold">Upload/Replace Resume</label>
-            <input type="file" name="resume" id="resume" class="form-control rounded-pill my-3" accept=".pdf,.doc,.docx">
+    <label for="resume" class="form-label fw-bold">Upload/Replace Resume</label>
+    <input type="file" name="resume" id="resume" class="form-control rounded-pill my-3" accept=".pdf">
 
-            <!-- Upload/Replace Resume Button -->
-            <button type="submit" class="btn btn-upload-resume me-2">
-                <i class="fas fa-upload"></i> Upload/Replace Resume
-            </button>
+    <small class="form-text text-muted">Only PDF files are allowed. Convert your resume into PDF.</small><br><br> <!-- Added note here -->
 
-            <!-- Create Resume Button -->
-            <a href="resume.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Resume
-            </a>
-            <a href="/JOB/forms/forms.php" class="btn btn-create-resume">
-                <i class="fas fa-file-alt"></i> Create Application form
-            </a>
-        </form>
+    <!-- Upload/Replace Resume Button -->
+    <button type="submit" class="btn btn-upload-resume me-2">
+        <i class="fas fa-upload"></i> Upload/Replace Resume
+    </button>
+
+    <!-- Create Resume Button -->
+    <a href="resume.php" class="btn btn-create-resume">
+        <i class="fas fa-file-alt"></i> Create Resume
+    </a>
+    <a href="/JOB/forms/forms.php" class="btn btn-create-resume">
+        <i class="fas fa-file-alt"></i> Create Application form
+    </a>
+</form>
+
     <?php endif; ?>
 </div>
         </div>

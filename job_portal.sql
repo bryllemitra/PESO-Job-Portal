@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 06, 2025 at 05:12 PM
+-- Generation Time: Mar 09, 2025 at 05:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -116,20 +116,6 @@ CREATE TABLE `applications` (
   `action_taken_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `applications`
---
-
-INSERT INTO `applications` (`id`, `user_id`, `job_id`, `applied_at`, `resume_file`, `status`, `is_read`, `status_updated_at`, `dismissed`, `remark`, `canceled_at`, `user_viewed`, `action_taken_by`) VALUES
-(509, 57, 87, '2025-03-05 11:17:32', '../uploads/resumes/CV-Salido.docx', 'accepted', 0, '2025-03-06 04:50:16', 0, '', NULL, 1, 4),
-(510, 61, 87, '2025-03-05 11:17:47', '../uploads/resumes/PNP-NAPOLCOM-EXAM-APP.pdf', 'rejected', 0, '2025-03-06 04:33:15', 0, '', NULL, 0, 4),
-(511, 61, 63, '2025-03-05 11:17:57', '../uploads/resumes/PNP-NAPOLCOM-EXAM-APP.pdf', 'accepted', 0, '2025-03-06 04:33:05', 0, '', NULL, 0, 4),
-(512, 57, 24, '2025-03-06 04:50:22', '../uploads/resumes/CV-Salido.docx', 'pending', 0, '2025-03-06 04:50:22', 0, NULL, NULL, 0, NULL),
-(513, 57, 23, '2025-03-06 04:50:27', '../uploads/resumes/CV-Salido.docx', 'accepted', 0, '2025-03-06 14:59:08', 0, 'Yes sir!', NULL, 1, 4),
-(514, 57, 21, '2025-03-06 04:50:32', '../uploads/resumes/CV-Salido.docx', 'rejected', 0, '2025-03-06 15:42:09', 0, 'Ekis bro, better luck next time.', NULL, 0, 4),
-(515, 61, 24, '2025-03-06 04:50:52', '../uploads/resumes/CV-Salido.docx', 'pending', 0, '2025-03-06 04:50:52', 0, NULL, NULL, 0, NULL),
-(516, 61, 23, '2025-03-06 14:58:06', '../uploads/resumes/CV-Salido.docx', 'canceled', 0, '2025-03-06 14:58:10', 0, NULL, '2025-03-06 22:58:10', 0, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -141,19 +127,6 @@ CREATE TABLE `application_positions` (
   `application_id` int(11) NOT NULL,
   `position_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `application_positions`
---
-
-INSERT INTO `application_positions` (`id`, `application_id`, `position_id`) VALUES
-(223, 509, 28),
-(224, 510, 28),
-(225, 511, 5),
-(226, 512, 57),
-(227, 513, 42),
-(228, 514, 40),
-(229, 515, 57);
 
 -- --------------------------------------------------------
 
@@ -367,7 +340,8 @@ CREATE TABLE `contacts` (
 --
 
 INSERT INTO `contacts` (`id`, `name`, `email`, `subject`, `message`, `created_at`, `is_read`, `status`) VALUES
-(52, 'Borat Sagadiyev', 'borat@gmail.com', 'Halo I&#039;m under the water', 'please halp me!', '2025-03-01 08:11:57', 1, 'active');
+(52, 'Borat Sagadiyev', 'borat@gmail.com', 'Halo I&#039;m under the water', 'please halp me!', '2025-03-01 08:11:57', 1, 'active'),
+(53, 'Venard Jhon Salido', 'venard@gmail.com', 'tes', 'test', '2025-03-07 14:22:39', 1, 'deleted');
 
 -- --------------------------------------------------------
 
@@ -445,7 +419,7 @@ INSERT INTO `jobs` (`id`, `title`, `description`, `thumbnail`, `photo`, `created
 (59, 'GYM INSTRUCTOR FOR HIRE!', 'We are seeking a passionate and certified Gym Instructor to join our fitness team. The ideal candidate will have a strong understanding of fitness principles, excellent communication skills, and a commitment to motivating others to achieve their fitness goals. As a Gym Instructor, you will be responsible for leading individual and group workout sessions, providing guidance on proper form and technique, and ensuring a safe and welcoming environment for all gym members.', 'uploads/GYM.jpg', 'uploads/YEAH BUDDY!.jpg', '2025-02-24 10:21:38', 29, 'Guiwan', 'KG Fitness (Beside AMA College)', 'Conduct individual and group fitness classes, including strength training, cardio, and flexibility workouts.\r\nAssess clients\' fitness levels and create personalized training plans.\r\nMonitor clients\' progress, adjusting training programs as needed.\r\nEnsure the safety and proper use of gym equipment.\r\nProvide advice and support to gym members on proper workout techniques and nutrition.\r\nMaintain a clean and organized gym environment.\r\nStay up to date with industry trends and continuously improve your fitness knowledge.', 'Certification in personal training or group fitness (e.g., NASM, ACE, or equivalent).\r\nHigh school diploma or equivalent; a degree in kinesiology, exercise science, or a related field is preferred.\r\nProven experience as a gym instructor or personal trainer.\r\nExcellent communication and interpersonal skills.\r\nAbility to motivate and inspire clients to reach their fitness goals.\r\nBasic knowledge of nutrition and wellness principles.\r\nAbility to work flexible hours, including evenings and weekends.', ' Experience in teaching specialized fitness classes (e.g., yoga, Pilates, HIIT).\r\nCPR and First Aid certification.\r\nAdditional certifications in advanced training techniques or fitness programs.\r\nExperience working with diverse populations, including elderly or rehabilitation clients.', 'approved', 0, NULL),
 (63, 'BUDGET WISE HIRING!', '𝙋𝙧𝙚𝙨𝙚𝙣𝙩𝙞𝙣𝙜 𝙩𝙝𝙚 𝙀𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 & 𝙅𝙤𝙗 𝙊𝙥𝙥𝙤𝙧𝙩𝙪𝙣𝙞𝙩𝙞𝙚𝙨 𝙖𝙩 𝙩𝙝𝙚 88𝙩𝙝 𝘿𝙞𝙖 𝙙𝙚 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝙅𝙤𝙗 𝙁𝙖𝙞𝙧! \r\n\r\nPESO Zamboanga is excited to introduce the 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙚𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 participating in this year’s Dia de Zamboanga Job Fair on February 26, 2025, at KCC Mall de Zamboanga – East Wing! Get ready to explore 4,421 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 7,972 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙤𝙛 𝙟𝙤𝙗 𝙫𝙖𝙘𝙖𝙣𝙘𝙞𝙚𝙨 in various industries. \r\n', 'uploads/c1f76d16621454906a2b7834d24ecad4.jpg', 'uploads/480816748_618044877498140_6226821060831528521_n.jpg', '2025-02-25 05:05:16', 0, 'Culianan', NULL, 'Cashier:\r\n\r\n-Handle cash transactions with customers using cash registers.\r\n\r\n-Scan goods and ensure pricing is accurate.\r\n\r\n-Issue receipts, refunds, or change.\r\n\r\n-Count money in cash drawers at the beginning and end of shifts to ensure that amounts are correct.\r\n\r\nCustomer Service Representative:\r\n\r\n-Greet customers and provide assistance.\r\n\r\n-Handle customer complaints, provide appropriate solutions, and follow up to ensure resolution.\r\n\r\n-Maintain a positive and professional demeanor to enhance customer experience.\r\n\r\n-Assist with product inquiries and information.\r\n\r\nInventory Counter:\r\n\r\n-Monitor and maintain inventory levels.\r\n\r\n-Conduct regular inventory audits and stock checks.\r\n\r\n-Enter inventory data into the system.\r\n\r\n-Assist in restocking shelves and organizing the warehouse.\r\n\r\nMerchandiser:\r\n\r\n-Ensure merchandise is visually appealing and correctly displayed.\r\n\r\n-Arrange products and create attractive displays.\r\n\r\n-Monitor stock levels and coordinate with the inventory team.\r\n\r\nImplement promotional campaigns and signage.\r\n\r\nSales Associate:\r\n\r\n-Assist customers with product selection and inquiries.\r\n\r\nProcess sales transactions and handle customer payments.\r\n\r\nMaintain a clean and organized sales floor.\r\n\r\nAchieve sales targets and contribute to overall store profitability.', 'General Requirements:\r\n\r\n-High school diploma or equivalent.\r\n\r\n-Strong communication and interpersonal skills.\r\n\r\n-Customer-focused with a positive attitude.\r\n\r\n-Basic math skills for handling transactions.\r\n\r\n-Ability to work flexible hours, including weekends and holidays.\r\n\r\nSpecific Requirements:\r\n\r\nCashier: Previous cashier experience is a plus.\r\n\r\nCustomer Service Representative: Experience in customer service or retail preferred.\r\n\r\nInventory Counter: Attention to detail and accuracy in counting.\r\n\r\nMerchandiser: Creativity and a good eye for design.\r\n\r\nSales Associate: Sales experience is an advantage.', ' Previous experience in the retail industry.\r\n\r\nProficiency in using retail software and POS systems.\r\n\r\nAbility to work effectively in a team environment.\r\n\r\nStrong problem-solving skills.\r\n\r\nMultilingual skills are a plus.', 'approved', 0, NULL),
 (87, 'KCC Mall de ZAMBOANGA ', 'We are seeking a highly organized and proactive Administrative Assistant and Office Support professional to join our team. The ideal candidate will provide comprehensive administrative support to ensure the smooth operation of daily office activities. This role requires someone who can manage multiple responsibilities with efficiency, communicate effectively with internal and external stakeholders, and contribute to maintaining an organized and welcoming work environment.', 'uploads/KCC.png', 'uploads/adminsupp.jpg', '2025-03-02 15:05:30', 0, 'Canelar', 'Camins', 'Administrative Support:\r\nManage calendars, schedule appointments, and coordinate meetings for executives and staff.\r\nHandle incoming and outgoing correspondence, including emails, phone calls, and mail.\r\nPrepare and edit documents, reports, presentations, and spreadsheets as required.\r\nMaintain filing systems (both digital and physical) to ensure easy access to information.\r\nOffice Management:\r\nOversee general office operations, including ordering supplies, managing inventory, and ensuring equipment is functioning properly.\r\nGreet visitors professionally and direct them appropriately.\r\nCoordinate travel arrangements, including booking flights, accommodations, and transportation.\r\nCommunication:\r\nAct as the first point of contact for clients, vendors, and employees.\r\nDraft and distribute memos, letters, and other communications on behalf of management.\r\nRespond promptly to inquiries and resolve issues as they arise.\r\nProject Coordination:\r\nAssist with special projects by conducting research, gathering data, and preparing su', 'High school diploma or equivalent; associate degree in business administration or related field is a plus.\r\nMinimum of 1-2 years of experience in administrative roles or office support positions.\r\nProficiency in Microsoft Office Suite (Word, Excel, PowerPoint, Outlook).\r\nExcellent verbal and written communication skills.\r\nStrong organizational and time-management abilities.\r\nAbility to multitask and prioritize tasks in a fast-paced environment.\r\nAttention to detail and problem-solving skills.\r\nProfessional demeanor and ability to maintain confidentiality.', ' Bachelor’s degree in Business Administration, Communications, or a related field.\r\nPrior experience using CRM software or project management tools (e.g., Asana, Trello, Salesforce).\r\nFamiliarity with bookkeeping or accounting principles is a plus.\r\nExperience working in a corporate or professional services environment.\r\nSoft Skills:\r\nExceptional interpersonal skills and the ability to build strong relationships.\r\nAdaptability and willingness to take initiative.\r\nPositive attitude and a team-player mindset.\r\nTechnical Skills:\r\nAdvanced proficiency in Excel (pivot tables, formulas, etc.).\r\nKnowledge of video conferencing platforms like Zoom or Microsoft Teams.\r\nBasic understanding of IT troubleshooting for common office technology issues.', 'approved', 21, NULL),
-(96, 'Lorem', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', 'uploads/482882353_934151648888451_1569749446389878035_n.jpg', 'uploads/465288762_9217939608235897_512827677959919798_n.jpg', '2025-03-05 11:14:49', 0, 'Arena Blanco', 'Kazakh', 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"', 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.', '  Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.', 'rejected', 21, 'Please review your post, something is missing and just resubmit it.');
+(96, 'Lorem Ipsum', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', 'uploads/482882353_934151648888451_1569749446389878035_n.jpg', 'uploads/465288762_9217939608235897_512827677959919798_n.jpg', '2025-03-05 11:14:49', 0, 'Arena Blanco', NULL, 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"', 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.', '      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.', 'rejected', 21, 'Please review your post and resubmit.');
 
 -- --------------------------------------------------------
 
@@ -472,7 +446,7 @@ INSERT INTO `job_categories` (`id`, `job_id`, `category_id`) VALUES
 (29, 24, 9),
 (48, 59, 29),
 (65, 87, 2),
-(85, 96, 1);
+(89, 96, 1);
 
 -- --------------------------------------------------------
 
@@ -668,7 +642,7 @@ INSERT INTO `job_positions_jobs` (`id`, `job_id`, `position_id`) VALUES
 (59, 59, 77),
 (60, 59, 136),
 (77, 87, 28),
-(97, 96, 3);
+(101, 96, 3);
 
 -- --------------------------------------------------------
 
@@ -687,27 +661,6 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `user_role` enum('admin','user','employer') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`id`, `recipient_id`, `sender_id`, `job_id`, `application_id`, `message`, `is_read`, `created_at`, `user_role`) VALUES
-(274, 21, 57, 87, 509, 'A new application has been submitted for your job: 87', 1, '2025-03-05 11:17:32', 'employer'),
-(275, 4, 57, 87, 509, 'A new application has been submitted for the job: 87', 1, '2025-03-05 11:17:32', 'admin'),
-(276, 21, 61, 87, 510, 'A new application has been submitted for your job: 87', 1, '2025-03-05 11:17:47', 'employer'),
-(277, 4, 61, 87, 510, 'A new application has been submitted for the job: 87', 1, '2025-03-05 11:17:47', 'admin'),
-(278, 4, 61, 63, 511, 'A new application has been submitted for the job: 63', 1, '2025-03-05 11:17:57', 'admin'),
-(279, 61, 4, 63, NULL, 'Juan Pendeho has been accepted for the job: BUDGET WISE HIRING!.', 0, '2025-03-06 04:33:05', 'admin'),
-(280, 57, 4, 87, NULL, 'Borat Sagadiyev has been accepted for the job: KCC Mall de ZAMBOANGA .', 1, '2025-03-06 04:33:13', 'admin'),
-(281, 61, 4, 87, NULL, 'Juan Pendeho has been rejected for the job: KCC Mall de ZAMBOANGA .', 0, '2025-03-06 04:33:15', 'admin'),
-(282, 4, 57, 24, 512, 'A new application has been submitted for the job: 24', 0, '2025-03-06 04:50:22', 'admin'),
-(283, 4, 57, 23, 513, 'A new application has been submitted for the job: 23', 0, '2025-03-06 04:50:27', 'admin'),
-(284, 4, 57, 21, 514, 'A new application has been submitted for the job: 21', 1, '2025-03-06 04:50:32', 'admin'),
-(285, 4, 61, 24, 515, 'A new application has been submitted for the job: 24', 0, '2025-03-06 04:50:52', 'admin'),
-(286, 4, 61, 23, 516, 'A new application has been submitted for the job: 23', 1, '2025-03-06 14:58:06', 'admin'),
-(287, 57, 4, 23, NULL, 'Borat Sagadiyev has been accepted for the job: Animator for HIRE! ASAP!.', 1, '2025-03-06 14:58:46', 'admin'),
-(288, 57, 4, 21, NULL, 'Borat Sagadiyev has been rejected for the job: LOOKING FOR A GRAPHIC DESIGNER!.', 1, '2025-03-06 15:42:09', 'admin');
 
 -- --------------------------------------------------------
 
@@ -731,10 +684,7 @@ INSERT INTO `saved_jobs` (`id`, `user_id`, `job_id`, `saved_at`) VALUES
 (26, 21, 8, '2025-02-16 16:03:08'),
 (33, 21, 22, '2025-02-19 07:06:26'),
 (51, 4, 51, '2025-02-24 00:59:58'),
-(52, 4, 26, '2025-02-24 01:00:00'),
-(76, 21, 23, '2025-02-28 16:43:21'),
-(80, 21, 59, '2025-03-01 02:32:46'),
-(81, 21, 24, '2025-03-01 02:32:47');
+(52, 4, 26, '2025-02-24 01:00:00');
 
 -- --------------------------------------------------------
 
@@ -753,16 +703,16 @@ CREATE TABLE `users` (
   `middle_name` varchar(50) DEFAULT NULL,
   `last_name` varchar(50) NOT NULL,
   `ext_name` varchar(10) DEFAULT NULL,
-  `gender` enum('Male','Female','Non-Binary','LGBTQ+','Other') NOT NULL,
+  `gender` enum('Male','Female','Non-Binary','LGBTQ+','Other') DEFAULT NULL,
   `birth_date` date DEFAULT NULL,
-  `age` int(11) NOT NULL,
-  `phone_number` varchar(20) NOT NULL,
-  `place_of_birth` varchar(100) NOT NULL,
-  `civil_status` enum('Single','Married','Divorced','Widowed') NOT NULL,
-  `zip_code` varchar(10) NOT NULL,
-  `street_address` varchar(255) NOT NULL,
-  `barangay` varchar(100) NOT NULL,
-  `city` varchar(100) NOT NULL,
+  `age` int(11) DEFAULT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `place_of_birth` varchar(100) DEFAULT NULL,
+  `civil_status` enum('Single','Married','Divorced','Widowed') DEFAULT NULL,
+  `zip_code` varchar(10) DEFAULT NULL,
+  `street_address` varchar(255) DEFAULT NULL,
+  `barangay` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
   `education_level` varchar(50) DEFAULT NULL,
   `completion_year` int(11) DEFAULT NULL,
   `school_name` varchar(255) DEFAULT NULL,
@@ -774,18 +724,21 @@ CREATE TABLE `users` (
   `linkedin_profile` varchar(255) DEFAULT NULL,
   `portfolio_url` varchar(255) DEFAULT NULL,
   `resume_file` varchar(255) DEFAULT NULL,
-  `cover_photo` varchar(255) DEFAULT NULL
+  `cover_photo` varchar(255) DEFAULT NULL,
+  `verification_token` varchar(32) DEFAULT NULL,
+  `is_verified` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password`, `role`, `created_at`, `username`, `first_name`, `middle_name`, `last_name`, `ext_name`, `gender`, `birth_date`, `age`, `phone_number`, `place_of_birth`, `civil_status`, `zip_code`, `street_address`, `barangay`, `city`, `education_level`, `completion_year`, `school_name`, `inclusive_years`, `uploaded_file`, `caption`, `work_experience`, `skills`, `linkedin_profile`, `portfolio_url`, `resume_file`, `cover_photo`) VALUES
-(4, 'admin@gmail.com', '$2y$10$l/JQhgiGlsFUDRFopU3uzuLUITk/hPV2yQPdQQeI.9ABeBDx5eyKm', 'admin', '2025-02-09 04:34:27', 'admin', 'Super ', NULL, 'Admin', NULL, 'Other', '1956-02-17', 69, '09058316452', '', 'Single', '7000', 'Gov. Alvarez Street', 'Barangay Zone II', 'Zamboanga City', 'Doctorate', 2011, 'Harvard Bolibard', '2007-2011', '../uploads/anonymous-8291223_960_720.webp', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 'N/A', 'N/A', '', '', NULL, '../uploads/67bf50b1a7b98_anonymouse.png'),
-(21, 'venard@gmail.com', '$2y$10$GEa.OlRYZb.yPRdNTqWIbevFvFRQIzrwutXyacnTLTqUi83/dA9fS', 'employer', '2025-02-12 07:38:43', 'venard', 'Venard Jhon', 'Cabahug', 'Salido', '', 'Male', '1994-05-12', 30, '09351363586', 'ZC', 'Single', '7000', 'Little Baguio', 'Putik', 'Zamboanga City', 'College', 15, 'Western Mindanao State University', '2011-2025', '../uploads/465786029_9219920348037823_7671980852851727402_n.jpg', 'Just a little boy', '', '', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', NULL, '../uploads/67c4898c711f5_291246817_5741197772576782_5609956086463003802_n.jpg'),
-(57, 'borat@gmail.com', '$2y$10$1nigCVnAONIKFGykkU6QaevifI7WcSCnQnRBU/enyeuDrDE9zrKbW', 'user', '2025-02-19 13:40:41', 'borat', 'Borat', 'The Great', 'Sagadiyev', '', 'Male', '1995-02-19', 30, '09265605777', 'Zamboanga City', 'Single', '7000', 'Gov. Alvarez Street!', 'Zone II', 'Zamboanga City', NULL, NULL, NULL, NULL, '../uploads/borat.jpg', NULL, NULL, NULL, NULL, NULL, '../uploads/resumes/CV-Salido.docx', '../uploads/67beb04fe9401_borattt.jpg'),
-(61, 'juan@gmail.com', '$2y$10$KJzMMaHZCI0fkA7LdkfzVuJKkgCKPphStkQAUSyb6JA9HoAsTsoSa', 'user', '2025-03-03 10:56:31', 'Juan', 'Juan', 'Tamad', 'Pendeho', '', 'Male', '1995-03-03', 30, '09351363586', 'Zamboanga City', '', '7000', 'Gov. Alvarez Street!', '', 'Zamboanga City!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `users` (`id`, `email`, `password`, `role`, `created_at`, `username`, `first_name`, `middle_name`, `last_name`, `ext_name`, `gender`, `birth_date`, `age`, `phone_number`, `place_of_birth`, `civil_status`, `zip_code`, `street_address`, `barangay`, `city`, `education_level`, `completion_year`, `school_name`, `inclusive_years`, `uploaded_file`, `caption`, `work_experience`, `skills`, `linkedin_profile`, `portfolio_url`, `resume_file`, `cover_photo`, `verification_token`, `is_verified`) VALUES
+(4, 'admin@gmail.com', '$2y$10$l/JQhgiGlsFUDRFopU3uzuLUITk/hPV2yQPdQQeI.9ABeBDx5eyKm', 'admin', '2025-02-09 04:34:27', 'admin', 'Super ', NULL, 'Admin', NULL, 'Other', '1956-02-17', 69, '09058316452', '', 'Single', '7000', 'Gov. Alvarez Street', 'Barangay Zone II', 'Zamboanga City', 'Doctorate', 2011, 'Harvard Bolibard', '2007-2011', '../uploads/anonymous-8291223_960_720.webp', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 'N/A', 'N/A', '', '', NULL, '../uploads/67bf50b1a7b98_anonymouse.png', NULL, 1),
+(21, 'venard@gmail.com', '$2y$10$GEa.OlRYZb.yPRdNTqWIbevFvFRQIzrwutXyacnTLTqUi83/dA9fS', 'employer', '2025-02-12 07:38:43', 'venard', 'Venard Jhon', 'Cabahug', 'Salido', '', 'Male', '1994-05-12', 30, '09351363586', 'ZC', 'Single', '7000', 'Little Baguio', 'Putik', 'Zamboanga City', 'College', 15, 'Western Mindanao State University', '2011-2025', '../uploads/465786029_9219920348037823_7671980852851727402_n.jpg', 'Just a little boy', '', '', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', '../uploads/resumes/VENARD.pdf', '../uploads/67c4898c711f5_291246817_5741197772576782_5609956086463003802_n.jpg', NULL, 1),
+(57, 'borat@gmail.com', '$2y$10$1nigCVnAONIKFGykkU6QaevifI7WcSCnQnRBU/enyeuDrDE9zrKbW', 'user', '2025-02-19 13:40:41', 'borat', 'Borat', 'The Great', 'Sagadiyev', '', 'Male', '1995-02-19', 30, '09265605777', 'Zamboanga City', 'Single', '7000', 'Gov. Alvarez Street!', '', 'Zamboanga City', 'High School', 2011, 'Harvard Bolibard', '2007-2011', '../uploads/borat.jpg', 'I like you! I like segss!', '', '', '', '', NULL, '../uploads/67beb04fe9401_borattt.jpg', NULL, 1),
+(61, 'juan@gmail.com', '$2y$10$KJzMMaHZCI0fkA7LdkfzVuJKkgCKPphStkQAUSyb6JA9HoAsTsoSa', 'user', '2025-03-03 10:56:31', 'Juan', 'Juan', 'Tamad', 'Pendeho', '', 'Male', '1995-03-03', 30, '09351363586', 'Zamboanga City', '', '7000', 'Gov. Alvarez Street!', '', 'Zamboanga City!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0),
+(67, 'sl201101795@wmsu.edu.ph', '$2y$10$xCM5uw39UdJOzH9bE2TBF.rceNM6FbEvdtWXbTaz0hoEf0eVzn88y', 'user', '2025-03-09 14:34:31', 'vengwapo', 'Venard', NULL, 'Salido', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1);
 
 --
 -- Indexes for dumped tables
@@ -942,13 +895,13 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=517;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=525;
 
 --
 -- AUTO_INCREMENT for table `application_positions`
 --
 ALTER TABLE `application_positions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=231;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=239;
 
 --
 -- AUTO_INCREMENT for table `barangay`
@@ -972,7 +925,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `contacts`
 --
 ALTER TABLE `contacts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `employers`
@@ -996,7 +949,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `job_categories`
 --
 ALTER TABLE `job_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `job_positions`
@@ -1008,25 +961,25 @@ ALTER TABLE `job_positions`
 -- AUTO_INCREMENT for table `job_positions_jobs`
 --
 ALTER TABLE `job_positions_jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=289;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=303;
 
 --
 -- AUTO_INCREMENT for table `saved_jobs`
 --
 ALTER TABLE `saved_jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- Constraints for dumped tables

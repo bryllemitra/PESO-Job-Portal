@@ -2,8 +2,8 @@
 include '../includes/header.php'; // This already includes session_start()
 include '../includes/config.php'; // Include DB connection
 
-// Restrict access to admins and employers only
-if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'employer')) {
+// Restrict access: Show modal and redirect if not logged in
+if (!isset($_SESSION['user_id'])) {
     echo "
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>
     <div class='modal fade show' id='errorModal' tabindex='-1' aria-labelledby='errorModalLabel' aria-hidden='false' style='display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;'>
@@ -11,24 +11,18 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['ro
             <div class='modal-content'>
                 <div class='modal-header'>
                     <h5 class='modal-title' id='errorModalLabel'>Access Denied</h5>
-                    <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
                 </div>
                 <div class='modal-body'>
                     You do not have permission to access this page.
                 </div>
                 <div class='modal-footer'>
-                    <button type='button' class='btn btn-primary' id='redirectBtn'>OK</button>
+                    <button type='button' class='btn btn-primary' onclick=\"window.location.href='/JOB/pages/index.php'\">OK</button>
                 </div>
             </div>
         </div>
     </div>
     <div class='modal-backdrop fade show' style='position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998;'></div>
     <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js'></script>
-    <script type='text/javascript'>
-        document.getElementById('redirectBtn').addEventListener('click', function() {
-            window.location.href = '../index.php'; // Redirect to the home page when the button is clicked
-        });
-    </script>
     ";
     exit();
 }
@@ -36,71 +30,59 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['ro
 // Now safe to use $_SESSION['user_id']
 $user_role = $_SESSION['role'] ?? 'guest'; 
 
-// Check if the admin is trying to access employer profile directly
+// Logic for Admin role: Redirect if no 'id' is provided
 if ($user_role === 'admin') {
-    // Admin should be redirected to their own profile if accessing employers/profile.php directly
     if (!isset($_GET['id'])) {
+        // Redirect admin to their own profile page
         echo "<script>window.location.href = '/JOB/admin/profile.php';</script>";
         exit();
-    }
-
-    // Admin can view any profile (employer or user)
-    $user_id = isset($_GET['id']) ? (int)$_GET['id'] : $_SESSION['user_id'];
-} elseif ($user_role === 'employer') {
-    // Employers should be able to view only their own profile or applicants
-    if (!isset($_GET['id'])) {
-        // If it's the employer's own profile, set $user_id to the logged-in user's ID
-        $user_id = $_SESSION['user_id'];  // Employer's own profile
     } else {
-        // Employers can view profiles of applicants who have applied to their jobs
-        $viewed_user_id = (int)$_GET['id'];
-        $query_check_applicant = "
-            SELECT COUNT(*) AS applicant_count
-            FROM applications
-            WHERE job_id IN (SELECT id FROM jobs WHERE employer_id = ?) AND user_id = ?
-        ";
-        $stmt_check = $conn->prepare($query_check_applicant);
-        $stmt_check->bind_param("ii", $_SESSION['user_id'], $viewed_user_id);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        $check_data = $result_check->fetch_assoc();
+        // If 'id' is provided, show the admin the profile of the specified user
+        $user_id = (int)$_GET['id'];
+    }
+} 
 
-        if ($check_data['applicant_count'] === 0) {
-            // If the employer hasn't posted a job that the applicant has applied to, redirect or show error
-            echo "<script>window.location.href = '/JOB/index.php';</script>";
+// Logic for Employer role: Show their own profile if no 'id' is provided
+elseif ($user_role === 'employer') {
+    if (!isset($_GET['id'])) {
+        // Employer is allowed to see their own profile without an 'id'
+        $user_id = $_SESSION['user_id']; 
+    } else {
+        // Employer cannot view other employers' profiles
+        $requested_id = (int)$_GET['id'];
+        if ($requested_id !== $_SESSION['user_id']) {
+            echo "<script>alert('Access Denied: You can only view your own profile.'); window.location.href = '/JOB/employers/profile.php';</script>";
             exit();
         } else {
-            // Allow the employer to view the applicant's profile
-            $user_id = $viewed_user_id;
+            $user_id = $_SESSION['user_id']; // View their own profile if 'id' matches
         }
-    }
-} else {
-    // Default for user (applicant): They can only view their own profile
-    $user_id = $_SESSION['user_id'];
-
-    // Redirect to the user's own profile if 'id' is not their own ID
-    if (isset($_GET['id']) && $_GET['id'] != $user_id) {
-        echo "<script>window.location.href = '/JOB/pages/profile.php';</script>"; // Or any error page you prefer
-        exit();
     }
 }
 
-// Validate $user_id
+// Logic for User role: Redirect them to their own profile
+elseif ($user_role === 'user') {
+    echo "<script>window.location.href = '/JOB/pages/profile.php';</script>";
+    exit();
+} 
+
+// Validate $user_id (make sure it's numeric)
 if (!$user_id || !is_numeric($user_id)) {
     die("Invalid user ID.");
 }
 
-// Fetch user data
+// Fetch user data from the database
 $query = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Check if the user was found
 if ($result->num_rows === 0) {
     die("User not found.");
 }
 
+// Fetch user details
 $user = $result->fetch_assoc();
 
 
@@ -323,7 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
         $target_file = $target_dir . basename($_FILES["resume"]["name"]);
         $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
         // Allowed file types
-        $allowed_types = ['pdf', 'doc', 'docx'];
+        $allowed_types = ['pdf'];
         // Check if the file type is allowed
         if (!in_array($fileType, $allowed_types)) {
             echo "<div class='alert alert-danger'>Only PDF, DOC, and DOCX files are allowed.</div>";
@@ -847,8 +829,9 @@ $result_jobs = $stmt->get_result();
     
     <?php if ($isOwnProfile): ?>
         <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mt-3">
-            <label for="resume" class="form-label fw-bold">Upload/Replace Resume</label>
-            <input type="file" name="resume" id="resume" class="form-control rounded-pill my-3" accept=".pdf,.doc,.docx">
+            <label for="resume" class="form-label fw-bold">Upload/Replace Document</label>
+            <input type="file" name="resume" id="resume" class="form-control rounded-pill my-3" accept=".pdf">
+            <small class="form-text text-muted">Only PDF files are allowed. Convert your document into PDF.</small><br><br> <!-- Added note here -->
 
             <!-- Upload/Replace Resume Button -->
             <button type="submit" class="btn btn-upload-resume me-2">
