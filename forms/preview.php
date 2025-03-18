@@ -38,10 +38,7 @@ function validateEmail($email) {
 
 // Retrieve query parameters
 $data = [
-    'surname' => trim($_GET['surname'] ?? ''),
-    'first_name' => trim($_GET['first_name'] ?? ''),
-    'middle_name' => trim($_GET['middle_name'] ?? ''),
-    'suffix' => trim($_GET['suffix'] ?? ''),
+    'name' => trim($_GET['name'] ?? ''),
     'email' => trim($_GET['email'] ?? ''),
     'phone' => trim($_GET['phone'] ?? ''),
     'address' => trim($_GET['address'] ?? ''),
@@ -56,11 +53,7 @@ $data = [
     'religion' => trim($_GET['religion'] ?? ''),
     'languages' => trim($_GET['languages'] ?? ''),
     'profile' => trim($_GET['profile'] ?? ''),
-    'tin' => trim($_GET['tin'] ?? ''),
-    'disability' => trim($_GET['disability'] ?? ''),
-    'house_number' => trim($_GET['house_number'] ?? ''),
     // New fields
-    'disability' => trim($_GET['disability'] ?? ''),
     'employment_status' => trim($_GET['employment_status'] ?? ''),
     'employed_type' => trim($_GET['employed_type'] ?? ''),
     'unemployed_reason' => trim($_GET['unemployed_reason'] ?? ''),
@@ -102,12 +95,7 @@ $_SESSION['resume_data'] = $data;
     <div class="resume-container">
         <!-- Header Section -->
         <div class="header">
-            <div class="name-container">
-                <h1><?php echo htmlspecialchars($data['surname']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['first_name']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['middle_name']); ?></h1>
-                <h1><?php echo htmlspecialchars($data['suffix']); ?></h1>
-            </div>
+            <h1><?php echo htmlspecialchars($data['name']); ?></h1>
             <p><?php echo nl2br(htmlspecialchars($data['profile'])); ?></p>
         </div>
 
@@ -136,221 +124,89 @@ $_SESSION['resume_data'] = $data;
         <!-- Profile Section -->
         <div class="section">
             <div class="section-title">Profile</div>
-            <table>
-                <tr>
-                    <th>Age</th>
-                    <td><?php echo htmlspecialchars($data['age']); ?></td>
-                </tr>
-                <tr>
-                    <th>Date of Birth</th>
-                    <td><?php echo htmlspecialchars($data['dob']); ?></td>
-                </tr>
-                <tr>
-                    <th>Place of Birth</th>
-                    <td><?php echo htmlspecialchars($data['pob']); ?></td>
-                </tr>
-                <tr>
-                    <th>Gender</th>
-                    <td><?php echo htmlspecialchars($data['gender']); ?></td>
-                </tr>
-                <tr>
-                    <th>Marital Status</th>
-                    <td><?php echo htmlspecialchars($data['marital_status']); ?></td>
-                </tr>
-                <tr>
-                    <th>Weight</th>
-                    <td><?php echo htmlspecialchars($data['weight']); ?> kg</td>
-                </tr>
-                <tr>
-                    <th>Height</th>
-                    <td><?php echo htmlspecialchars($data['height']); ?> cm</td>
-                </tr>
-                <tr>
-                    <th>Nationality</th>
-                    <td><?php echo htmlspecialchars($data['nationality']); ?></td>
-                </tr>
-                <tr>
-                    <th>Religion</th>
-                    <td><?php echo htmlspecialchars($data['religion']); ?></td>
-                </tr>
-                <tr>
-                    <th>Languages</th>
-                    <td><?php echo htmlspecialchars($data['languages']); ?></td>
-                </tr>
-                <tr>
-                    <th>Tin</th>
-                    <td><?php echo htmlspecialchars($data['tin']); ?></td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Disability Section -->
-        <div class="section">
-            <div class="section-title">Disability</div>
-            <table>
-                <tr>
-                    <th>Disability</th>
-                    <td><?php echo htmlspecialchars($data['disability']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Age:</strong> <?php echo htmlspecialchars($data['age']); ?></p>
+            <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars($data['dob']); ?></p>
+            <p><strong>Place of Birth:</strong> <?php echo htmlspecialchars($data['pob']); ?></p>
+            <p><strong>Gender:</strong> <?php echo htmlspecialchars($data['gender']); ?></p>
+            <p><strong>Marital Status:</strong> <?php echo htmlspecialchars($data['marital_status']); ?></p>
+            <p><strong>Weight:</strong> <?php echo htmlspecialchars($data['weight']); ?> kg</p>
+            <p><strong>Height:</strong> <?php echo htmlspecialchars($data['height']); ?> cm</p>
+            <p><strong>Nationality:</strong> <?php echo htmlspecialchars($data['nationality']); ?></p>
+            <p><strong>Religion:</strong> <?php echo htmlspecialchars($data['religion']); ?></p>
+            <p><strong>Languages:</strong> <?php echo htmlspecialchars($data['languages']); ?></p>
         </div>
 
         <!-- Employment Status -->
         <div class="section">
             <div class="section-title">Employment Status</div>
-            <table>
-                <tr>
-                    <th>Status</th>
-                    <td><?php echo htmlspecialchars($data['employment_status']); ?></td>
-                </tr>
-                <?php if ($data['employment_status'] === 'Employed'): ?>
-                <tr>
-                    <th>Type</th>
-                    <td><?php echo htmlspecialchars($data['employed_type']); ?></td>
-                </tr>
-                <?php elseif ($data['employment_status'] === 'Unemployed'): ?>
-                <tr>
-                    <th>Reason</th>
-                    <td><?php echo htmlspecialchars($data['unemployed_reason']); ?></td>
-                </tr>
-                <?php endif; ?>
-                <tr>
-                    <th>OFW Status</th>
-                    <td><?php echo htmlspecialchars($data['ofw_status']); ?></td>
-                </tr>
-                <tr>
-                    <th>Former OFW Status</th>
-                    <td><?php echo htmlspecialchars($data['former_ofw_status']); ?></td>
-                </tr>
-                <tr>
-                    <th>4Ps Beneficiary</th>
-                    <td><?php echo htmlspecialchars($data['4ps_beneficiary']); ?></td>
-                </tr>
-                <tr>
-                    <th>Household ID No.</th>
-                    <td><?php echo htmlspecialchars($data['house_number']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Status:</strong> <?php echo htmlspecialchars($data['employment_status']); ?></p>
+            <?php if ($data['employment_status'] === 'Employed'): ?>
+                <p><strong>Type:</strong> <?php echo htmlspecialchars($data['employed_type']); ?></p>
+            <?php elseif ($data['employment_status'] === 'Unemployed'): ?>
+                <p><strong>Reason:</strong> <?php echo htmlspecialchars($data['unemployed_reason']); ?></p>
+            <?php endif; ?>
+            <p><strong>OFW Status:</strong> <?php echo htmlspecialchars($data['ofw_status']); ?></p>
+            <p><strong>Former OFW Status:</strong> <?php echo htmlspecialchars($data['former_ofw_status']); ?></p>
+            <p><strong>4Ps Beneficiary:</strong> <?php echo htmlspecialchars($data['4ps_beneficiary']); ?></p>
         </div>
 
         <!-- Job Preference -->
         <div class="section">
             <div class="section-title">Job Preference</div>
-            <table>
-                <tr>
-                    <th>Preferred Occupation</th>
-                    <td><?php echo htmlspecialchars($data['preferred_occupation']); ?></td>
-                </tr>
-                <tr>
-                    <th>Preferred Work Location (Local)</th>
-                    <td><?php echo htmlspecialchars($data['preferred_work_location_local']); ?></td>
-                </tr>
-                <tr>
-                    <th>Preferred Work Location (Overseas)</th>
-                    <td><?php echo htmlspecialchars($data['preferred_work_location_overseas']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Preferred Occupation:</strong> <?php echo htmlspecialchars($data['preferred_occupation']); ?></p>
+            <p><strong>Preferred Work Location (Local):</strong> <?php echo htmlspecialchars($data['preferred_work_location_local']); ?></p>
+            <p><strong>Preferred Work Location (Overseas):</strong> <?php echo htmlspecialchars($data['preferred_work_location_overseas']); ?></p>
         </div>
 
         <!-- Language / Dialect Proficiency -->
         <div class="section">
             <div class="section-title">Language / Dialect Proficiency</div>
-            <table>
-                <tr>
-                    <th>Languages/Dialects</th>
-                    <td><?php echo htmlspecialchars($data['languages_proficiency']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Languages/Dialects:</strong> <?php echo htmlspecialchars($data['languages_proficiency']); ?></p>
         </div>
 
         <!-- Educational Background -->
         <div class="section">
             <div class="section-title">Educational Background</div>
-            <table>
-                <tr>
-                    <th>Currently in School</th>
-                    <td><?php echo htmlspecialchars($data['currently_in_school']); ?></td>
-                </tr>
-                <tr>
-                    <th>Educational Level</th>
-                    <td><?php echo htmlspecialchars($data['educational_level']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Currently in School:</strong> <?php echo htmlspecialchars($data['currently_in_school']); ?></p>
+            <p><strong>Educational Level:</strong> <?php echo htmlspecialchars($data['educational_level']); ?></p>
         </div>
 
         <!-- Technical/Vocational and Other Training -->
         <div class="section">
             <div class="section-title">Technical/Vocational and Other Training</div>
-            <table>
-                <tr>
-                    <th>Courses</th>
-                    <td><?php echo htmlspecialchars($data['training_courses']); ?></td>
-                </tr>
-                <tr>
-                    <th>Institution</th>
-                    <td><?php echo htmlspecialchars($data['institution']); ?></td>
-                </tr>
-                <tr>
-                    <th>Skills Acquired</th>
-                    <td><?php echo htmlspecialchars($data['skills_acquired']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Courses:</strong> <?php echo htmlspecialchars($data['training_courses']); ?></p>
+            <p><strong>Institution:</strong> <?php echo htmlspecialchars($data['institution']); ?></p>
+            <p><strong>Skills Acquired:</strong> <?php echo htmlspecialchars($data['skills_acquired']); ?></p>
         </div>
 
         <!-- Eligibility / Professional License -->
         <div class="section">
             <div class="section-title">Eligibility / Professional License</div>
-            <table>
-                <tr>
-                    <th>Type of License</th>
-                    <td><?php echo htmlspecialchars($data['license_type']); ?></td>
-                </tr>
-                <tr>
-                    <th>License Number</th>
-                    <td><?php echo htmlspecialchars($data['license_number']); ?></td>
-                </tr>
-                <tr>
-                    <th>Issuing Agency</th>
-                    <td><?php echo htmlspecialchars($data['issuing_agency']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Type of License:</strong> <?php echo htmlspecialchars($data['license_type']); ?></p>
+            <p><strong>License Number:</strong> <?php echo htmlspecialchars($data['license_number']); ?></p>
+            <p><strong>Issuing Agency:</strong> <?php echo htmlspecialchars($data['issuing_agency']); ?></p>
         </div>
 
         <!-- Work Experience -->
         <div class="section">
             <div class="section-title">Work Experience</div>
-            <table>
-                <tr>
-                    <th>Most Recent Employment</th>
-                    <td><?php echo htmlspecialchars($data['most_recent_employment']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Most Recent Employment:</strong> <?php echo htmlspecialchars($data['most_recent_employment']); ?></p>
         </div>
 
         <!-- Other Skills Acquired Without Certificate -->
         <div class="section">
             <div class="section-title">Other Skills Acquired Without Certificate</div>
-            <table>
-                <tr>
-                    <th>Skills</th>
-                    <td><?php echo htmlspecialchars($data['other_skills']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Skills:</strong> <?php echo htmlspecialchars($data['other_skills']); ?></p>
         </div>
 
         <!-- Certification/Authorization -->
         <div class="section">
             <div class="section-title">Certification/Authorization</div>
-            <table>
-                <tr>
-                    <th>Signature</th>
-                    <td><?php echo htmlspecialchars($data['signature']); ?></td>
-                </tr>
-            </table>
+            <p><strong>Signature:</strong> <?php echo htmlspecialchars($data['signature']); ?></p>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
             <button class="back-button" onclick="window.location.href='forms.php'">Back to Form</button>
             <button class="download-button" onclick="window.location.href='generate.php'">Download Resume</button>
         </div>

@@ -3,11 +3,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f9fafb;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.6;  
             margin-top:20px;
-
-            
         }
+
+        main{
+            padding-left:270px;
+            padding-right:20px;
+        }
+
 
         /* Sidebar */
         .sidebar {
@@ -17,7 +21,7 @@
             width: 250px;
             height: 100vh;
             background: #ffffff;
-            padding: 20px;
+            padding-top:80px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -151,6 +155,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #000000be;
+    font-size: 0.9rem;
 
 }
 
@@ -163,6 +168,9 @@
     }
     .job-header div {
         font-size: 0.9rem; /* Reduce font size for better readability */
+    }
+    main {
+        padding-left:0; /* Reduce font size for better readability */
     }
 
 }
@@ -249,17 +257,90 @@
             .sidebar {
                 transform: translateX(-100%);
             }
-            .main-content {
-                margin-left: 0;
-            }
-            .job-header, .job-item {
-                grid-template-columns: 1fr;
-                grid-gap: 30px;
-            }
-            .job-header div, .job-item div {
-                font-size: 0.8rem;
-            }
-        }
+    /* Hide Description and Date columns */
+    .job-header div:nth-child(2), /* Hide Description column */
+    .job-header div:nth-child(4) { /* Hide Date column */
+        display: none;
+    }
+
+    .job-item .description, /* Hide Description in job items */
+    .job-item .date { /* Hide Date in job items */
+        display: none;
+    }
+
+    /* Flex layout for header */
+    .job-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px; /* Add gap between header columns */
+        padding: 10px 0;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    /* Flex layout for job items */
+    .job-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        gap: 15px; /* Add gap between columns */
+    }
+
+    /* Ensure columns (Job Title, Applicants, Actions) are evenly spaced */
+    .job-item .title,
+    .job-item .applicants,
+    .job-item .actions {
+        flex: 1; /* Distribute space evenly */
+        text-align: left;
+    }
+
+    /* Action buttons should have enough space */
+    .job-item .actions {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px; /* Add space between action buttons */
+    }
+
+    /* Ensure the title and applicants columns have more space */
+    .job-item .title,
+    .job-item .applicants {
+        flex: 2; /* Allow Job Title and Applicants to take more space */
+    }
+
+    /* Job header styling for better alignment */
+    .job-header div {
+        flex: 2; /* Set all visible headers to take equal space */
+        text-align: left; /* Align text to the left */
+    }
+
+    /* Adjust the font size for mobile */
+    .job-header div, .job-item div {
+        font-size: 0.9rem; /* Reduce font size slightly for better mobile fit */
+    }
+}
+
+        /* Increase height for search input, select dropdowns, and button */
+ .form-control,
+.form-select
+ {
+    height: 45px; /* Adjust height as needed */
+    padding: 10px 15px; /* Adjust padding to ensure the content fits */
+    font-size: 1rem; /* Increase font size if needed */
+}
+
+/* Additional styling to ensure the height remains consistent */
+
+
+/* Adjust for smaller screens to maintain the increased height */
+@media (max-width: 768px) {
+    form .form-control,
+    form .form-select,
+    form .btn {
+        height: 50px; /* Ensure the elements stay tall on smaller screens */
+        padding: 12px 15px; /* Ensure proper padding on mobile devices */
+    }
+}
+
 
  
 /* Custom button styling */
@@ -348,4 +429,13 @@
     z-index: 1000; /* Ensure it appears above other elements */
 }
 
+h3{
+    font-size: 2rem;
+    color: #363636; 
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top:20px;
+}
        
+

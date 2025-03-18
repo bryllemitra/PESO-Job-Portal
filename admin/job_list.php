@@ -110,35 +110,38 @@ $total_pages = ceil($total_jobs / $limit);
 </div>
 
             <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <h2 class="mt-4">Posted Jobs</h2>
+            <main>
+                <h3>Posted Jobs</h3>
 
                 <!-- Search, Category Filter, and Sort Form -->
-                <form class="d-flex mb-3" method="get" action="job_list.php">
-                    <input type="text" name="search" class="form-control me-2 rounded-pill" placeholder="Search by job title" value="<?= htmlspecialchars($search) ?>">
-                    
-                    <!-- Category Filter -->
-                    <select name="category_filter" class="form-select mx-2 rounded-pill">
-                        <option value="">All Categories</option>
-                        <?php while ($category = $categories_result->fetch_assoc()): ?>
-                            <option value="<?= $category['id'] ?>" <?= $category['id'] == $category_filter ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($category['name']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                    
-                    <!-- Combined Sorting Dropdown -->
-                    <select name="sort" class="form-select mx-2 rounded-pill">
-                        <option value="created_at_desc" <?= $sort === 'created_at_desc' ? 'selected' : '' ?>>Sort by Date (Newest First)</option>
-                        <option value="created_at_asc" <?= $sort === 'created_at_asc' ? 'selected' : '' ?>>Sort by Date (Oldest First)</option>
-                        <option value="title_asc" <?= $sort === 'title_asc' ? 'selected' : '' ?>>Sort by Title (A-Z)</option>
-                        <option value="title_desc" <?= $sort === 'title_desc' ? 'selected' : '' ?>>Sort by Title (Z-A)</option>
-                        <option value="total_applicants_asc" <?= $sort === 'total_applicants_asc' ? 'selected' : '' ?>>Sort by Applicants (Lowest First)</option>
-                        <option value="total_applicants_desc" <?= $sort === 'total_applicants_desc' ? 'selected' : '' ?>>Sort by Applicants (Highest First)</option>
-                    </select>
-                    
-                    <button type="submit" class="btn btn-primary rounded-pill">Search</button>
-                </form>
+<form class="d-flex mb-3 flex-column flex-sm-row" method="get" action="job_list.php">
+    <!-- Search Box -->
+    <input type="text" name="search" class="form-control rounded-pill mb-3 mb-sm-0" placeholder="Search by job title" value="<?= htmlspecialchars($search) ?>">
+
+    <!-- Category Filter -->
+    <select name="category_filter" class="form-select rounded-pill mb-3 mb-sm-0">
+        <option value="">All Categories</option>
+        <?php while ($category = $categories_result->fetch_assoc()): ?>
+            <option value="<?= $category['id'] ?>" <?= $category['id'] == $category_filter ? 'selected' : '' ?>>
+                <?= htmlspecialchars($category['name']) ?>
+            </option>
+        <?php endwhile; ?>
+    </select>
+
+    <!-- Combined Sorting Dropdown -->
+    <select name="sort" class="form-select rounded-pill mb-3 mb-sm-0">
+        <option value="created_at_desc" <?= $sort === 'created_at_desc' ? 'selected' : '' ?>>Sort by Date (Newest First)</option>
+        <option value="created_at_asc" <?= $sort === 'created_at_asc' ? 'selected' : '' ?>>Sort by Date (Oldest First)</option>
+        <option value="title_asc" <?= $sort === 'title_asc' ? 'selected' : '' ?>>Sort by Title (A-Z)</option>
+        <option value="title_desc" <?= $sort === 'title_desc' ? 'selected' : '' ?>>Sort by Title (Z-A)</option>
+        <option value="total_applicants_asc" <?= $sort === 'total_applicants_asc' ? 'selected' : '' ?>>Sort by Applicants (Lowest First)</option>
+        <option value="total_applicants_desc" <?= $sort === 'total_applicants_desc' ? 'selected' : '' ?>>Sort by Applicants (Highest First)</option>
+    </select>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary rounded-pill">Search</button>
+</form>
+
 
    <!-- Job List -->
    <div class="job-list">

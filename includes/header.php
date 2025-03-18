@@ -250,63 +250,77 @@ $(document).ready(function() {
         fetchNotifications(currentPage);
     });
 
-    // Function to fetch notifications with pagination
-    function fetchNotifications(page) {
-        $.ajax({
-            url: '../includes/fetch_notifications.php',
-            method: 'GET',
-            data: { page: page, limit: notificationsPerPage },
-            success: function(data) {
-                try {
-                    let notifications = JSON.parse(data);
+   // Function to fetch notifications with pagination
+function fetchNotifications(page) {
+    $.ajax({
+        url: '../includes/fetch_notifications.php',
+        method: 'GET',
+        data: { page: page, limit: notificationsPerPage },
+        success: function(data) {
+            try {
+                let notifications = JSON.parse(data);
 
-                    // Handle potential errors from the backend
-                    if (notifications.error) {
-                        console.error("Error fetching notifications:", notifications.error);
-                        $('#notification-items').html('<div class="dropdown-item text-center py-3">Failed to load notifications.</div>');
-                        return;
-                    }
-
-                    // Clear current notifications and pagination
-                    $('#notification-items').empty();
-                    $('#pagination-custom').empty();
-
-                    // Display notifications or a "no notifications" message
-                    if (notifications.notifications.length === 0) {
-                        $('#notification-items').append('<div class="dropdown-item text-center py-3">No new notifications</div>');
-                    } else {
-notifications.notifications.forEach(function(notif) {
-    // Construct the URL based on the user's role
-                            const role = "<?php echo $_SESSION['role']; ?>"; // Pass the user's role from PHP
-                            const jobUrl = role === 'admin'
-                                ? `../admin/view_applicants.php?job_id=${notif.job_id || ''}`
-                                : (role === 'employer'
-                                    ? `../pages/job.php?id=${notif.job_id || ''}` // Employer job URL
-                                    : `../pages/job.php?id=${notif.job_id || ''}`); // User job URL (if needed)
-
-    let notificationItem = `
-        <div style="text-decoration:none;" class="dropdown-item ${notif.is_read == 0 ? 'unread' : 'read'}" data-id="${notif.id}">
-            <div>
-                ${
-                    role === 'admin'
-                        ? `<a href="${jobUrl}" style="text-decoration:none;" class="notification-link" data-id="${notif.id}">
-                            ${notif.message || 'Notification details unavailable'} <br>
-                            <small>${notif.created_at || 'Unknown time'}</small>
-                        </a>`
-                        : `<a href="${jobUrl}" style="text-decoration:none;" class="notification-link" data-id="${notif.id}">
-                            ${notif.message || 'Notification details unavailable'} <br>
-                            <small>${notif.created_at || 'Unknown time'}</small>
-                        </a>`
+                // Handle potential errors from the backend
+                if (notifications.error) {
+                    console.error("Error fetching notifications:", notifications.error);
+                    $('#notification-items').html('<div class="dropdown-item text-center py-3">Failed to load notifications.</div>');
+                    return;
                 }
-            </div>
-            <div class="notification-actions">
-                <i class="fas fa-check notification-action-icon mark-read" data-id="${notif.id}" title="Mark as Read"></i>
-                <i class="fas fa-xmark notification-action-icon delete" data-id="${notif.id}" title="Delete"></i>
-            </div>
-        </div>
-    `;
-    $('#notification-items').append(notificationItem);
-});
+
+                // Clear current notifications and pagination
+                $('#notification-items').empty();
+                $('#pagination-custom').empty();
+
+                // Display notifications or a "no notifications" message
+                if (notifications.notifications.length === 0) {
+                    $('#notification-items').append('<div class="dropdown-item text-center py-3">No new notifications</div>');
+                } else {
+                    notifications.notifications.forEach(function(notif) {
+                        // Determine the redirect URL based on the user's role and job status
+                        let redirectUrl = '';
+                        const role = "<?php echo $_SESSION['role']; ?>"; // Pass the user's role from PHP
+
+                        if (role === 'admin') {
+                            // Admin: Redirect to job approval page for job approval requests
+                            if (notif.message && notif.message.includes('requested approval')) {
+                                redirectUrl = `../admin/job_approval.php?job_id=${notif.job_id || ''}`;
+                            } else {
+                                // Default redirect for other admin notifications
+                                redirectUrl = `../admin/view_applicants.php?job_id=${notif.job_id || ''}`;
+                            }
+                        } else if (role === 'employer') {
+                            // Employer: Redirect based on job approval status
+                            if (notif.message && notif.message.includes('has been approved')) {
+                                redirectUrl = `../pages/job.php?id=${notif.job_id || ''}`;
+                            } else if (notif.message && notif.message.includes('has been rejected')) {
+                                redirectUrl = `../pages/job.php?id=${notif.job_id || ''}`;
+                            } else {
+                                // Default redirect for other employer notifications
+                                redirectUrl = `../admin/view_applicants.php?job_id=${notif.job_id || ''}`;
+                            }
+                        } else {
+                            // Default redirect for users (non-admin, non-employer)
+                            redirectUrl = `../pages/job.php?id=${notif.job_id || ''}`;
+                        }
+
+                        // Construct the notification item
+                        let notificationItem = `
+                            <div style="text-decoration:none;" class="dropdown-item ${notif.is_read == 0 ? 'unread' : 'read'}" data-id="${notif.id}">
+                                <div>
+                                    <a href="${redirectUrl}" style="text-decoration:none;" class="notification-link" data-id="${notif.id}">
+                                        ${notif.message || 'Notification details unavailable'} <br>
+                                        <small>${notif.created_at || 'Unknown time'}</small>
+                                    </a>
+                                </div>
+                                <div class="notification-actions">
+                                    <i class="fas fa-check notification-action-icon mark-read" data-id="${notif.id}" title="Mark as Read"></i>
+                                    <i class="fas fa-xmark notification-action-icon delete" data-id="${notif.id}" title="Delete"></i>
+                                </div>
+                            </div>
+                        `;
+                        $('#notification-items').append(notificationItem);
+                    });
+                
 
                         // Pagination logic
                         const totalPages = notifications.totalPages;

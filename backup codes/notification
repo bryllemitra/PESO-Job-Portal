@@ -354,7 +354,13 @@ if ($_SESSION['role'] == 'employer') {
                 >
                     <i class="fas fa-trash-alt text-danger me-2"></i> Delete
                 </button>
-
+                <a 
+                    class="dropdown-item d-flex align-items-center" 
+                    href="job.php?id=<?php echo $notif['job_id']; ?>" 
+                    style="padding: 0.75rem 1rem;"
+                >
+                    <i class="fas fa-briefcase me-2"></i> View Job
+                </a>
             <?php endif; ?>
 
             <?php if ($_SESSION['role'] == 'user'): ?>

@@ -32,7 +32,7 @@ $total_users = $user_data['total_users'];
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="/JOB/assets/dashboard.css">
+    <link rel="stylesheet" href="/JOB/assets/admin.css">
 </head>
 <body>
 
@@ -56,7 +56,7 @@ $total_users = $user_data['total_users'];
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
     <div class="header">
-        <h1>Admin Dashboard</h1>
+        <h1 >Dashboard</h1>
     </div>
 
     <!-- Charts Row -->
@@ -152,7 +152,7 @@ $total_users = $user_data['total_users'];
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return `${context.label}: ${context.raw} (${Math.round(context.parsed * 100)}%)`;
+                            return `${context.label}: ${context.raw} `;
                         }
                     }
                 }

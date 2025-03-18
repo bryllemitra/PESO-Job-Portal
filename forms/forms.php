@@ -34,29 +34,6 @@ $errors = $_SESSION['errors'] ?? [];
 unset($_SESSION['errors']);
 ?>
 
-<script>
-    function toggleEmploymentDetails() {
-        const employmentStatus = document.getElementById('employment_status').value;
-        const employedDetails = document.getElementById('employed-details');
-        const unemployedDetails = document.getElementById('unemployed-details');
-
-        if (employmentStatus === 'Employed') {
-            employedDetails.style.display = 'block';
-            unemployedDetails.style.display = 'none';
-        } else if (employmentStatus === 'Unemployed') {
-            employedDetails.style.display = 'none';
-            unemployedDetails.style.display = 'block';
-        } else {
-            employedDetails.style.display = 'none';
-            unemployedDetails.style.display = 'none';
-        }
-    }
-
-    // Initial call to set the correct display based on the current selection
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleEmploymentDetails();
-    });
-</script>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -85,20 +62,8 @@ unset($_SESSION['errors']);
                 <div class="section-content" id="basic-info">
                     <div class="form-grid">
                         <div>
-                            <label for="surname">Surname</label>
-                            <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($data['surname'] ?? ''); ?>" required>
-                        </div>
-                        <div>
-                            <label for="first_name">First name</label>
-                            <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($data['first_name'] ?? ''); ?>" required>
-                        </div>
-                        <div>
-                            <label for="middle_name">Middle name</label>
-                            <input type="text" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($data['middle_name'] ?? ''); ?>" required>
-                        </div>
-                        <div>
-                            <label for="suffix">Suffix</label>
-                            <input type="text" id="suffix" name="suffix" value="<?php echo htmlspecialchars($data['suffix'] ?? ''); ?>" required>
+                            <label for="name">Full Name:</label>
+                            <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($data['name'] ?? ''); ?>" required>
                         </div>
                         <div>
                             <label for="email">Email:</label>
@@ -111,10 +76,6 @@ unset($_SESSION['errors']);
                         <div>
                             <label for="address">Address:</label>
                             <input type="text" id="address" name="address" value="<?php echo htmlspecialchars($data['address'] ?? ''); ?>" required>
-                        </div>
-                        <div>
-                             <label for="tin">Tin:</label>
-                             <input type="number" id="tin" name="tin" value="<?php echo htmlspecialchars($data['tin'] ?? ''); ?>" required>
                         </div>
                     </div>
                 </div>
@@ -184,19 +145,6 @@ unset($_SESSION['errors']);
                 </div>
             </div>
 
-            <!-- Disabilityy -->
-            <div class="collapsible-section">
-                <div class="section-header" onclick="toggleSection('disability')">Disability</div>
-                <div class="section-content" id="disability">
-                    <div class="form-grid">
-                        <div>
-                            <label for="disability">Disability</label>
-                            <textarea id="languages_proficiency" name="disability" rows="2" placeholder="ex: Visual, Speech, Mental, Hearing, Physical, etc..." required><?php echo htmlspecialchars($data['Disability'] ?? ''); ?></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Employment Status / Type -->
 <div class="collapsible-section">
     <div class="section-header" onclick="toggleSection('employment-status')">Employment Status / Type</div>
@@ -204,15 +152,13 @@ unset($_SESSION['errors']);
         <div class="form-grid">
             <div>
                 <label for="employment_status">Employment Status:</label>
-                <select id="employment_status" name="employment_status" required onchange="toggleEmploymentDetails()">
+                <select id="employment_status" name="employment_status" required>
                     <option value="" disabled selected>Select an option</option>
                     <option value="Employed" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Employed' ? 'selected' : ''; ?>>Employed</option>
                     <option value="Unemployed" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Unemployed' ? 'selected' : ''; ?>>Unemployed</option>
                     <option value="Others" <?php echo isset($data['employment_status']) && $data['employment_status'] === 'Others' ? 'selected' : ''; ?>>Others</option>
                 </select>
             </div>
-
-            <!-- Employed Details -->
             <div id="employed-details" style="display: none;">
                 <label for="employed_type">Type of Employment:</label>
                 <select id="employed_type" name="employed_type">
@@ -229,8 +175,6 @@ unset($_SESSION['errors']);
                     <option value="Other" <?php echo isset($data['employed_type']) && $data['employed_type'] === 'Other' ? 'selected' : ''; ?>>Other</option>
                 </select>
             </div>
-
-            <!-- Unemployed Details -->
             <div id="unemployed-details" style="display: none;">
                 <label for="unemployed_reason">Reason for Unemployment:</label>
                 <select id="unemployed_reason" name="unemployed_reason">
@@ -244,8 +188,6 @@ unset($_SESSION['errors']);
                     <option value="Terminated/Laid off (abroad)" <?php echo isset($data['unemployed_reason']) && $data['unemployed_reason'] === 'Terminated/Laid off (abroad)' ? 'selected' : ''; ?>>Terminated/Laid off (abroad)</option>
                 </select>
             </div>
-
-            <!-- Other Employment Details -->
             <div>
                 <label for="ofw_status">Are you an OFW?</label>
                 <select id="ofw_status" name="ofw_status" required>
@@ -269,10 +211,6 @@ unset($_SESSION['errors']);
                     <option value="Yes" <?php echo isset($data['4ps_beneficiary']) && $data['4ps_beneficiary'] === 'Yes' ? 'selected' : ''; ?>>Yes</option>
                     <option value="No" <?php echo isset($data['4ps_beneficiary']) && $data['4ps_beneficiary'] === 'No' ? 'selected' : ''; ?>>No</option>
                 </select>
-            </div>
-            <div>
-                <label for="house_number">Household ID No.:</label>
-                <input type="number" id="house_number" name="house_number" placeholder="if you are a 4ps beneficiary" value="<?php echo htmlspecialchars($data['house_number'] ?? ''); ?>">
             </div>
         </div>
     </div>

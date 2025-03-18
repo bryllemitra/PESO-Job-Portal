@@ -46,10 +46,9 @@ $query_all_jobs = "
     $category_filter
     $position_filter
     $location_filter
-    AND j.status != 'pending'  -- Exclude pending jobs
+    AND j.status = 'approved'  -- Only fetch approved jobs
     ORDER BY j.created_at DESC
 ";
-
 
 // Build the query for saved jobs (Only for logged-in users)
 if ($user_id) {
@@ -64,10 +63,9 @@ if ($user_id) {
     $category_filter
     $position_filter
     $location_filter
-    AND j.status != 'pending'  -- Exclude pending jobs
+    AND j.status = 'approved'  -- Only fetch approved jobs
     ORDER BY sj.saved_at DESC
 ";
-
 } else {
     // If user is not logged in, show empty result
     $query_saved_jobs = "SELECT * FROM jobs WHERE 1 = 0"; // This query returns no jobs if not logged in
@@ -86,7 +84,7 @@ if ($user_id) {
     $category_filter
     $position_filter
     $location_filter
-    AND j.status != 'pending'  -- Exclude pending jobs
+    AND j.status = 'approved'  -- Only fetch approved jobs
     ORDER BY a.applied_at DESC
 ";
 } else {
@@ -114,6 +112,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     // If not admin, show empty result
     $query_jobs_with_applicants = "SELECT * FROM jobs WHERE 1 = 0";
 }
+
 
 
 
@@ -582,7 +581,7 @@ if ($browse_data) {
         <?php endif; ?>
     <?php endif; ?>
 
-       <!-- New Applicant Indicator for Employer -->
+<!-- New Applicant Indicator for Employer -->
 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'employer'): ?>
     <?php
     // Query to count new applicants (pending applications) for this employer's job
@@ -604,7 +603,53 @@ if ($browse_data) {
             New Applicant(s): <?= $new_applicants_count ?>
         </span>
     <?php endif; ?>
+
+    <!-- Job Approval Status Indicator (Pending/Approved/Rejected) -->
+    <?php
+    // Query to get the job's approval status
+    $job_approval_query = "
+        SELECT status 
+        FROM jobs 
+        WHERE id = {$row['id']} 
+        AND employer_id = ? 
+    ";
+    $job_approval_stmt = $conn->prepare($job_approval_query);
+    $job_approval_stmt->bind_param("i", $_SESSION['user_id']); // Ensure it's filtered by the employer's job
+    $job_approval_stmt->execute();
+    $job_approval_result = $job_approval_stmt->get_result();
+    
+    // Check if the result is not null or empty
+    if ($job_approval_result->num_rows > 0) {
+        $job_approval_status = $job_approval_result->fetch_assoc()['status'];
+    } else {
+        $job_approval_status = null; // If no status found, set it to null
+    }
+    ?>
+
+    <!-- Display the job's approval status only inside the "My Jobs" tab -->
+    <?php if (isset($active_tab) && $active_tab === 'my_jobs'): ?>
+        <div class="approval-status">
+            <strong>Approval Status: </strong>
+            <?php
+            // Display the job's approval status with different badge colors
+            switch ($job_approval_status) {
+                case 'approved':
+                    echo '<span class="badge bg-success">Approved</span>';
+                    break;
+                case 'rejected':
+                    echo '<span class="badge bg-danger">Rejected</span>';
+                    break;
+                case 'pending':
+                    echo '<span class="badge bg-warning">Pending</span>';
+                    break;
+                default:
+                    echo '<span class="badge bg-secondary">Unknown</span>';
+            }
+            ?>
+        </div>
+    <?php endif; ?>
 <?php endif; ?>
+
 
     <!-- Action Buttons -->
     <div class="mt-auto">

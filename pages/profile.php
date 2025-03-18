@@ -2,13 +2,7 @@
 include '../includes/header.php'; // This already includes session_start()
 include '../includes/config.php'; // Include DB connection
 
-// Check user role and redirect admins/employers
-if (isset($_SESSION['role'])) {
-    if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer') {
-        echo "<script>window.location.href = '/JOB/employers/profile.php';</script>";
-        exit();
-    }
-}
+
 
 // Restrict access: Show modal and redirect if not logged in
 if (!isset($_SESSION['user_id'])) {

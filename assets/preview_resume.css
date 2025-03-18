@@ -21,35 +21,23 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Subtle shadow for depth */
 }
-/* fix the look for the name container*/
-    .header {
-        display: flex;
-        flex-direction: column; /* Stack children vertically */
-        align-items: center; /* Center everything horizontally */
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    
-    .header .name-container {
-        display: flex;
-        justify-content: center;
-        gap: 20px; /* Space between h1 elements */
-        flex-wrap: wrap; /* Ensure they stay aligned properly */
-    }
 
-    .header h1 {
-        
-        font-size: 2rem;
-        font-weight: 600;
-        color: #1a202c; /* Dark gray for headings */
-        margin-bottom: 10px;
-    }
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-    .header p {
-        margin-top: 10px;
-        font-size: 1.1rem;
-        color: #4a5568; /* Medium gray for subheadings */
-    }
+.header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a202c; /* Dark gray for headings */
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 1.1rem;
+    color: #4a5568; /* Medium gray for subheadings */
+}
 
 .contact-info {
     display: flex;
@@ -138,32 +126,4 @@ body {
 
 .download-button:hover {
     background: #3182ce; /* Darker blue on hover */
-}
-
-/* Table-like styling for sections */
-.section table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-.section table th, .section table td {
-    border: 1px solid #e2e8f0;
-    padding: 10px;
-    text-align: left;
-}
-
-.section table th {
-    background-color: #edf2f7;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.section table td {
-    background-color: #ffffff;
-    color: #4a5568;
-}
-
-.section table tr:nth-child(even) td {
-    background-color: #f7fafc;
 }

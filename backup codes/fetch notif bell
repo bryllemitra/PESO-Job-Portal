@@ -32,6 +32,31 @@ try {
     $counts = $count_result->fetch_assoc();
     $total_notifications = $counts['total'];
     $unread_count = $counts['unread_count'];
+
+    // Add new notifications to the unread count
+    if ($role == 'admin') {
+        // Count pending job approval requests for admins
+        $query = "SELECT COUNT(*) AS pending_approvals
+                  FROM jobs j
+                  WHERE j.status = 'pending'";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $pending_approvals = $result->fetch_assoc()['pending_approvals'];
+        $unread_count += $pending_approvals; // Add to unread count
+    } elseif ($role == 'employer') {
+        // Count job post status updates for employers
+        $query = "SELECT COUNT(*) AS status_updates
+                  FROM jobs j
+                  WHERE j.employer_id = ? AND j.status IN ('approved', 'rejected')";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param('i', $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $status_updates = $result->fetch_assoc()['status_updates'];
+        $unread_count += $status_updates; // Add to unread count
+    }
+
     $total_pages = ceil($total_notifications / $limit); // Calculate total pages
 
     // Prepare query to fetch notifications for the current page

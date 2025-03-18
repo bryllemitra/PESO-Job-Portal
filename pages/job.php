@@ -111,6 +111,22 @@ if ($user_applied) {
     }
 }
 
+// Fetch job details, including the remarks for rejected job posts
+$jobQuery = "SELECT * FROM jobs WHERE id = ?";
+$stmt = $conn->prepare($jobQuery);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$job = $result->fetch_assoc();
+
+if (!$job) {
+    echo "<div class='alert alert-danger text-center'>Job not found.</div>";
+    exit();
+}
+
+// Check if the job is rejected and if the remarks field exists
+$job_status = $job['status'] ?? null;  // Assuming status is in the jobs table
+$job_remarks = $job['remarks'] ?? '';  // Remarks for rejected jobs
 ?>
 
 
@@ -175,40 +191,45 @@ if ($user_applied) {
             <hr class="divider-futuristic">
 
 
-                    <!-- Job Description -->
-                    <div class="job-description">
-                        <h5 class="section-title text-futuristic">Job Description</h5>
-                        <p class="card-text"><?= nl2br(htmlspecialchars($job['description'])) ?></p>
-                    </div>
-                    <hr class="divider-futuristic">
-                    <!-- Responsibilities -->
-                    <div class="job-responsibilities">
-                        <h5 class="section-title text-futuristic">Responsibilities</h5>
-                        <p class="card-text"><?= nl2br(htmlspecialchars($job['responsibilities'])) ?></p>
-                    </div>
-                    <hr class="divider-futuristic">
-                    <!-- Requirements -->
-                    <div class="job-requirements">
-                        <h5 class="section-title text-futuristic">Requirements</h5>
-                        <p class="card-text"><?= nl2br(htmlspecialchars($job['requirements'])) ?></p>
-                    </div>
-                    <hr class="divider-futuristic">
-                    <!-- Preferred Qualifications -->
-                    <div class="job-preferred-qualifications">
-                        <h5 class="section-title text-futuristic">Preferred Qualifications</h5>
-                        <p class="card-text"><?= nl2br(htmlspecialchars($job['preferred_qualifications'])) ?></p>
-                    </div>
-                        <hr class="divider-futuristic">
+<!-- Job Description -->
+<div class="job-description">
+    <h5 class="section-title text-futuristic">Job Description</h5>
+    <p class="card-text"><?= nl2br(htmlspecialchars($job['description'] ?? '')) ?></p>
+</div>
+<hr class="divider-futuristic">
 
-                        <!-- Show Positions Applied for (Only If User Applied) -->
-<?php if ($user_applied && !empty($applied_positions)): ?>
+<!-- Responsibilities -->
+<div class="job-responsibilities">
+    <h5 class="section-title text-futuristic">Responsibilities</h5>
+    <p class="card-text"><?= nl2br(htmlspecialchars($job['responsibilities'] ?? '')) ?></p>
+</div>
+<hr class="divider-futuristic">
+
+<!-- Requirements -->
+<div class="job-requirements">
+    <h5 class="section-title text-futuristic">Requirements</h5>
+    <p class="card-text"><?= nl2br(htmlspecialchars($job['requirements'] ?? '')) ?></p>
+</div>
+<hr class="divider-futuristic">
+
+<!-- Preferred Qualifications -->
+<div class="job-preferred-qualifications">
+    <h5 class="section-title text-futuristic">Preferred Qualifications</h5>
+    <p class="card-text"><?= nl2br(htmlspecialchars($job['preferred_qualifications'] ?? '')) ?></p>
+</div>
+<hr class="divider-futuristic">
+
+
+
+<!-- Show Positions Applied for (Only If User Applied) -->
+<?php if (isset($user_applied) && $user_applied && !empty($applied_positions)): ?>
     <div class="alert alert-info">
         <strong>Applied for:</strong> <?= implode(", ", $applied_positions) ?>
     </div>
 <?php endif; ?>
 
 <!-- Display the Admin's Remark (If Any and Only for the Applicant) -->
-<?php if ($user_applied && !empty($remark['remark'])): ?>
+<?php if (isset($user_applied) && $user_applied && isset($remark['remark']) && !empty($remark['remark'])): ?>
     <div class="alert <?= ($application_status === 'accepted') ? 'alert-success' : ($application_status === 'rejected' ? 'alert-danger' : 'alert-info') ?>">
         <strong>Employer's Remark:</strong> <?= htmlspecialchars($remark['remark']) ?>
     </div>
@@ -216,9 +237,10 @@ if ($user_applied) {
 
 
 
+
 <!-- Action Buttons -->
 <div class="text-center mt-4">
-    <?php if ($user_role === 'admin'): ?>
+<?php if ($user_role === 'admin'): ?>
         <!-- Admin View - Can see all applicants for any job -->
         <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
         <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
@@ -227,10 +249,25 @@ if ($user_applied) {
     <?php elseif ($user_id): ?>
         <!-- Employer View - Only for the job they posted -->
         <?php if ($user_id === $job['employer_id']): ?>
-            <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
-            <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
-                <i class="fas fa-users me-2"></i> Manage Applicants
-            </a>
+            <?php if ($job['status'] !== 'rejected'): ?> <!-- Check if the job is not rejected -->
+                <p><strong>Applicants:</strong> <?= $total_applicants ?></p>
+                <a href="../admin/view_applicants.php?job_id=<?= $id ?>" class="btn btn-futuristic-primary btn-action">
+                    <i class="fas fa-users me-2"></i> Manage Applicants
+                </a>
+            <?php endif; ?>
+<!-- Show rejection remarks if the job is rejected -->
+<?php if (isset($job['status']) && $job['status'] === 'rejected'): ?>
+    <div class="alert alert-danger mt-3">
+        <strong>Job Status:</strong> Rejected
+    </div>
+    <?php if (!empty($job['remarks'])): ?>
+        <div class="alert alert-danger">
+            <strong>Employer's Remark:</strong> <?= htmlspecialchars($job['remarks']) ?>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
+
+
         <?php elseif (!$user_applied): ?>
             <!-- User View - If not applied yet, show apply form -->
             <form action="apply.php" method="POST" enctype="multipart/form-data" class="d-inline" id="applyForm">
@@ -311,7 +348,7 @@ if ($user_applied) {
                     $remaining_minutes = ceil($remaining_time / 60); // Convert to minutes and round up
 
                     echo "<div class='alert alert-warning text-center'>
-                            You can reapply in <strong>{$remaining_minutes} minutes</strong>.
+                            You can reapply in <strong>{$remaining_minutes} minutes</strong> 
                           </div>";
                 } else {
                     // Delete the application record after 10 minutes
@@ -372,6 +409,7 @@ if ($user_applied) {
         </p>
     <?php endif; ?>
 </div>
+
 
 
 
