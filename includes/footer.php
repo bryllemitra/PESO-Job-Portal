@@ -33,6 +33,8 @@
                 <!-- Copyright -->
                 <div class="footer-copyright">
                     <p>&copy; <?php echo date('Y'); ?> Zamboanga PESO Job Portal. All rights reserved.</p>
+                    <p>&copy; Salido, Sardani, Umipig, Sarausos</p>
+                    <p> Western Mindanao State University BSIT-3A</p>
                 </div>
             </div>
         </div>

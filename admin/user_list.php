@@ -59,6 +59,18 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/JOB/assets/user_list.css">
+    <style>
+     .form-control, .form-select, .btn {
+        height: 45px; /* Set height for consistency */
+        
+    }
+    .expanded-input, .expanded-select, .expanded-button {
+        width: 100%; /* Make sure the input and select span full width of their column */
+    }
+    .expanded-button {
+        width: auto; /* Let the button width be dynamic based on the content */
+    } 
+    </style>
 </head>
 <body>
 
@@ -86,29 +98,30 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
 
     </div>
 
-    <!-- Filters and Sorting -->
-    <div class="filters">
+<!-- Filters and Sorting -->
+<div class="filters">
     <form action="user_list.php" method="GET" class="mb-4 row g-3 align-items-center">
-    <!-- Search Box -->
-<!-- Search Box -->
-<div class="col-md-6">
-    <input type="text" name="search" class="form-control rounded-pill shadow-sm expanded-input" 
-           placeholder="Search by name" 
-           value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+        <!-- Search Box -->
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control rounded-pill shadow-sm expanded-input" 
+                   placeholder="Search by name" 
+                   value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+        </div>
+
+        <!-- Sorting Dropdown -->
+        <div class="col-md-3">
+            <select name="sort_by" class="form-select rounded-pill shadow-sm expanded-select">
+                <option value="username" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'username') ? 'selected' : '' ?>>Alphabetical</option>
+                <option value="created_at" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'created_at') ? 'selected' : '' ?>>Latest Registered</option>
+            </select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary rounded-pill shadow-sm expanded-button">Filter</button>
+        </div>
+    </form>
 </div>
-<!-- Sorting Dropdown -->
-<div class="col-md-3">
-    <select name="sort_by" class="form-select rounded-pill shadow-sm expanded-select">
-        <option value="username" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'username') ? 'selected' : '' ?>>Alphabetical</option>
-        <option value="created_at" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'created_at') ? 'selected' : '' ?>>Latest Registered</option>
-    </select>
-</div>
-    <!-- Submit Button -->
-    <div class="col-md-auto">
-        <button type="submit" class="btn btn-primary rounded-pill shadow-sm">Filter</button>
-    </div>
-</form>
-    </div>
 
 <!-- User List -->
 <div class="user-list">

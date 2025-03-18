@@ -1,12 +1,16 @@
 <?php
 include '../includes/config.php';
 include '../includes/header.php';
-include '../includes/restrictions.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../pages/index.php");
+// Check if the employer is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employer') {
+    // Redirect to login page or show an error message
+    header('Location: ../login.php');
     exit();
 }
+
+// Get the logged-in employer's ID
+$employer_id = $_SESSION['user_id'];
 
 // Pagination logic
 $limit = 15;  // Number of jobs per page
@@ -70,7 +74,7 @@ $query_all_jobs = "
     LEFT JOIN applications a ON j.id = a.job_id
     LEFT JOIN job_categories jc ON j.id = jc.job_id
     LEFT JOIN job_positions_jobs jp ON j.id = jp.job_id
-    WHERE 1=1
+    WHERE j.employer_id = $employer_id
     $search_filter
     $category_filter
     $position_filter
@@ -89,7 +93,7 @@ $count_query = "
     FROM jobs j
     LEFT JOIN job_categories jc ON j.id = jc.job_id
     LEFT JOIN job_positions_jobs jp ON j.id = jp.job_id
-    WHERE 1=1
+    WHERE j.employer_id = $employer_id
     $search_filter
     $category_filter
     $position_filter
@@ -113,6 +117,7 @@ $barangay_query = "SELECT name FROM barangay ORDER BY name ASC";
 $barangay_result = $conn->query($barangay_query);
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,26 +131,24 @@ $barangay_result = $conn->query($barangay_query);
     <style>
 
 
-/* Full width for small screens (e.g., mobile devices) */
-@media (max-width: 575.98px) {
-    .filter-button {
-        width: 100%;
-    }
-}
-</style>
+        /* Full width for small screens (e.g., mobile devices) */
+        @media (max-width: 575.98px) {
+            .filter-button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div>
-        <h2>Admin Panel</h2>
+        <h2>Employer Panel</h2>
         <ul>
-            <li><a href="admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php" class="active"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
+            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="job_list.php" class="active"><i class="fas fa-briefcase"></i> My Jobs</a></li>
+            <li><a href="user_list.php"><i class="fas fa-users"></i> Applicants</a></li>
         </ul>
     </div>
     <div class="toggle-btn" onclick="toggleSidebar()">
@@ -153,7 +156,7 @@ $barangay_result = $conn->query($barangay_query);
     </div>
 </div>
 
-<!-- Main Content -->
+ <!-- Main Content -->
 <main>
     <h3>Posted Jobs</h3><br>
 
@@ -202,23 +205,22 @@ $barangay_result = $conn->query($barangay_query);
         <!-- Combined Sorting Dropdown -->
         <div class="col-lg-2 col-md-3 col-6">
             <select name="sort" class="form-select form-select-m shadow-sm rounded-pill">
-                <option value="created_at_desc" <?= $sort === 'created_at_desc' ? 'selected' : '' ?>>Sort by Date (Newest)</option>
-                <option value="created_at_asc" <?= $sort === 'created_at_asc' ? 'selected' : '' ?>>Sort by Date (Oldest)</option>
+                <option value="created_at_desc" <?= $sort === 'created_at_desc' ? 'selected' : '' ?>>Sort by Date (Newest First)</option>
+                <option value="created_at_asc" <?= $sort === 'created_at_asc' ? 'selected' : '' ?>>Sort by Date (Oldest First)</option>
                 <option value="title_asc" <?= $sort === 'title_asc' ? 'selected' : '' ?>>Sort by Title (A-Z)</option>
                 <option value="title_desc" <?= $sort === 'title_desc' ? 'selected' : '' ?>>Sort by Title (Z-A)</option>
-                <option value="total_applicants_asc" <?= $sort === 'total_applicants_asc' ? 'selected' : '' ?>>by Applicants (Lowest)</option>
-                <option value="total_applicants_desc" <?= $sort === 'total_applicants_desc' ? 'selected' : '' ?>>by Applicants (Highest)</option>
+                <option value="total_applicants_asc" <?= $sort === 'total_applicants_asc' ? 'selected' : '' ?>>Sort by Applicants (Lowest First)</option>
+                <option value="total_applicants_desc" <?= $sort === 'total_applicants_desc' ? 'selected' : '' ?>>Sort by Applicants (Highest First)</option>
             </select>
         </div>
         <!-- Submit Button -->
         <div class="col-md-2">
-        <button type="submit" style="height: 100%;" class="btn btn-primary btn-lg rounded-pill filter-button">Filter</button>
+            <button type="submit" style="height: 100%;" class="btn btn-primary btn-lg rounded-pill filter-button">Filter</button>
         </div>
     </form><br>
-
-
-   <!-- Job List -->
-   <div class="job-list">
+    
+    <!-- Job List -->
+    <div class="job-list">
         <!-- Table Header -->
         <div class="job-header">
             <div>Job Title</div>
@@ -238,23 +240,22 @@ $barangay_result = $conn->query($barangay_query);
                 </div>
                 <div class="date"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($row['created_at']))) ?></div>
                 <div class="actions">
-                <button onclick="location.href='edit_job.php?id=<?= $row['id'] ?>&source=job_list'"><i class="fas fa-edit"></i></button>
+                    <button onclick="location.href='edit_job.php?id=<?= $row['id'] ?>&source=job_list'"><i class="fas fa-edit"></i></button>
                     <button data-bs-toggle="modal" data-bs-target="#deleteJobModal" class="btn-delete" data-job-id="<?= $row['id'] ?>"><i class="fas fa-trash"></i></button>
                 </div>
-
             </div>
         <?php endwhile; ?>
     </div>
 
     <!-- Pagination -->
     <div class="pagination">
-        <button onclick="location.href='?page=<?= $page - 1 ?>&search=<?= $search ?>'" <?= $page <= 1 ? 'disabled' : '' ?>> <i class="fas fa-chevron-left"></i> </button>
+        <button onclick="location.href='?page=<?= $page - 1 ?>&search=<?= $search ?>&category=<?= $_GET['category'] ?? '' ?>&position=<?= $_GET['position'] ?? '' ?>&location=<?= $_GET['location'] ?? '' ?>'" <?= $page <= 1 ? 'disabled' : '' ?>> <i class="fas fa-chevron-left"></i> </button>
         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <button onclick="location.href='?page=<?= $i ?>&search=<?= $search ?>'" <?= $i === $page ? 'class="active"' : '' ?>><?= $i ?></button>
+            <button onclick="location.href='?page=<?= $i ?>&search=<?= $search ?>&category=<?= $_GET['category'] ?? '' ?>&position=<?= $_GET['position'] ?? '' ?>&location=<?= $_GET['location'] ?? '' ?>'" <?= $i === $page ? 'class="active"' : '' ?>><?= $i ?></button>
         <?php endfor; ?>
-        <button onclick="location.href='?page=<?= $page + 1 ?>&search=<?= $search ?>'" <?= $page >= $total_pages ? 'disabled' : '' ?>> <i class="fas fa-chevron-right"></i> </button>
+        <button onclick="location.href='?page=<?= $page + 1 ?>&search=<?= $search ?>&category=<?= $_GET['category'] ?? '' ?>&position=<?= $_GET['position'] ?? '' ?>&location=<?= $_GET['location'] ?? '' ?>'" <?= $page >= $total_pages ? 'disabled' : '' ?>> <i class="fas fa-chevron-right"></i> </button>
     </div>
-</div>
+</main>
 
 <!-- Delete Job Modal -->
 <div class="modal fade" id="deleteJobModal" tabindex="-1" aria-labelledby="deleteJobModalLabel" aria-hidden="true">

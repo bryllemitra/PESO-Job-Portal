@@ -113,8 +113,58 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     $query_jobs_with_applicants = "SELECT * FROM jobs WHERE 1 = 0";
 }
 
+// Handle search input for my_jobs (employer)
+$search_filter_my_jobs = "";
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $search_term = $conn->real_escape_string($_GET['search']);
+    $search_filter_my_jobs = " AND j.title LIKE '%$search_term%'";
+}
 
+// Handle category selection for my_jobs
+$category_filter_my_jobs = "";
+if (isset($_GET['category']) && is_numeric($_GET['category'])) {
+    $category_id = $_GET['category'];
+    $category_filter_my_jobs = " AND (j.category_id = $category_id OR jc.category_id = $category_id)";
+}
 
+// Handle position selection for my_jobs
+$position_filter_my_jobs = "";
+if (isset($_GET['position']) && is_numeric($_GET['position'])) {
+    $position_id = $_GET['position'];
+    $position_filter_my_jobs = " AND (jp.position_id = $position_id)";
+}
+
+// Handle location selection for my_jobs
+$location_filter_my_jobs = "";
+if (isset($_GET['location']) && !empty($_GET['location'])) {
+    $location = $conn->real_escape_string($_GET['location']);
+    $location_filter_my_jobs = " AND j.location = '$location'";
+}
+
+// Build the query for employer's own jobs with sorting and filtering
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'employer') {
+    $query_my_jobs = "
+        SELECT DISTINCT j.* 
+        FROM jobs j
+        LEFT JOIN job_categories jc ON j.id = jc.job_id
+        LEFT JOIN job_positions_jobs jp ON j.id = jp.job_id
+        WHERE j.employer_id = ? 
+        $search_filter_my_jobs
+        $category_filter_my_jobs
+        $position_filter_my_jobs
+        $location_filter_my_jobs
+        AND j.status = 'approved'  -- Only fetch approved jobs
+        ORDER BY j.created_at DESC  -- You can adjust this sorting as needed
+    ";
+    $stmt = $conn->prepare($query_my_jobs);
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    $stmt->execute();
+    // Now, you can use get_result() here to fetch results.
+    $result = $stmt->get_result();
+} else {
+    // If not logged in as an employer, show an empty result
+    $result = $conn->query("SELECT * FROM jobs WHERE 1 = 0");
+}
 
 // Determine which tab is active
 $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all'; // Default to 'all'
@@ -127,18 +177,11 @@ if ($active_tab === 'saved' && $user_id) {
 } elseif ($active_tab === 'applicants' && isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     $result = $conn->query($query_jobs_with_applicants);
 } elseif ($active_tab === 'my_jobs' && isset($_SESSION['role']) && $_SESSION['role'] === 'employer') {
-    // Query to fetch only the employer's own jobs
-    $query_my_jobs = "SELECT * FROM jobs WHERE employer_id = ?";
-    $stmt = $conn->prepare($query_my_jobs);
-    $stmt->bind_param("i", $_SESSION['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Query to fetch only the employer's own jobs with filters applied
+    // Here, `$stmt` is already used, and result is fetched directly from `$stmt->get_result()`
 } else {
     $result = $conn->query($query_all_jobs); // Default to all jobs
 }
-
-
-
 
 // Fetch categories for the dropdown
 $category_query = "SELECT * FROM categories ORDER BY name ASC";
@@ -151,6 +194,7 @@ $position_result = $conn->query($position_query);
 // Fetch barangay names for the location dropdown (Use a separate variable)
 $barangay_query = "SELECT name FROM barangay ORDER BY name ASC";
 $barangay_result = $conn->query($barangay_query);
+
 
 // Fetch the latest cover photo from the 'browse' table
 $cover_query = "SELECT cover_photo FROM browse ORDER BY id DESC LIMIT 1";

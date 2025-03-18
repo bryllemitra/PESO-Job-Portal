@@ -63,6 +63,20 @@ $result = $conn->query($query);
         /* Custom Styles */
         .job-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #ddd; }
         .job-actions { display: flex; gap: 30px; }
+
+        .form-control, .form-select, .btn {
+    height: 45px; /* Set consistent height for input, select, and button */
+    
+}
+
+.expanded-input, .expanded-select, .expanded-button {
+    width: 100%; /* Ensure inputs, select, and button take up full width of their containers */
+}
+
+.expanded-button {
+    width: auto; /* Allow the button to adjust dynamically based on its content */
+}
+
     </style>
 </head>
 <body>
@@ -87,28 +101,29 @@ $result = $conn->query($query);
         <h1>Job Approvals</h1>
     </div>
 
-    <!-- Filters and Sorting -->
-    <div class="filters">
-        <form action="job_approval.php" method="GET" class="mb-4 row g-3 align-items-center">
-            <!-- Search Box -->
-            <div class="col-md-6 col-12">
-                <input type="text" name="search" class="form-control rounded-pill shadow-sm"
-                       placeholder="Search by title or employer name"
-                       value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
-            </div>
-            <!-- Sorting Dropdown -->
-            <div class="col-md-3 col-12">
-                <select name="sort_by" class="form-select rounded-pill shadow-sm w-100">
-                    <option value="created_at" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'created_at') ? 'selected' : '' ?>>Latest Jobs</option>
-                    <option value="title" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'title') ? 'selected' : '' ?>>By Job Title</option>
-                </select>
-            </div>
-            <!-- Submit Button -->
-            <div class="col-md-auto col-12">
-                <button type="submit" class="btn btn-primary rounded-pill shadow-sm w-100">Filter</button>
-            </div>
-        </form>
-    </div>
+<!-- Filters and Sorting -->
+<div class="filters">
+    <form action="job_approval.php" method="GET" class="mb-4 row g-3 align-items-center">
+        <!-- Search Box -->
+        <div class="col-md-6 col-12">
+            <input type="text" name="search" class="form-control rounded-pill shadow-sm expanded-input"
+                   placeholder="Search by title or employer name"
+                   value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+        </div>
+        <!-- Sorting Dropdown -->
+        <div class="col-md-3 col-12">
+            <select name="sort_by" class="form-select rounded-pill shadow-sm expanded-select w-100">
+                <option value="created_at" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'created_at') ? 'selected' : '' ?>>Latest Jobs</option>
+                <option value="title" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'title') ? 'selected' : '' ?>>By Job Title</option>
+            </select>
+        </div>
+        <!-- Submit Button -->
+        <div class="col-md-auto col-12">
+            <button type="submit" class="btn btn-primary rounded-pill shadow-sm expanded-button">Filter</button>
+        </div>
+    </form>
+</div>
+
 
 <!-- Job List -->
 <div class="user-list">

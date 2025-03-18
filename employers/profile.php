@@ -680,31 +680,70 @@ $result_jobs = $stmt->get_result();
 <!-- Applications Tab -->
 <div class="tab-pane fade" id="applications" role="tabpanel" aria-labelledby="applications-tab">
     <div class="container mt-4">
-        <h4 class="text-center"><?php echo isset($_SESSION['role']) && $_SESSION['role'] === 'admin' ? 'Pending Applications' : 'Managing Jobs'; ?></h4><Br>
+        <h4 class="text-center">
+            <?php 
+            // Check if the admin is viewing their own profile or another employer's profile
+            if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+                // If admin is viewing their own profile
+                $viewedUserId = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id']; // Profile being viewed
+                
+                // If the admin is viewing their own profile
+                if ($viewedUserId == $_SESSION['user_id']) {
+                    echo 'Pending Applications'; // Admin sees Pending Applications for their own profile
+                } else {
+                    echo 'Managing Jobs'; // Admin sees Managing Jobs for another employer
+                }
+            } else {
+                echo 'Managing Jobs'; // Employers see Managing Jobs for their own profile
+            }
+            ?>
+        </h4><br>
         <?php
         // Check if the current user is an admin or employer
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         $isEmployer = isset($_SESSION['role']) && $_SESSION['role'] === 'employer';
+        
+        // Determine the profile being viewed (either admin's or another employer's)
+        $viewedUserId = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id']; // The profile being viewed
 
         if ($isAdmin): 
-            // Fetch jobs with pending applications for admin
-            $query_jobs = "
-                SELECT 
-                    jobs.id AS job_id, 
-                    jobs.title, 
-                    categories.name AS category, 
-                    jobs.location, 
-                    jobs.created_at AS posted_date, 
-                    COUNT(applications.id) AS pending_applicants
-                FROM jobs
-                LEFT JOIN applications ON jobs.id = applications.job_id AND applications.status = 'pending'
-                LEFT JOIN job_categories ON jobs.id = job_categories.job_id
-                LEFT JOIN categories ON job_categories.category_id = categories.id
-                WHERE jobs.status != 'rejected' 
-                GROUP BY jobs.id
-                HAVING COUNT(applications.id) > 0"; // Only jobs with pending applications
+            // Admin should see "Managing Jobs" for another employer's profile or "Pending Applications" for their own profile
+            if ($viewedUserId == $_SESSION['user_id']) {
+                // Admin viewing their own profile, show Pending Applications
+                $query_jobs = "
+                    SELECT 
+                        jobs.id AS job_id, 
+                        jobs.title, 
+                        categories.name AS category, 
+                        jobs.location, 
+                        jobs.created_at AS posted_date, 
+                        COUNT(applications.id) AS pending_applicants
+                    FROM jobs
+                    LEFT JOIN applications ON jobs.id = applications.job_id AND applications.status = 'pending'
+                    LEFT JOIN job_categories ON jobs.id = job_categories.job_id
+                    LEFT JOIN categories ON job_categories.category_id = categories.id
+                    WHERE jobs.status != 'rejected' 
+                    GROUP BY jobs.id
+                    HAVING COUNT(applications.id) > 0"; // Only jobs with pending applications
+            } else {
+                // Admin viewing another employer's profile, show Managing Jobs
+                $query_jobs = "
+                    SELECT 
+                        jobs.id AS job_id, 
+                        jobs.title, 
+                        categories.name AS category, 
+                        jobs.location, 
+                        jobs.created_at AS posted_date, 
+                        COUNT(applications.id) AS pending_applicants
+                    FROM jobs
+                    LEFT JOIN applications ON jobs.id = applications.job_id AND applications.status = 'pending'
+                    LEFT JOIN job_categories ON jobs.id = job_categories.job_id
+                    LEFT JOIN categories ON job_categories.category_id = categories.id
+                    WHERE jobs.employer_id = ?
+                    GROUP BY jobs.id"; // Jobs posted by the employer
+            }
         elseif ($isEmployer):
-            // Fetch jobs posted by the employer, whether they have applicants or not
+            // Employer sees their own jobs (Managing Jobs)
             $query_jobs = "
                 SELECT 
                     jobs.id AS job_id, 
@@ -718,14 +757,15 @@ $result_jobs = $stmt->get_result();
                 LEFT JOIN job_categories ON jobs.id = job_categories.job_id
                 LEFT JOIN categories ON job_categories.category_id = categories.id
                 WHERE jobs.employer_id = ?
-                GROUP BY jobs.id"; // All jobs posted by this employer
+                GROUP BY jobs.id"; // All jobs posted by the employer
         endif;
 
         // Execute query for admin or employer
         if ($isAdmin || $isEmployer): 
             $stmt = $conn->prepare($query_jobs);
-            if ($isEmployer) {
-                $stmt->bind_param("i", $_SESSION['user_id']);
+            if ($isEmployer || ($isAdmin && $viewedUserId != $_SESSION['user_id'])) {
+                // For the admin viewing another employer's profile, or employer viewing their own jobs
+                $stmt->bind_param("i", $viewedUserId); // Employer's ID (viewed profile)
             }
             $stmt->execute();
             $result_jobs = $stmt->get_result();
@@ -772,6 +812,7 @@ $result_jobs = $stmt->get_result();
 
 
 
+
 <!-- Documents Tab -->
 <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
         <div class="profile-cardop-4 mb-4">
@@ -800,7 +841,7 @@ $result_jobs = $stmt->get_result();
                 </button>
             <?php endif; ?>
         <?php else: ?>
-            No resume uploaded yet.
+            No document uploaded yet.
         <?php endif; ?>
     </p>
     

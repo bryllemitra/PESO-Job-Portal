@@ -167,15 +167,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <ul style="background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);" class="dropdown-menu dropdown-menu-end">
         <!-- Conditional profile link based on role -->
         <li>
-    <a class="dropdown-item text-white" href="<?= ($_SESSION['role'] === 'admin') ? '../admin/profile.php' : ($_SESSION['role'] === 'employer' ? '../employers/profile.php' : '../pages/profile.php') ?>">
-        <i class="fas fa-user me-2"></i> Profile
-    </a>
-</li>
+            <a class="dropdown-item text-white" href="<?= ($_SESSION['role'] === 'admin') ? '../admin/profile.php' : ($_SESSION['role'] === 'employer' ? '../employers/profile.php' : '../pages/profile.php') ?>">
+                <i class="fas fa-user me-2"></i> Profile
+            </a>
+        </li>
 
-        
         <!-- Dashboard link for Admin -->
         <?php if ($_SESSION['role'] === 'admin'): ?>
             <li><a class="dropdown-item text-white" href="../admin/admin.php"><i class="fas fa-tachometer-alt me-2"></i> Admin Panel</a></li>
+        <?php endif; ?>
+
+        <!-- Dashboard link for Employer -->
+        <?php if ($_SESSION['role'] === 'employer'): ?>
+            <li><a class="dropdown-item text-white" href="../employers/dashboard.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
         <?php endif; ?>
 
         <li><hr class="dropdown-divider"></li>
@@ -188,6 +192,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </li>
     </ul>
 </li>
+
 
                         <?php else: ?>
                             <!-- Login Button (for users who are not logged in) -->

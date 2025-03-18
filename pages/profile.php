@@ -613,35 +613,76 @@ $result_jobs = $stmt->get_result();
 <!-- Applications Tab -->
 <div class="tab-pane fade" id="applications" role="tabpanel" aria-labelledby="applications-tab">
     <div class="container mt-4">
-        <h4 class="text-center">My Applications</h4><Br>
+        <h4 class="text-center">
+            <?php 
+            // Check if the current user is an admin, employer, or applicant
+            $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+            $isEmployer = isset($_SESSION['role']) && $_SESSION['role'] === 'employer';
+            $isOwnProfile = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $user_id;
+            
+            // Display title based on role
+            if ($isAdmin) {
+                echo 'All Job Applications';
+            } elseif ($isEmployer) {
+                echo 'Applications for Your Jobs';
+            } else {
+                echo 'My Applications'; // For applicants (users)
+            }
+            ?>
+        </h4><br>
         <?php
-        // Check if the current user is an admin or viewing their own profile
-        $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        $isOwnProfile = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $user_id;
-        // Only allow admins or the profile owner to view applications
-        if ($isAdmin || $isOwnProfile): 
-            // Fetch applied jobs for the user with status
-            $query_jobs = "
-            SELECT 
-                jobs.title, 
-                categories.name AS category, 
-                jobs.location, 
-                jobs.id AS job_id, 
-                applications.status, 
-                applications.applied_at, 
-                applications.resume_file, 
-                applications.status_updated_at 
-            FROM applications 
-            JOIN jobs ON applications.job_id = jobs.id 
-            JOIN job_categories ON jobs.id = job_categories.job_id 
-            JOIN categories ON job_categories.category_id = categories.id
-            WHERE applications.user_id = ?
-        ";
-        $stmt = $conn->prepare($query_jobs);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result_jobs = $stmt->get_result();
-        
+        // Check if the current user is an admin, employer, or applicant
+        if ($isAdmin || $isOwnProfile || $isEmployer): 
+            // If the user is an admin or viewing their own profile (applicant), fetch the applications for the user
+            if ($isAdmin || $isOwnProfile) {
+                // Query for fetching applications for an applicant, excluding canceled ones
+                $query_jobs = "
+                    SELECT 
+                        jobs.title, 
+                        categories.name AS category, 
+                        jobs.location, 
+                        jobs.id AS job_id, 
+                        applications.status, 
+                        applications.applied_at, 
+                        applications.resume_file, 
+                        applications.status_updated_at 
+                    FROM applications 
+                    JOIN jobs ON applications.job_id = jobs.id 
+                    JOIN job_categories ON jobs.id = job_categories.job_id 
+                    JOIN categories ON job_categories.category_id = categories.id
+                    WHERE applications.user_id = ? AND applications.status != 'canceled'
+                ";
+            } elseif ($isEmployer) {
+                // Query for fetching applications made by the specific user for jobs posted by the employer, excluding canceled ones
+                $query_jobs = "
+                    SELECT 
+                        jobs.title, 
+                        categories.name AS category, 
+                        jobs.location, 
+                        jobs.id AS job_id, 
+                        applications.status, 
+                        applications.applied_at, 
+                        applications.resume_file, 
+                        applications.status_updated_at,
+                        applications.user_id AS applicant_id 
+                    FROM applications 
+                    JOIN jobs ON applications.job_id = jobs.id 
+                    JOIN job_categories ON jobs.id = job_categories.job_id 
+                    JOIN categories ON job_categories.category_id = categories.id
+                    WHERE jobs.employer_id = ? AND applications.user_id = ? AND applications.status != 'canceled'
+                ";
+            }
+
+            // Prepare and execute the query
+            $stmt = $conn->prepare($query_jobs);
+            if ($isEmployer) {
+                $stmt->bind_param("ii", $_SESSION['user_id'], $user_id); // Employer's ID and specific user's ID
+            } else {
+                $stmt->bind_param("i", $user_id); // Applicant's ID
+            }
+            $stmt->execute();
+            $result_jobs = $stmt->get_result();
+            
             // Display content based on conditions
             if ($result_jobs->num_rows > 0): ?>
                 <div class="job-list">
@@ -681,7 +722,7 @@ $result_jobs = $stmt->get_result();
                                 <!-- View Details Button -->
                                 <div class="job-actions mt-3">
                                     <a href="job.php?id=<?php echo $job['job_id']; ?>" class="btn btn-primary btn-sm rounded-pill">
-                                        View Details
+                                        View Job Details
                                     </a>
                                 </div>
                             </div>
@@ -689,11 +730,12 @@ $result_jobs = $stmt->get_result();
                     <?php endwhile; ?>
                 </div>
             <?php else: ?>
-                <p class="text-center text-muted"><?php echo $isAdmin ? "This user has not applied for any jobs yet." : "You have not applied for any jobs yet."; ?></p>
+                <p class="text-center text-muted"><?php echo $isAdmin ? "No job applications available." : ($isEmployer ? "You have no applicants for your job posted by this user." : "You have not applied for any jobs yet."); ?></p>
             <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>
+
 
 
 

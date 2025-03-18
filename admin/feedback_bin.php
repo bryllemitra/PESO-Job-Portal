@@ -116,6 +116,18 @@ if ($result === false) {
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/JOB/assets/feedback_bin.css">
     <style>
+        .form-control, .form-select, .btn {
+    height: 45px; /* Consistent height */
+    
+}
+
+.expanded-input, .expanded-select, .expanded-button {
+    width: 100%; /* Make the input, select, and button take up full column width */
+}
+
+.expanded-button {
+    width: auto; /* Allow the button to adjust dynamically based on content */
+}
 
     </style>
 </head>
@@ -154,19 +166,22 @@ if ($result === false) {
                    placeholder="Search by name or subject"
                    value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
         </div>
+
         <!-- Sorting Dropdown -->
         <div class="col-md-3 col-12">
-            <select name="sort_by" class="form-select rounded-pill shadow-sm expanded-select w-100">
+            <select name="sort_by" class="form-select rounded-pill expanded-select w-100">
                 <option value="created_at" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'created_at') ? 'selected' : '' ?>>Latest Deleted</option>
                 <option value="subject" <?= (isset($_GET['sort_by']) && $_GET['sort_by'] == 'subject') ? 'selected' : '' ?>>By Subject</option>
             </select>
         </div>
+
         <!-- Submit Button -->
         <div class="col-md-auto col-12">
-            <button type="submit" class="btn btn-primary rounded-pill shadow-sm w-100   ">Filter</button>
+            <button type="submit" class="btn btn-primary rounded-pill shadow-sm expanded-button">Filter</button>
         </div>
     </form>
 </div>
+
 
         <!-- Feedback List -->
 <div class="user-list">

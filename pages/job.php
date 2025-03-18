@@ -253,7 +253,7 @@ $job_remarks = $job['remarks'] ?? '';
             </div>
             <?php if (!empty($job['remarks'])): ?>
                 <div class="alert alert-danger">
-                    <strong>Employer's Remark:</strong> <?= htmlspecialchars($job['remarks']) ?>
+                    <strong>Admin's Remark:</strong> <?= htmlspecialchars($job['remarks']) ?>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

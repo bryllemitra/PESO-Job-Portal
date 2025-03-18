@@ -188,14 +188,14 @@ if ($is_logged_in && $user_role === 'admin') {
             <?php if (!$is_logged_in): ?>
                 <!-- Message for Non-Logged-In Users -->
                 <div class="alert alert-warning text-center" role="alert">
-                    <p>You must be logged in to send us a message.</p>
+                    <p>You must be logged in to send a feedback.</p>
                     <a href="../pages/login.php" class="btn btn-outline-custom btn-lg rounded-pill">Login Now</a>
                 </div>
 
             <?php elseif ($user_role === 'admin'): ?>
                 <!-- Admin-Specific Content -->
                 <div class="messenger-container">
-                    <h3>Recent Messages</h3><br>
+                    <h3>Recent Feedback</h3><br>
                     <div class="messages-list">
                         <?php if (!empty($recent_messages)): ?>
                             <?php foreach ($recent_messages as $msg): ?>
@@ -207,7 +207,7 @@ if ($is_logged_in && $user_role === 'admin') {
                                 </div><br>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <p>No recent messages.</p>
+                            <p>No recent feedback.</p>
                         <?php endif; ?>
                     </div>
                     <a href="../admin/view_message.php" class="btn btn-primary-custom w-100 mt-3">View All Messages</a>

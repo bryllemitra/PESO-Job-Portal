@@ -420,35 +420,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['first_name']) && isse
     $user = $stmt->get_result()->fetch_assoc();
 }
 
-// Query to get total applications per week
-$query_applications = "SELECT WEEK(applied_at) AS week_number, COUNT(*) AS total_applications 
-                        FROM applications 
-                        GROUP BY week_number 
-                        ORDER BY week_number";
-$result_applications = $conn->query($query_applications);
+// Fetch applicants per week for the current month
+$current_year = date('Y');
+$current_month = date('m');
 
-// Fetch data for applications
-$applications_data = [];
-if ($result_applications->num_rows > 0) {
-    while ($row = $result_applications->fetch_assoc()) {
-        $applications_data[] = $row;
+// Generate a list of all weeks in the current month
+$weeks_in_month = [];
+$first_day_of_month = date("$current_year-$current_month-01");
+$last_day_of_month = date("Y-m-t", strtotime($first_day_of_month));
+
+$current_week_start = $first_day_of_month;
+while ($current_week_start <= $last_day_of_month) {
+    $current_week_end = date('Y-m-d', strtotime('+6 days', strtotime($current_week_start)));
+    $weeks_in_month[] = [
+        'week_start' => $current_week_start,
+        'week_end' => $current_week_end,
+        'week_number' => date('W', strtotime($current_week_start)) // Use ISO week number
+    ];
+    $current_week_start = date('Y-m-d', strtotime('+1 week', strtotime($current_week_start)));
+}
+
+// Fetch applicants per week for all job posts
+$applicants_per_week_query = "
+    SELECT 
+        YEARWEEK(a.applied_at) AS week,
+        COUNT(DISTINCT a.id) AS total_applicants
+    FROM applications a
+    WHERE YEAR(a.applied_at) = $current_year
+    AND MONTH(a.applied_at) = $current_month
+    GROUP BY YEARWEEK(a.applied_at)
+    ORDER BY week ASC";
+$applicants_per_week_result = $conn->query($applicants_per_week_query);
+$applicants_per_week_data = $applicants_per_week_result->fetch_all(MYSQLI_ASSOC);
+
+// Map the fetched data to the weeks in the current month
+$applicants_per_week = [];
+foreach ($weeks_in_month as $week) {
+    $week_number = $week['week_number'];
+    $found = false;
+    foreach ($applicants_per_week_data as $data) {
+        if ($data['week'] == $current_year . $week_number) {
+            $applicants_per_week[] = [
+                'week' => $week_number,
+                'total_applicants' => $data['total_applicants']
+            ];
+            $found = true;
+            break;
+        }
+    }
+    if (!$found) {
+        $applicants_per_week[] = [
+            'week' => $week_number,
+            'total_applicants' => 0
+        ];
     }
 }
 
-// Query to get total jobs per week
-$query_jobs = "SELECT WEEK(created_at) AS week_number, COUNT(*) AS total_jobs 
-               FROM jobs 
-               GROUP BY week_number 
-               ORDER BY week_number";
-$result_jobs = $conn->query($query_jobs);
-
-// Fetch data for jobs
-$jobs_data = [];
-if ($result_jobs->num_rows > 0) {
-    while ($row = $result_jobs->fetch_assoc()) {
-        $jobs_data[] = $row;
-    }
-}
+// Convert the data to JSON for JavaScript
+$applicants_per_week_json = json_encode($applicants_per_week);
 
 
 ?>
@@ -715,16 +744,20 @@ if ($result_jobs->num_rows > 0) {
 
     </div>
 
-    <!-- New Line Chart for Total Applications -->
-<div class="row mb-4">
-<div class="col-md-12">
-            <div class="card shadow-lg rounded custom-card">
-                <div class="card-body">
-                    <h5 class="card-title text-center" style="font-size: 20px; font-weight: bold; color: #333;">Total Applications per Week</h5>
-                    <canvas id="totalApplicationsChart"></canvas>
-                </div>
+<!-- Line Chart for Total Applicants per Week -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-lg border-0 rounded-3 chart-card" style="height: 500px;">
+            <div class="card-header bg-transparent text-white">
+                <i class="fas fa-chart-line me-2"></i> Total Applicants per Week
+            </div>
+            <div class="card-body" style="height: 100%;">
+                <!-- Dynamic Label -->
+                <h6 id="dynamicLabel" class="text-center mb-3"></h6>
+                <canvas id="totalApplicationsChart" style="height: 95%; width: 100%;"></canvas>
             </div>
         </div>
+    </div>
 </div>
 </div>
 </div>
@@ -836,7 +869,7 @@ if ($result_jobs->num_rows > 0) {
 <!-- Applications Tab -->
 <div class="tab-pane fade" id="applications" role="tabpanel" aria-labelledby="applications-tab">
     <div class="container mt-4">
-        <h4 class="text-center"><?php echo isset($_SESSION['role']) && $_SESSION['role'] === 'admin' ? 'Pending Applications' : 'Managing Jobs'; ?></h4><Br>
+        <h4 class="text-center"><?php echo isset($_SESSION['role']) && $_SESSION['role'] === 'admin' ? 'With Pending Applications' : 'Managing Jobs'; ?></h4><Br>
         <?php
         // Check if the current user is an admin or employer
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
@@ -1368,32 +1401,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Existing chart configurations (for Total Users, Jobs, etc.)
 
-// Line chart for Total Applications per Week
-var ctx5 = document.getElementById('totalApplicationsChart').getContext('2d');
-var totalApplicationsChart = new Chart(ctx5, {
+// Parse the JSON data from PHP
+const applicantsPerWeekData = <?php echo $applicants_per_week_json; ?>;
+
+// Extract weeks and applicants data
+const weeks = applicantsPerWeekData.map(item => `Week ${item.week}`);
+const applicants = applicantsPerWeekData.map(item => item.total_applicants);
+
+// Get the current date
+const currentDate = new Date();
+const currentMonth = currentDate.toLocaleString('default', { month: 'long' }); // Full month name (e.g., "March")
+const currentDay = currentDate.getDate(); // Day of the month (e.g., 27)
+const currentWeekOfYear = getWeekOfYear(currentDate); // Week of the year (e.g., 13)
+const currentYear = currentDate.getFullYear(); // Current year (e.g., 2023)
+
+// Function to get the week of the year
+function getWeekOfYear(date) {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - startOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+}
+
+// Set the dynamic label in the HTML
+const dynamicLabel = document.getElementById('dynamicLabel');
+dynamicLabel.textContent = `Applicants for ${currentMonth} ${currentDay} (Week ${currentWeekOfYear}, ${currentYear})`;
+
+// Render the chart
+const ctx = document.getElementById('totalApplicationsChart').getContext('2d');
+const myChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'], // Weekly labels
+        labels: weeks,
         datasets: [{
-            label: 'Total Applications', // Chart label
-            data: [
-                <?= isset($total_applications[1]) ? $total_applications[1] : 0 ?>, // Week 1 data
-                <?= isset($total_applications[2]) ? $total_applications[2] : 0 ?>, // Week 2 data
-                <?= isset($total_applications[3]) ? $total_applications[3] : 0 ?>, // Week 3 data
-                <?= isset($total_applications[4]) ? $total_applications[4] : 0 ?>, // Week 4 data
-                <?= isset($total_applications[5]) ? $total_applications[5] : 0 ?>  // Week 5 data
-            ],
-            backgroundColor: 'rgba(28, 200, 138, 0.2)', // Light green color
-            borderColor: '#1cc88a', // Dark green color for the line
-            fill: false,
-            borderWidth: 2
+            label: 'Total Applicants', // Generic label for the dataset
+            data: applicants,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
         }]
     },
     options: {
-        responsive: true,
         scales: {
             y: {
                 beginAtZero: true
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    title: (context) => `Week ${context[0].label.replace('Week ', '')}`, // Custom tooltip title
+                    label: (context) => `Applicants: ${context.raw}` // Custom tooltip label
+                }
             }
         }
     }
