@@ -111,10 +111,15 @@ $total_pages = ceil($total_notifications / $notifications_per_page);
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/JOB/assets/notification.css">
+    <style>
+        body {
+            background-color: #F0F8FF !important;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
-    <h3 class="text-center">Notifications</h3><br><br>
+    <h1 class="text-center">Notifications</h1><br><br>
 
 <!-- Search and Sorting Form -->
 <form method="GET" class="mb-3">

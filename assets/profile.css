@@ -5,8 +5,8 @@
 }
 
 
-body {
-    background-color: #F0F8FF;
+body{
+    background-color: #f1f3f5;
 }
 
 /* Hide the button when the Applications Tab is active */
@@ -255,7 +255,7 @@ body[data-tab="applications"] .tab-pane#profile {
 
 /* Hover Effect */
 .nav-tabs .nav-link:hover {
-    color: #007bff; /* Turns blue on hover */
+    color: #007bff !important; /* Turns blue on hover */
 }
 
 /* Active Tab Style */
@@ -263,8 +263,23 @@ body[data-tab="applications"] .tab-pane#profile {
     color: #007bff !important; /* Blue text for active tab */
     font-weight: bold; /* Makes active tab stand out */
     border-bottom: 2px solid #007bff; /* Adds an underline effect */
+    transition: width 0.3s ease-in-out;
 }
 
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background: none !important;
+    transition: width 0.3s ease-in-out;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
 
 
 /* Custom button styling */

@@ -1,11 +1,13 @@
 <?php
 // Footer content for the job portal
 ?>
-<div class="content-wrapper">
+<!-- Wrapper for the page content and footer -->
+<div class="page-wrapper">
     <!-- Main Content -->
     <div class="main-content">
         <!-- Your page content here -->
     </div>
+
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
@@ -40,18 +42,28 @@
         </div>
     </footer>
 </div>
+
 <!-- Font Awesome Icons -->
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 <!-- Footer CSS -->
 <style>
-    /* Ensure that the footer is at the bottom without affecting content */
-    .content-wrapper {
+    /* Make sure the entire page is filled vertically */
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+
+    /* Flex container for the entire page */
+    .page-wrapper {
         display: flex;
         flex-direction: column;
-        min-height: 50vh; /* Ensure the wrapper fills the entire viewport height */
+        min-height: 70vh; /* Ensures footer stays at the bottom */
     }
+
+    /* Main content area will fill the available space */
     .main-content {
-        flex: 1; /* Take available space, pushing footer down if needed */
+        flex: 1;
     }
 
     /* General Footer Styling */
@@ -146,7 +158,7 @@
         margin: 0;
         text-align: center;
         width: 100%;
-        margin-top: 20px;
+        margin-top: 10px;
         color: #666; /* Soft gray for copyright text */
     }
 

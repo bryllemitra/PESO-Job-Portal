@@ -1,0 +1,256 @@
+<?php
+// Include database connection and header
+include '../includes/config.php';
+include '../includes/header.php';
+
+// Check if the user is logged in and if they are an admin
+if ($_SESSION['role'] !== 'admin') {
+    header("Location: ../index.php");
+    exit();
+}
+
+// Fetch all employer requests along with user details
+$query = "SELECT er.*, u.first_name, u.last_name FROM employer_requests er
+          JOIN users u ON er.user_id = u.id
+          WHERE er.status = 'pending' ORDER BY er.created_at DESC";
+$stmt = $conn->prepare($query);
+$stmt->execute();
+$requests_result = $stmt->get_result();
+?>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS (for modals) -->
+ <!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+
+<div class="container mt-5">
+    <h2 class="text-center mb-5">Employer Requests</h2>
+
+    <div class="row">
+        <div class="col-md-12">
+            <?php if ($requests_result->num_rows > 0): ?>
+                <div class="list-group">
+                    <?php while ($request = $requests_result->fetch_assoc()): ?>
+                        <div class="request-item card mb-3 p-4">
+                            <div>
+                                <strong>ID:</strong> <?= htmlspecialchars($request['user_id']) ?>
+                            </div>
+                            <div>
+                                <strong>Name:</strong> <?= htmlspecialchars($request['first_name']) ?> <?= htmlspecialchars($request['last_name']) ?>
+                            </div>
+                            <div>
+                                <strong>Company Name:</strong> <?= htmlspecialchars($request['company_name']) ?> <!-- Displaying company name -->
+                            </div>
+                            <div>
+                                <strong>Company Details:</strong>
+                                <p><?= nl2br(htmlspecialchars($request['request_message'])) ?></p>
+                            </div>
+                            <div>
+                                <small>Requested on: <?= date('M d, Y h:i A', strtotime($request['created_at'])) ?></small>
+                            </div>
+                            <br>
+                            <div>
+                                 <?php
+                                 // Fetch additional proof files for this request
+                                 $proof_query = "SELECT * FROM employer_request_proofs WHERE request_id = ?";
+                                 $proof_stmt = $conn->prepare($proof_query);
+                                 $proof_stmt->bind_param("i", $request['id']);
+                                 $proof_stmt->execute();
+                                 $proof_result = $proof_stmt->get_result();
+
+                                 if ($proof_result->num_rows > 0) {
+                                     while ($proof = $proof_result->fetch_assoc()) {
+                                         echo '<a href="' . htmlspecialchars($proof['file_path']) . '" target="_blank" class="btn btn-light btn-sm mb-2">Attached File</a><br>';
+                                     }
+                                 } else {
+                                     echo '<span>No additional proof files.</span>';
+                                 }
+                                 ?>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <button data-request-id="<?= $request['id'] ?>" class="btn btn-success btn-approve">Approve Request</button>
+                                <button data-request-id="<?= $request['id'] ?>" class="btn btn-danger btn-reject">Reject Request</button>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <p>No recent requests found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal for Rejecting Request -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Reject Employer Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm" method="POST">
+                    <div class="mb-3">
+                        <label for="remark" class="form-label">Reason for Rejection</label>
+                        <textarea id="remark" name="remark" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <input type="hidden" name="request_id" id="rejectRequestId">
+                    <button type="submit" class="btn btn-danger">Submit Rejection</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Approving Request (Simple Confirmation) -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveModalLabel">Approve Employer Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve this employer request? Please note that they will automatically be set as an employer once approved.</p>
+                <form id="approveForm" method="POST">
+                    <input type="hidden" name="request_id" id="approveRequestId">
+                    <button type="submit" class="btn btn-success">Yes, Approve</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+
+// Reject Request Button Click
+document.querySelectorAll('.btn-reject').forEach(button => {
+    button.addEventListener('click', function() {
+        const requestId = this.getAttribute('data-request-id');
+        document.getElementById('rejectRequestId').value = requestId;
+        $('#rejectModal').modal('show');
+    });
+});
+
+// Handle Reject Form Submission
+$('#rejectForm').submit(function(e) {
+    e.preventDefault();
+    
+    const requestId = $('#rejectRequestId').val();
+    const remark = $('#remark').val();
+
+    $.ajax({
+        type: 'POST',
+        url: 'reject_request.php', // Ensure this URL points to the correct PHP handler
+        data: { request_id: requestId, remark: remark },
+        dataType: 'json', // Expecting JSON response from the server
+        success: function(response) {
+            if (response.status === 'success') {
+                // SweetAlert success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Request Rejected!',
+                    text: 'The employer request has been successfully rejected. ', // Show rejection reason
+                    
+                    confirmButtonText: 'Okay',
+                   
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // If user clicks "Send Again", reload the form to allow resubmission
+                        window.location.reload();
+                    } else {
+                        // If the user cancels, they can choose to leave
+                    }
+                });
+            } else {
+                // SweetAlert error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'There was an error while rejecting the request. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            // Handle AJAX request failure
+            Swal.fire({
+                icon: 'error',
+                title: 'AJAX Error!',
+                text: 'Failed to process your request. Please try again later.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+});
+
+// Approve Request Button Click
+document.querySelectorAll('.btn-approve').forEach(button => {
+    button.addEventListener('click', function() {
+        const requestId = this.getAttribute('data-request-id');
+        document.getElementById('approveRequestId').value = requestId;
+        $('#approveModal').modal('show');
+    });
+});
+
+
+// Handle Approve Form Submission
+$('#approveForm').submit(function(e) {
+    e.preventDefault();
+    
+    const requestId = $('#approveRequestId').val();
+
+    $.ajax({
+        type: 'POST',
+        url: 'approve_request.php', // Make sure this URL points to the correct PHP handler
+        data: { request_id: requestId },
+        dataType: 'json', // Expecting JSON response from the server
+        success: function(response) {
+            if (response.status === 'success') {
+                // SweetAlert success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Request Approved!',
+                    text: 'The employer request has been successfully approved and the role has been updated.',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    // Optionally, you could reload the page or show some updated information
+                    location.reload(); // This will reload the page to reflect the new role change
+                });
+            } else {
+                // SweetAlert error message if update fails
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'There was an error while approving the request. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            // Handle AJAX request failure
+            Swal.fire({
+                icon: 'error',
+                title: 'AJAX Error!',
+                text: 'Failed to process your request. Please try again later.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+});
+
+</script>
+
+
+
+<?php include '../includes/footer.php'; ?>

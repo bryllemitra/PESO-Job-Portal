@@ -664,7 +664,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
 
 <!-- Dashboard Container -->
 <div class="dashboard-container mt-5">
-    <h1 class="text-center mb-4" style="font-family: 'Roboto', sans-serif; color: #333;">Dashboard</h1>
+    <h1 class="text-center mb-4" style="font-family: 'Roboto', sans-serif; color: #4a90e2;">Dashboard</h1>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">

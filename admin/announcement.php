@@ -38,8 +38,8 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
 
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
-
+<body>
+<br><h1 class="text-center mt-8 ">Latest Announcements</h1>
     
     <div class="container mt-6 text-center">
         <?php if ($user_role === 'admin'): ?>
@@ -48,10 +48,10 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
             </button>
         <?php endif; ?>
     </div>
-</body>
+
 <!-- Announcements Section -->
 <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold text-center mb-8 text-[#1976d2]">Latest Announcements</h1>
+    
 
     <?php
     // Fetch announcements from the database

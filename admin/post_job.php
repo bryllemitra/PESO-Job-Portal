@@ -196,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['role'])) {
 
         body{
             margin-top:24px;
-            background-color: #F0F8FF !important;
+            background-color: #f1f3f5 !important;
         }
 
         

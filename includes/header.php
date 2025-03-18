@@ -79,21 +79,28 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <!-- Collapsible Navigation Links -->
                 <div class="collapse navbar-collapse justify-content-start" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo ($current_page === 'index.php') ? 'custom-active' : ''; ?>" href="../pages/index.php">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo ($current_page === 'browse.php') ? 'custom-active' : ''; ?>" href="../pages/browse.php">Browse</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo ($current_page === 'announcement.php') ? 'custom-active' : ''; ?>" href="../admin/announcement.php">Announcement</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo ($current_page === 'about.php') ? 'custom-active' : ''; ?>" href="../pages/about.php">About Us</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo ($current_page === 'contact.php') ? 'custom-active' : ''; ?>" href="../pages/contact.php">Contact</a>
-                        </li>
+                    <li class="nav-item">
+    <a class="nav-link <?php echo ($current_page === 'index.php') ? 'custom-active' : ''; ?>" href="../pages/index.php">Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <?php echo ($current_page === 'browse.php') ? 'custom-active' : ''; ?>" href="../pages/browse.php">Browse</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <?php echo ($current_page === 'announcement.php') ? 'custom-active' : ''; ?>" href="../admin/announcement.php">Announcement</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <?php echo ($current_page === 'about.php') ? 'custom-active' : ''; ?>" href="../pages/about.php">About Us</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <?php echo ($current_page === 'contact.php') ? 'custom-active' : ''; ?>" href="../pages/contact.php">Contact</a>
+</li>
+
+<?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'user'): ?>
+    <li class="nav-item">
+        <a class="nav-link <?php echo ($current_page === 'employer_requests.php') ? 'custom-active' : ''; ?>" href="../pages/employer_requests.php">Hire Now</a>
+    </li>
+<?php endif; ?>
+
 
                     </ul>
                 </div>

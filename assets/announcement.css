@@ -72,8 +72,8 @@
             background-color: #fee2e2;
         }
 
-        h4{
-            font-size: 24px;
+        h1{
+            font-size: 35px !important;
             font-weight: 500;
         }
 
@@ -181,6 +181,9 @@
 
 
 body{
-    background-color: #F0F8FF !important;
+    background-color: #f1f3f5;
 }
-       
+
+h1{
+    color:cornflowerblue;
+}

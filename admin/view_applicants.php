@@ -148,7 +148,7 @@ $appResult = $stmt->get_result();
 <link rel="stylesheet" href="/JOB/assets/view_applicants.css">
 <style>
         body {
-            background-color: #F0F8FF !important;
+            background-color: #f1f3f5;
         }
     </style>
 

@@ -191,10 +191,12 @@ if (isset($_SESSION['login_message'])) {
         <h2 >Admin Panel</h2>
         <ul>
             <li><a href="admin.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
             <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
+            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
+            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
             <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
+            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
+            
         </ul>
     </div>
     <div class="toggle-btn" onclick="toggleSidebar()">

@@ -125,6 +125,19 @@ if (isset($_SESSION['login_message'])) {
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
+        /* Remove underline from all links */
+a {
+    text-decoration: none;
+}
+
+/* If you only want to remove the underline for feature links */
+.feature-card a {
+    text-decoration: none;
+}
+
+h3{
+    color: #000;
+}
 
     </style>
 </head>
@@ -223,23 +236,31 @@ if (isset($_SESSION['login_message'])) {
         </div>
     </div>
 
-        <!-- Features Section -->
-        <div style="margin-bottom:100px;"  class="container features">
-        <div class="feature-card">
+<!-- Features Section -->
+<div style="margin-bottom:100px;" class="container features">
+    <div class="feature-card">
+        <a href="../pages/browse.php"> <!-- Link to Browse page for Job Listings -->
             <i class="fas fa-briefcase"></i>
             <h3>Job Listings</h3>
             <p>Find the perfect job that matches your skills and aspirations.</p>
-        </div>
-        <div class="feature-card">
+        </a>
+    </div>
+    <div class="feature-card">
+        <a href="../pages/employer_requests.php"> <!-- Link to Announcement page for Employer Support -->
             <i class="fas fa-handshake"></i>
             <h3>Employer Support</h3>
             <p>We assist employers in finding the right candidates for their needs.</p>
-        </div>
-        <div class="feature-card">
+        </a>
+    </div>
+    <div class="feature-card">
+        <a href="../admin/announcement.php"> <!-- Link to About Us page for Community Engagement -->
             <i class="fas fa-users"></i>
             <h3>Community Engagement</h3>
             <p>Empowering the community through employment opportunities.</p>
-        </div>
+        </a>
+    </div>
+</div>
+
     </div>
 
         <!-- Ads Section -->
@@ -457,7 +478,7 @@ if (isset($_SESSION['login_message'])) {
 
 
 
-    <!-- JavaScript for Auto-Sliding Ads -->
+
     <script>
         // Get the message from the URL query parameter
         const urlParams = new URLSearchParams(window.location.search);

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 09, 2025 at 05:02 PM
+-- Generation Time: Mar 10, 2025 at 06:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -90,8 +90,6 @@ INSERT INTO `announcements` (`id`, `title`, `content`, `created_at`, `thumbnail`
 (1, 'New Job Openings', 'We are excited to announce new job openings in various industries, ranging from tech and healthcare to finance and customer service. These positions offer competitive salaries, benefits, and opportunities for growth in dynamic, supportive work environments. Whether you\'re looking to take the next step in your career or explore a new field, we have something for everyone. Stay tuned for updates on available roles, and don\'t miss out—apply today and take the first step towards your future!', '2025-02-12 13:29:41', NULL, ''),
 (2, 'Upcoming Career Fair', 'Join us for our annual career fair happening next month, where you’ll have the chance to meet top employers, network with industry professionals, and explore exciting career opportunities. Whether you\'re a recent graduate or an experienced professional looking for a new challenge, this event is designed to help you make valuable connections and take the next step in your career. Register now to secure your spot and get ready to unlock new possibilities for your future!', '2025-02-12 13:29:41', NULL, NULL),
 (3, 'PESO Office Hours Update', 'Our office hours have been updated to better serve you. We encourage you to check the updated schedule on our website for the most accurate information regarding availability. Whether you\'re planning a visit or need assistance during specific hours, the new schedule ensures that we are here when you need us. Be sure to take a look and plan accordingly!', '2025-02-12 13:29:41', NULL, NULL),
-(26, 'Looking for a BAND', 'Cute lang pero walang talent', '2025-03-02 08:01:05', '../uploads/465288762_9217939608235897_512827677959919798_n.jpg', 'https://www.facebook.com/venard.jhon.c.salido'),
-(27, 'ATTENTION!!', 'SAD BOY! NEED JOWA!', '2025-03-02 08:05:40', '../uploads/465705731_9225645314131993_8015089547455862540_n.jpg', 'https://www.facebook.com/venchansalido'),
 (28, '📢 𝙋𝙐𝘽𝙇𝙄𝘾 𝘼𝙉𝙉𝙊𝙐𝙉𝘾𝙀𝙈𝙀𝙉𝙏 📢', 'Dear valued stakeholders, job seekers, employers, and partners,\r\nAs our 𝙤𝙛𝙛𝙞𝙘𝙞𝙖𝙡 𝙋𝙀𝙎𝙊 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝙁𝙖𝙘𝙚𝙗𝙤𝙤𝙠 𝙥𝙖𝙜𝙚 𝙞𝙨 𝙘𝙪𝙧𝙧𝙚𝙣𝙩𝙡𝙮 𝙨𝙪𝙨𝙥𝙚𝙣𝙙𝙚𝙙, we will be using this temporary account to continue providing you with timely updates, job opportunities, and important announcements.\r\nWe kindly ask for your support—𝙥𝙡𝙚𝙖𝙨𝙚 𝙛𝙤𝙡𝙡𝙤𝙬 𝙩𝙝𝙞𝙨 𝙖𝙘𝙘𝙤𝙪𝙣𝙩 𝙖𝙣𝙙 𝙨𝙝𝙖𝙧𝙚 𝙩𝙝𝙞𝙨 𝙥𝙤𝙨𝙩 so we can reach more people. Your patience and understanding are greatly appreciated as we work on resolving this issue.\r\n𝙋𝙪𝙗𝙡𝙞𝙘 𝙀𝙢𝙥𝙡𝙤𝙮𝙢𝙚𝙣𝙩 𝙎𝙚𝙧𝙫𝙞𝙘𝙚 𝙊𝙛𝙛𝙞𝙘𝙚 (𝙋𝙀𝙎𝙊) – 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝘾𝙞𝙩𝙮', '2025-03-03 10:03:11', '../uploads/official.jpg', 'https://www.facebook.com/profile.php?id=61573999820314');
 
 -- --------------------------------------------------------
@@ -116,6 +114,13 @@ CREATE TABLE `applications` (
   `action_taken_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `applications`
+--
+
+INSERT INTO `applications` (`id`, `user_id`, `job_id`, `applied_at`, `resume_file`, `status`, `is_read`, `status_updated_at`, `dismissed`, `remark`, `canceled_at`, `user_viewed`, `action_taken_by`) VALUES
+(525, 57, 87, '2025-03-10 15:22:28', '../uploads/resumes/VENARD (1).pdf', 'pending', 0, '2025-03-10 15:22:28', 0, NULL, NULL, 0, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -127,6 +132,13 @@ CREATE TABLE `application_positions` (
   `application_id` int(11) NOT NULL,
   `position_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `application_positions`
+--
+
+INSERT INTO `application_positions` (`id`, `application_id`, `position_id`) VALUES
+(239, 525, 28);
 
 -- --------------------------------------------------------
 
@@ -364,6 +376,54 @@ CREATE TABLE `employers` (
 
 INSERT INTO `employers` (`id`, `user_id`, `company_name`, `company_description`, `company_website`, `location`) VALUES
 (2, 21, 'KCC Mall de Zamboanga', 'KCC Mall de Zamboanga is a premier shopping destination in Zamboanga City. It offers a wide range of retail stores, dining options, and entertainment facilities to provide a complete shopping experience. The mall is known for its modern architecture, top-tier customer service, and vibrant community involvement.', 'https://www.facebook.com/KCCZamboanga', 'Gov. Camins St. Zamboanga City, Philippines');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `employer_requests`
+--
+
+CREATE TABLE `employer_requests` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `request_message` text NOT NULL,
+  `proof_file` varchar(255) NOT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `remark` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `company_name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `employer_requests`
+--
+
+INSERT INTO `employer_requests` (`id`, `user_id`, `request_message`, `proof_file`, `status`, `remark`, `created_at`, `company_name`) VALUES
+(38, 57, 'Halo I\'m under the water please halp me!', '', 'rejected', 'maybe next time bro', '2025-03-10 14:18:44', 'Borat'),
+(40, 67, 'TechTrek is an innovative student-led organization focused on advancing technology and software engineering knowledge. Comprising a group of passionate IT students, our mission is to explore, develop, and solve real-world challenges through cutting-edge software solutions. We are committed to staying ahead of the curve by applying industry-leading practices, tools, and frameworks in our software engineering projects. As part of our academic journey, we collaborate, learn, and grow, preparing ourselves for the future of technology.', '', 'pending', NULL, '2025-03-10 15:37:56', 'TechTrek');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `employer_request_proofs`
+--
+
+CREATE TABLE `employer_request_proofs` (
+  `id` int(11) NOT NULL,
+  `request_id` int(11) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `employer_request_proofs`
+--
+
+INSERT INTO `employer_request_proofs` (`id`, `request_id`, `file_path`, `created_at`) VALUES
+(36, 38, '../uploads/1l8lo8.jpg', '2025-03-10 14:18:44'),
+(38, 40, '../uploads/465288762_9217939608235897_512827677959919798_n.jpg', '2025-03-10 15:37:56'),
+(39, 40, '../uploads/VENARD (1).pdf', '2025-03-10 15:37:56'),
+(40, 40, '../uploads/CV-Salido.docx', '2025-03-10 15:37:56');
 
 -- --------------------------------------------------------
 
@@ -662,6 +722,14 @@ CREATE TABLE `notifications` (
   `user_role` enum('admin','user','employer') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `recipient_id`, `sender_id`, `job_id`, `application_id`, `message`, `is_read`, `created_at`, `user_role`) VALUES
+(303, 21, 57, 87, 525, 'A new application has been submitted for your job: 87', 1, '2025-03-10 15:22:28', 'employer'),
+(304, 4, 57, 87, 525, 'A new application has been submitted for the job: 87', 0, '2025-03-10 15:22:28', 'admin');
+
 -- --------------------------------------------------------
 
 --
@@ -810,6 +878,20 @@ ALTER TABLE `employers`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `employer_requests`
+--
+ALTER TABLE `employer_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `employer_request_proofs`
+--
+ALTER TABLE `employer_request_proofs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `request_id` (`request_id`);
+
+--
 -- Indexes for table `homepage`
 --
 ALTER TABLE `homepage`
@@ -895,13 +977,13 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=525;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=526;
 
 --
 -- AUTO_INCREMENT for table `application_positions`
 --
 ALTER TABLE `application_positions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=239;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=240;
 
 --
 -- AUTO_INCREMENT for table `barangay`
@@ -932,6 +1014,18 @@ ALTER TABLE `contacts`
 --
 ALTER TABLE `employers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `employer_requests`
+--
+ALTER TABLE `employer_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `employer_request_proofs`
+--
+ALTER TABLE `employer_request_proofs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `homepage`
@@ -967,7 +1061,7 @@ ALTER TABLE `job_positions_jobs`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=303;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=305;
 
 --
 -- AUTO_INCREMENT for table `saved_jobs`
@@ -1006,6 +1100,18 @@ ALTER TABLE `application_positions`
 --
 ALTER TABLE `employers`
   ADD CONSTRAINT `employers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `employer_requests`
+--
+ALTER TABLE `employer_requests`
+  ADD CONSTRAINT `employer_requests_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `employer_request_proofs`
+--
+ALTER TABLE `employer_request_proofs`
+  ADD CONSTRAINT `employer_request_proofs_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `employer_requests` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `job_categories`

@@ -71,7 +71,7 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
         width: auto; /* Let the button width be dynamic based on the content */
     } 
     body {
-            background-color: #F0F8FF !important;
+        background-color: #f1f3f5;
         }
     </style>
 </head>
@@ -83,10 +83,12 @@ $total_pages = ceil($total_users / $limit); // Calculate total pages
         <h2>Admin Panel</h2>
         <ul>
             <li><a href="admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
             <li><a href="user_list.php" class="active"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
+            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
+            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
             <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
+            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
+            
         </ul>
     </div>
     <div class="toggle-btn" onclick="toggleSidebar()">

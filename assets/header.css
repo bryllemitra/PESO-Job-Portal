@@ -172,36 +172,7 @@ body {
     }
 }
 
-/* Responsive Styles */
-@media (max-width: 991.98px) {
-    /* Left Dropdown */
-    .custom-header-container #navbarNav {
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: auto;
-        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
-        z-index: 1000;
-        padding: 10px;
-        border-radius: 0 0 10px 10px;
-    }
 
-    /* Right Dropdown */
-    .custom-header-container #rightNav {
-        position: absolute;
-        top: 60px;
-        right: 0;
-        width: auto;
-        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
-        z-index: 1000;
-        padding: 10px;
-        border-radius: 0 0 10px 10px;
-    }
-
-    .custom-header-container .navbar-toggler {
-        margin-left: auto;
-    }
-}
 
 
 
