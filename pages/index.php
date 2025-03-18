@@ -410,21 +410,9 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
         </button>
     </div>
 
-    <!-- Indicators Centered Below the Carousel -->
-    <div class="carousel-indicators-container text-center mt-4">
-        <div class="carousel-indicators">
-            <?php
-            // Fetch the latest 5 jobs from the database
-            $query = "SELECT id FROM jobs ORDER BY created_at DESC LIMIT 5";
-            $result = mysqli_query($conn, $query);
-            $index = 0;
-            while ($row = mysqli_fetch_assoc($result)) {
-                echo '<button type="button" data-bs-target="#jobCarousel" data-bs-slide-to="' . $index . '" class="' . ($index === 0 ? 'active' : '') . '" aria-label="Slide ' . ($index + 1) . '"></button>';
-                $index++;
-            }
-            ?>
-        </div>
-    </div>
+
+ 
+
 
     <!-- Browse All Jobs Button -->
     <div class="text-center mt-4">

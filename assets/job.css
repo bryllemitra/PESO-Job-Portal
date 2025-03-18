@@ -335,3 +335,6 @@
     z-index: 1000; /* Ensure it appears above other elements */
 }
 
+body{
+    background-color: #F0F8FF;
+}

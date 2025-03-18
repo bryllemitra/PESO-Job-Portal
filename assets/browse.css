@@ -353,5 +353,10 @@
 
 }
 
+body{
+    background-color: #F0F8FF;
+}
 
-
+    .album{
+        background-color: #F0F8FF !important;
+    }

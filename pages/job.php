@@ -132,7 +132,7 @@ $job_remarks = $job['remarks'] ?? '';
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/JOB/assets/job.css">
 </head>
-<body class="bg-light">
+<body>
     <div class="container py-5">
         <div class="row justify-content-center landscape-layout">
             <!-- Image Column -->

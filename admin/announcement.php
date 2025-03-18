@@ -48,7 +48,7 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
             </button>
         <?php endif; ?>
     </div>
-
+</body>
 <!-- Announcements Section -->
 <div class="container mx-auto py-8">
     <h1 class="text-3xl font-bold text-center mb-8 text-[#1976d2]">Latest Announcements</h1>
