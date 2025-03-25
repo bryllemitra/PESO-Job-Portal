@@ -13,7 +13,7 @@
     position: relative;
 }
 .placeholder-thumbnail {
-    height: 200px;
+    height: 250px;
     background: #f0f0f0;
     display: flex;
     align-items: center;
@@ -94,7 +94,36 @@
     color: #ff6700;
     background-color: transparent;
     transform: scale(1.03); /* Slight zoom-in effect */
+ 
 }
+
+.btn-outline-customz {            /* <-- FILTER BUTTON */
+
+    color: #4d4c4b;
+
+}
+.btn-outline-customz:hover {
+    color: #ff4500;
+    transform: translateY(-5px);
+    
+    
+    
+    
+}
+
+/* Add this CSS to your stylesheet */
+#filters-container {
+    display: none; /* Initially hidden */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    gap: 10px; /* Add space between filter items */
+    justify-content: center; /* Center the filter items horizontally */
+}
+
+.filter-item {
+    flex: 1 1 200px; /* Allow items to grow and shrink, with a base width of 200px */
+    max-width: 220px; /* Set a max-width for each dropdown */
+}
+
 
 .btn-outline-customs {            /* <-- FILTER BUTTON */
     background-color: #ff6700;
@@ -361,3 +390,6 @@ body{
     .album{
         background-color: #f1f3f5 !important;
     }
+
+
+    

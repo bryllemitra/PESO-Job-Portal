@@ -50,72 +50,98 @@ $positions = $position_stmt->get_result();
 // Handle job posting
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['role'])) {
     $user_role = $_SESSION['role']; // Get user role (admin or employer)
+    $uploader_username = $_SESSION['username']; // Get uploader's username from session
+    $uploader_id = $_SESSION['user_id']; // Optionally, use user ID instead of username
     
     // Check if user is admin or employer
     if ($user_role === 'admin' || $user_role === 'employer') {
-        $title = $_POST['title'];
-        $description = $_POST['description'];
-        $responsibilities = $_POST['responsibilities'];
-        $requirements = $_POST['requirements'];
-        $preferred_qualifications = $_POST['preferred_qualifications'];
-        $location = $_POST['location'];
+        // Sanitize input fields to prevent XSS
+        $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
+        $description = htmlspecialchars(trim($_POST['description']), ENT_QUOTES, 'UTF-8');
+        $responsibilities = htmlspecialchars(trim($_POST['responsibilities']), ENT_QUOTES, 'UTF-8');
+        $requirements = htmlspecialchars(trim($_POST['requirements']), ENT_QUOTES, 'UTF-8');
+        $preferred_qualifications = htmlspecialchars(trim($_POST['preferred_qualifications']), ENT_QUOTES, 'UTF-8');
+        $location = htmlspecialchars(trim($_POST['location']), ENT_QUOTES, 'UTF-8');
 
         // Retrieve specific location (ensure it doesn't get set as NULL if empty)
-        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) ? trim($_POST['specific_location']) : null;
+        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) 
+                              ? htmlspecialchars(trim($_POST['specific_location']), ENT_QUOTES, 'UTF-8') 
+                              : null;
 
-        $categories = $_POST['categories'] ?? []; // Ensure array input
-        $positions = $_POST['positions'] ?? [];   // Ensure array input
+        // Ensure array input for categories and positions
+        $categories = isset($_POST['categories']) ? array_map('intval', $_POST['categories']) : [];
+        $positions = isset($_POST['positions']) ? array_map('intval', $_POST['positions']) : [];
 
-        // Handle Thumbnail Upload
-        $thumbnail_path = null;
-        $photo_path = null;
-        $target_dir = "../uploads/";
+       // Handle Thumbnail and Photo Uploads
+$thumbnail_path = null;
+$photo_path = null;
 
-        function uploadFile($file, $target_dir) {
-            if (!empty($file['name'])) {
-                $target_file = $target_dir . basename($file["name"]);
-                $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-                $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
+// Dynamically set upload directories based on user role
+$thumbnail_dir = "../uploads/" . ($user_role === 'admin' ? 'admin_job_thumbnail/' : 'employer_job_thumbnail/');
+$photo_dir = "../uploads/" . ($user_role === 'admin' ? 'admin_job_photo/' : 'employer_job_photo/');
 
-                if (in_array($fileType, $allowed_types)) {
-                    if (move_uploaded_file($file["tmp_name"], $target_file)) {
-                        return "uploads/" . basename($file["name"]);
-                    }
-                }
-            }
-            return null;
+// Function to handle file uploads
+function uploadFile($file, $target_dir, $uploader_identifier) {
+    if (!empty($file['name'])) {
+        // Ensure the target directory exists
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true); // Create directory if it doesn't exist
         }
 
-        $thumbnail_path = uploadFile($_FILES['thumbnail'], $target_dir);
-        $photo_path = uploadFile($_FILES['photo'], $target_dir);
+        $fileType = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
 
-        // Insert job post with a 'pending' status (for employer) or 'approved' status (for admin)
-        $status = ($user_role === 'admin') ? 'approved' : 'pending';  // Admin gets 'approved' status, others get 'pending'
-        
-        $insert_stmt = $conn->prepare("INSERT INTO jobs (title, description, responsibilities, requirements, preferred_qualifications, location, specific_location, thumbnail, photo, status, employer_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $insert_stmt->bind_param("ssssssssssi", $title, $description, $responsibilities, $requirements, $preferred_qualifications, $location, $specific_location, $thumbnail_path, $photo_path, $status, $_SESSION['user_id']);
-        
-        if ($insert_stmt->execute()) {
-            $job_id = $conn->insert_id; // Get last inserted job ID
+        // Additional file checks (size limit, file type, etc.)
+        $max_size = 5 * 1024 * 1024; // 5MB max file size
+        if (in_array($fileType, $allowed_types) && $file['size'] <= $max_size) {
+            // Generate a unique file name using the uploader's identifier
+            $original_name = pathinfo($file["name"], PATHINFO_FILENAME); // Get the original file name without extension
+            $safe_file_name = preg_replace("/[^a-zA-Z0-9\.\-_]/", "", $original_name); // Sanitize file name
+            $unique_file_name = $uploader_identifier . '_' . uniqid() . '.' . $fileType; // Add uploader identifier and unique ID
 
-            // Insert into job_categories (Many-to-Many Relationship)
-            if (!empty($categories)) {
-                $category_stmt = $conn->prepare("INSERT INTO job_categories (job_id, category_id) VALUES (?, ?)");
-                foreach ($categories as $category_id) {
-                    $category_stmt->bind_param("ii", $job_id, $category_id);
-                    $category_stmt->execute();
-                }
+            $target_file = $target_dir . $unique_file_name;
+
+            // Move the uploaded file to the target directory
+            if (move_uploaded_file($file["tmp_name"], $target_file)) {
+                return str_replace("../", "", $target_dir) . $unique_file_name; // Return relative path
             }
+        }
+    }
+    return null;
+}
 
-            // Insert into job_positions_jobs (Many-to-Many Relationship)
-            if (!empty($positions)) {
-                $position_stmt = $conn->prepare("INSERT INTO job_positions_jobs (job_id, position_id) VALUES (?, ?)");
-                foreach ($positions as $position_id) {
-                    $position_stmt->bind_param("ii", $job_id, $position_id);
-                    $position_stmt->execute();
-                }
-            }
+// Upload the thumbnail and photo to their respective directories
+$thumbnail_path = uploadFile($_FILES['thumbnail'], $thumbnail_dir, $uploader_username);
+$photo_path = uploadFile($_FILES['photo'], $photo_dir, $uploader_username);
+
+// Insert job post with a 'pending' status (for employer) or 'approved' status (for admin)
+$status = ($user_role === 'admin') ? 'approved' : 'pending';  // Admin gets 'approved' status, others get 'pending'
+
+// Prepare and execute the INSERT statement for the job post
+$insert_stmt = $conn->prepare("INSERT INTO jobs (title, description, responsibilities, requirements, preferred_qualifications, location, specific_location, thumbnail, photo, status, employer_id) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$insert_stmt->bind_param("ssssssssssi", $title, $description, $responsibilities, $requirements, $preferred_qualifications, $location, $specific_location, $thumbnail_path, $photo_path, $status, $_SESSION['user_id']);
+
+if ($insert_stmt->execute()) {
+    $job_id = $conn->insert_id; // Get last inserted job ID
+
+    // Insert into job_categories (Many-to-Many Relationship)
+    if (!empty($categories)) {
+        $category_stmt = $conn->prepare("INSERT INTO job_categories (job_id, category_id) VALUES (?, ?)");
+        foreach ($categories as $category_id) {
+            $category_stmt->bind_param("ii", $job_id, $category_id);
+            $category_stmt->execute();
+        }
+    }
+
+    // Insert into job_positions_jobs (Many-to-Many Relationship)
+    if (!empty($positions)) {
+        $position_stmt = $conn->prepare("INSERT INTO job_positions_jobs (job_id, position_id) VALUES (?, ?)");
+        foreach ($positions as $position_id) {
+            $position_stmt->bind_param("ii", $job_id, $position_id);
+            $position_stmt->execute();
+        }
+    }
 
             // Different modals for admin and employer
             if ($user_role === 'admin') {
@@ -282,18 +308,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['role'])) {
                     </select>
                     <small class="text-gray-500">Hold CTRL (or CMD on Mac) to select multiple.</small>
                 </div>
-                
                 <!-- Job Thumbnail -->
-                <div>
-                    <label class="block font-medium text-gray-700">Job Thumbnail</label>
-                    <input type="file" name="thumbnail" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" required>
-                </div>
-                
-                <!-- Attach Photo -->
-                <div>
-                    <label class="block font-medium text-gray-700">Attach Photo</label>
-                    <input type="file" name="photo" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" required>
-                </div>
+<div>
+    <label class="block font-medium text-gray-700">Job Thumbnail</label>
+    <input type="file" name="thumbnail" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" accept="image/*" required>
+</div>
+
+<!-- Attach Photo -->
+<div>
+    <label class="block font-medium text-gray-700">Attach Photo</label>
+    <input type="file" name="photo" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" accept="image/*" required>
+</div>
+
             </div><br>
         
     

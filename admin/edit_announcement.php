@@ -3,14 +3,15 @@ include '../includes/config.php'; // Include your database connection file
 include '../includes/header.php';
 include '../includes/restrictions.php';
 
-if (!isset($_GET['id'])) {
-    echo "<script type='text/javascript'>
-            window.location.href = 'announcement.php';
-          </script>";
+// Check if 'id' is set and valid
+if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
+    echo "<script type='text/javascript'>window.location.href = 'announcement.php';</script>";
     exit;
 }
 
 $id = $_GET['id'];
+
+// Prepare and execute the SELECT query
 $query = "SELECT * FROM announcements WHERE id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $id);
@@ -18,46 +19,72 @@ $stmt->execute();
 $result = $stmt->get_result();
 $announcement = $result->fetch_assoc();
 
+// Check if announcement exists
 if (!$announcement) {
-    echo "<script type='text/javascript'>
-            window.location.href = 'announcement.php';
-          </script>";
+    echo "<script type='text/javascript'>window.location.href = 'announcement.php';</script>";
     exit;
 }
 
+// Process POST request (when updating an announcement)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $content = $_POST['content'];
-    $url_link = $_POST['url_link']; // URL Link for the announcement
-    $thumbnail = $_FILES['thumbnail']; // Handling the uploaded thumbnail image
+    // Sanitize user inputs to prevent XSS
+    $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
+    $content = htmlspecialchars(trim($_POST['content']), ENT_QUOTES, 'UTF-8');
+    
+    // Validate URL input
+    $url_link = $_POST['url_link'];
+    if (!empty($url_link)) {
+        if (!preg_match("/^https?:\/\/.*/", $url_link)) {
+            echo "<script>alert('Please enter a valid URL starting with http:// or https://');</script>";
+            exit;
+        }
+    }
 
-    // Handle thumbnail upload if there's a file
+    // Handle thumbnail upload
+    $thumbnail = $_FILES['thumbnail'];
     if ($thumbnail['name']) {
-        $upload_dir = '../uploads/';
+        // Validate file type and size
+        $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!in_array($thumbnail['type'], $allowed_types)) {
+            echo "<script>alert('Only image files are allowed.');</script>";
+            exit;
+        }
+
+        if ($thumbnail['size'] > 5 * 1024 * 1024) { // Max size of 5MB
+            echo "<script>alert('File size exceeds the limit of 5MB.');</script>";
+            exit;
+        }
+
+        // Sanitize file name (to prevent directory traversal or other issues)
         $thumbnail_name = time() . '-' . basename($thumbnail['name']);
+        $thumbnail_name = preg_replace("/[^a-zA-Z0-9.-]/", "", $thumbnail_name);
+
+        // Set upload directory and file path
+        $upload_dir = '../uploads/announcement_thumbnail/';
         $thumbnail_path = $upload_dir . $thumbnail_name;
-        
+
+        // Move the uploaded file to the target directory
         if (move_uploaded_file($thumbnail['tmp_name'], $thumbnail_path)) {
-            // Update in the database
+            // Update the database with the new thumbnail path
             $query = "UPDATE announcements SET title = ?, content = ?, url_link = ?, thumbnail = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->bind_param("ssssi", $title, $content, $url_link, $thumbnail_name, $id);
             $stmt->execute();
         }
     } else {
-        // If no file was uploaded, update without thumbnail
+        // If no thumbnail is uploaded, update without it
         $query = "UPDATE announcements SET title = ?, content = ?, url_link = ? WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("sssi", $title, $content, $url_link, $id);
         $stmt->execute();
     }
 
-    echo "<script type='text/javascript'>
-            window.location.href = 'announcement.php';
-          </script>";
+    // Redirect after successful update using JavaScript
+    echo "<script type='text/javascript'>window.location.href = 'announcement.php';</script>";
     exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -109,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="file" id="thumbnail" name="thumbnail" class="mt-1 block w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#1976d2] focus:ring-1 focus:ring-[#1976d2]">
                 <?php if ($announcement['thumbnail']): ?>
                     <div class="mt-2">
-                        <img src="../uploads/<?= htmlspecialchars($announcement['thumbnail']) ?>" alt="Current Thumbnail" class="w-24 h-24 object-cover rounded-md">
+                        <img src="../uploads/announcement_thumbnail/<?= htmlspecialchars($announcement['thumbnail']) ?>" alt="Current Thumbnail" class="w-24 h-24 object-cover rounded-md">
                     </div>
                 <?php endif; ?>
             </div>

@@ -3,32 +3,66 @@ include '../includes/config.php'; // Include your database connection file
 include '../includes/header.php';
 include '../includes/restrictions.php';
 
+// Check if the form was submitted via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $content = $_POST['content'];
+    // Sanitize user inputs to prevent XSS
+    $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
+    $content = htmlspecialchars(trim($_POST['content']), ENT_QUOTES, 'UTF-8');
     $url_link = $_POST['url_link'];
 
-    // Handle file upload
-    $thumbnail = null;
-    if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = '../uploads/'; // Directory to save images
-        $tmp_name = $_FILES['thumbnail']['tmp_name'];
-        $name = basename($_FILES['thumbnail']['name']);
-        $target_path = $upload_dir . $name;
-
-        if (move_uploaded_file($tmp_name, $target_path)) {
-            $thumbnail = $target_path; // Save the path of the uploaded image
+    // Validate the URL (ensure it starts with http:// or https://)
+    if (!empty($url_link)) {
+        if (!preg_match("/^https?:\/\/.*/", $url_link)) {
+            echo "<script>alert('Please enter a valid URL starting with http:// or https://');</script>";
+            exit;
         }
     }
 
-    // Prepare SQL query
+    // Handle file upload securely
+    $thumbnail = null;
+    if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../uploads/announcement_thumbnail/'; // Directory to save images
+        $tmp_name = $_FILES['thumbnail']['tmp_name'];
+        $name = basename($_FILES['thumbnail']['name']);
+
+        // Sanitize file name to avoid special characters or directory traversal
+        $name = preg_replace("/[^a-zA-Z0-9.-]/", "", $name);
+
+        // Validate the MIME type of the file
+        $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!in_array($_FILES['thumbnail']['type'], $allowed_types)) {
+            echo "<script>alert('Only image files are allowed (JPEG, PNG, JPG).');</script>";
+            exit;
+        }
+
+        // Set file path
+        $target_path = $upload_dir . $name;
+
+        // Validate the file size (max 5MB)
+        if ($_FILES['thumbnail']['size'] > 5 * 1024 * 1024) {
+            echo "<script>alert('File size exceeds the limit of 5MB.');</script>";
+            exit;
+        }
+
+        // Move the file to the uploads directory
+        if (move_uploaded_file($tmp_name, $target_path)) {
+            $thumbnail = $target_path; // Save the path of the uploaded image
+        } else {
+            echo "<script>alert('Error uploading the image. Please try again.');</script>";
+            exit;
+        }
+    }
+
+    // Prepare SQL query with parameterized statements to prevent SQL injection
     $query = "INSERT INTO announcements (title, content, thumbnail, url_link) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ssss", $title, $content, $thumbnail, $url_link);
 
+    // Execute the query and check if it's successful
     if ($stmt->execute()) {
-        ob_clean(); // Clear the output buffer
+        ob_clean(); // Clear the output buffer before sending redirection
 
+        // Modal structure for success message
         echo "
         <!-- Include Bootstrap CSS -->
         <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>
@@ -62,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<script>alert('Error creating announcement. Please try again.');</script>";
     }
 }
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

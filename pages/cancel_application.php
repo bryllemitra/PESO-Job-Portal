@@ -56,13 +56,15 @@ try {
     $conn->commit();
 
     $_SESSION['success_message'] = "Application canceled successfully! You can reapply after 10 minutes.";
-    header("Location: job.php?id=$job_id");
+    header("Location: job.php?id=$job_id&status=success");
     exit();
+    
 } catch (mysqli_sql_exception $exception) {
     // Rollback transaction in case of error
     $conn->rollback();
     $_SESSION['error_message'] = "Error canceling application. Please try again later.";
-    header("Location: job.php?id=$job_id");
+    header("Location: job.php?id=$job_id&status=error");
     exit();
+    
 }
 ?>

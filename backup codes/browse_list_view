@@ -1,0 +1,165 @@
+<!-- Job Listings -->
+<div class="album py-5 bg-light">
+    <div class="container">
+        <div class="row row-cols-1 g-4">
+            <?php if ($result->num_rows > 0): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <div class="col">
+                        <div class="card h-100 shadow-sm job-card position-relative">
+                            
+                            <!-- Dropdown Button on Top Left Corner -->
+                            <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || ($row['employer_id'] == $_SESSION['user_id']))): ?>
+                                <div class="dropdown position-absolute top-0 start-0 m-2">
+                                    <button class="btn btn-light dropdown-toggle btn-minimal" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <li><a class="dropdown-item" href="edit_job_browse.php?id=<?= $row['id'] ?>&source=browse">Edit</a></li>
+                                        <li><button class="dropdown-item btn-delete" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal" data-job-id="<?= $row['id'] ?>">Delete</button></li>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="row g-0">
+                                <!-- Thumbnail on the left -->
+                                <div class="col-md-4 position-relative"> <!-- Use col-md-4 for larger screens -->
+                                    <?php if (!empty($row['thumbnail'])): ?>
+                                        <img src="../<?= htmlspecialchars($row['thumbnail']) ?>" class="job-thumbnail" alt="Job Thumbnail" style="object-fit: cover; height: 290px; width: 100%;"> <!-- Original size on desktop -->
+                                    <?php else: ?>
+                                        <div class="job-thumbnail-placeholder" style="height: 250px; width: 100%;">No Image</div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Job Details on the right -->
+                                <div class="col">
+                                    <div class="card-body d-flex flex-column">
+                                        <!-- Job Title -->
+                                        <h5 class="card-title job-title"><?= htmlspecialchars($row['title']) ?></h5>
+
+                                        <!-- Created At -->
+                                        <small class="text-muted"><?= time_elapsed_string($row['created_at']) ?></small><br>
+
+                                        <!-- Job Description -->
+                                        <p class="card-description"><?= htmlspecialchars(substr($row['description'], 0, 333)) ?>...</p>
+
+                                        <!-- Categories -->
+                                        <?php if (!empty($row['categories'])): ?>
+                                            <p class="card-category"><i class="fas fa-briefcase me-2"></i><?= htmlspecialchars($row['categories']) ?></p>
+                                        <?php endif; ?>
+
+                                        <!-- Additional Job Info: Positions, Location -->
+                                        <?php if (!empty($row['positions'])): ?>
+                                            <p class="card-positions"><i class="fas fa-users me-2"></i><?= htmlspecialchars($row['positions']) ?></p>
+                                        <?php endif; ?>
+                                        <p class="card-location"><i class="fas fa-map-marker-alt me-2"></i><?= htmlspecialchars($row['location']) ?></p>
+
+                                        <!-- Job Approval Status or Response Indicators -->
+                                        <?php if ($active_tab === 'applied' && isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
+                                            <?php
+                                            // Query to check if the job has a response
+                                            $job_response_query = "
+                                                SELECT status, user_viewed 
+                                                FROM applications 
+                                                WHERE job_id = {$row['id']} AND user_id = $user_id
+                                            ";
+                                            $job_response_result = $conn->query($job_response_query);
+                                            $job_response = $job_response_result->fetch_assoc();
+                                            if ($job_response && in_array($job_response['status'], ['accepted', 'rejected'])): ?>
+                                                <span class="badge <?= $job_response['status'] === 'accepted' ? 'bg-success' : 'bg-danger' ?>">
+                                                    <?= ucfirst($job_response['status']) ?>
+                                                </span>
+                                                <?php if ($job_response['user_viewed'] == 0): ?>
+                                                    <span class="badge bg-primary">New</span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <!-- New Applicant Indicator for Admin or Employer -->
+                                        <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer')): ?>
+                                            <?php
+                                            // Query to count new applicants (pending applications) for this job
+                                            $new_applicants_query = "
+                                                SELECT COUNT(*) AS count 
+                                                FROM applications 
+                                                WHERE job_id = {$row['id']} AND status = 'pending'
+                                            ";
+                                            $new_applicants_result = $conn->query($new_applicants_query);
+                                            $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
+                                            ?>
+                                            <!-- Show the new applicants count on the View Details button -->
+                                            <div class="mt-auto">
+                                                <a href="job.php?id=<?= $row['id'] ?>&mark_as_read=true" class="btn btn-outline-primary btn-sm">
+                                                    View Details 
+                                                    <?php if ($new_applicants_count > 0): ?>
+                                                        <span class="badge bg-primary ms-2"><?= $new_applicants_count ?> New</span>
+                                                    <?php endif; ?>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save Flag positioned at the top-right of the card -->
+                            <?php if ($user_id): ?>
+                                <div title="Save job" class="save-flag position-absolute top-0 end-0 m-2" data-job-id="<?= $row['id'] ?>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+                                    </svg>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <p class="text-center text-muted fs-5">No jobs found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* MOBILE LIST VIEW */
+@media (max-width: 900px) {
+    /* Stack the job card content vertically */
+    .job-card .row {
+        flex-direction: column; /* Stack the image and job details */
+    }
+
+    /* Adjust job thumbnail to be on top and full width */
+    .job-thumbnail {
+        width: 100%;  /* Full width of the container */
+        height: auto; /* Maintain aspect ratio */
+        max-height: 300px; /* Set a max height for the thumbnail */
+        object-fit: cover; /* Ensure the image doesn't stretch or distort */
+        margin-bottom: 12px; /* Space below the thumbnail */
+    }
+
+    /* Job details (title, description, etc.) */
+    .job-card .card-body {
+        padding: 15px;
+        text-align: center; /* Center align the text */
+    }
+
+    /* Job title */
+    .job-card .job-title {
+        font-size: 1.5rem; /* Slightly larger font for mobile */
+        margin-bottom: 8px;
+    }
+
+    /* Job description */
+    .job-card .card-description {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        display:none;
+    }
+
+    /* Adjust the View Details button */
+    .job-card .btn-outline-primary {
+        width: 100%; /* Make button span the full width */
+        margin-top: 15px; /* Add some space above the button */
+    }
+}
+</style>

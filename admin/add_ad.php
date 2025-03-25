@@ -4,9 +4,10 @@ include '../includes/header.php';
 include '../includes/restrictions.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $description = $_POST['description'];
-    $link_url = $_POST['link_url'];
+    // Sanitize user input to prevent XSS
+    $title = htmlspecialchars($_POST['title'], ENT_QUOTES, 'UTF-8');
+    $description = htmlspecialchars($_POST['description'], ENT_QUOTES, 'UTF-8');
+    $link_url = filter_var($_POST['link_url'], FILTER_SANITIZE_URL);
 
     // Handle file upload
     if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_filename = uniqid('ad_', true) . '.' . $file_extension;
 
         // Move the uploaded file to the uploads folder
-        $upload_path = __DIR__ . '/../uploads/' . $new_filename;
+        $upload_path = __DIR__ . '/../uploads/ads_thumbnail/' . $new_filename;
         if (!move_uploaded_file($file['tmp_name'], $upload_path)) {
             echo "<script>alert('Failed to upload the file.');</script>";
             exit;
@@ -39,53 +40,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-// Start output buffering to prevent headers already sent issues
-ob_start();
+    // Start output buffering to prevent headers already sent issues
+    ob_start();
 
-// Insert into the database
-$query = "INSERT INTO ads (title, description, image_file, link_url, created_at) VALUES (?, ?, ?, ?, NOW())";
-$stmt = $conn->prepare($query);
-$stmt->bind_param('ssss', $title, $description, $new_filename, $link_url);
+    // Insert into the database using prepared statements
+    $query = "INSERT INTO ads (title, description, image_file, link_url, created_at) VALUES (?, ?, ?, ?, NOW())";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('ssss', $title, $description, $new_filename, $link_url);
 
-if ($stmt->execute()) {
-    // Clear any existing output and display only the modal
-    ob_clean(); // Clear the output buffer
+    if ($stmt->execute()) {
+        // Clear any existing output and display only the modal
+        ob_clean(); // Clear the output buffer
 
-    echo "
-    <!-- Include Bootstrap CSS -->
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>
+        echo "
+        <!-- Include Bootstrap CSS -->
+        <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' rel='stylesheet'>
 
-    <!-- Modal Structure -->
-    <div class='modal fade show' id='successModal' tabindex='-1' aria-labelledby='successModalLabel' aria-hidden='false' style='display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;'>
-        <div class='modal-dialog modal-dialog-centered'>
-            <div class='modal-content'>
-                <div class='modal-header'>
-                    <h5 class='modal-title' id='successModalLabel'>Success!</h5>
-                    <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close' onclick=\"window.location.href='../pages/index.php'\"></button>
-                </div>
-                <div class='modal-body'>
-                    Advertisement added successfully!
-                </div>
-                <div class='modal-footer'>
-                    <button type='button' class='btn btn-primary' onclick=\"window.location.href='../pages/index.php'\">OK</button>
+        <!-- Modal Structure -->
+        <div class='modal fade show' id='successModal' tabindex='-1' aria-labelledby='successModalLabel' aria-hidden='false' style='display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;'>
+            <div class='modal-dialog modal-dialog-centered'>
+                <div class='modal-content'>
+                    <div class='modal-header'>
+                        <h5 class='modal-title' id='successModalLabel'>Success!</h5>
+                        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close' onclick=\"window.location.href='../pages/index.php'\"></button>
+                    </div>
+                    <div class='modal-body'>
+                        Advertisement added successfully!
+                    </div>
+                    <div class='modal-footer'>
+                        <button type='button' class='btn btn-primary' onclick=\"window.location.href='../pages/index.php'\">OK</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Add a backdrop for the modal -->
-    <div class='modal-backdrop fade show' style='position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998;'></div>
+        <!-- Add a backdrop for the modal -->
+        <div class='modal-backdrop fade show' style='position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998;'></div>
 
-    <!-- Include Bootstrap JS and Popper.js -->
-    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js'></script>
-    ";
+        <!-- Include Bootstrap JS and Popper.js -->
+        <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js'></script>
+        ";
 
-    exit(); // Stop further execution of the script
-} else {
-    echo "<script>alert('Error adding ad: " . htmlspecialchars($stmt->error) . "');</script>";
-}
+        exit(); // Stop further execution of the script
+    } else {
+        echo "<script>alert('Error adding ad: " . htmlspecialchars($stmt->error, ENT_QUOTES, 'UTF-8') . "');</script>";
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

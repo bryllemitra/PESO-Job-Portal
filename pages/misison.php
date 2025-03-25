@@ -1,6 +1,6 @@
 <?php
 include '../includes/config.php'; // Include your database connection file
-include '../includes/restrictions.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mission = mysqli_real_escape_string($conn, $_POST['mission']);

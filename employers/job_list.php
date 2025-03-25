@@ -1,6 +1,7 @@
 <?php
 include '../includes/config.php';
 include '../includes/header.php';
+include('../includes/sidebar_employer.php');
 
 // Check if the employer is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employer') {
@@ -141,20 +142,7 @@ $barangay_result = $conn->query($barangay_query);
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Employer Panel</h2>
-        <ul>
-            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php" class="active"><i class="fas fa-briefcase"></i> My Jobs</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Applicants</a></li>
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
  <!-- Main Content -->
 <main>
@@ -222,7 +210,7 @@ $barangay_result = $conn->query($barangay_query);
     <!-- Job List -->
     <div class="job-list">
         <!-- Table Header -->
-        <div class="job-header">
+        <div class="job-header text-center">
             <div>Job Title</div>
             <div>Description</div>
             <div>Applicants</div>
@@ -232,7 +220,7 @@ $barangay_result = $conn->query($barangay_query);
 
         <!-- Job Items -->
         <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="job-item">
+            <div class="job-item text-center">
                 <div class="title"><?= htmlspecialchars($row['title']) ?></div>
                 <div class="description"><?= htmlspecialchars($row['description']) ?></div>
                 <div class="applicants" onclick="location.href='/JOB/admin/view_applicants.php?job_id=<?= $row['id'] ?>'">
@@ -278,12 +266,7 @@ $barangay_result = $conn->query($barangay_query);
 
 
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        sidebar.classList.toggle('hidden');
-        mainContent.classList.toggle('hidden');
-    }
+
 
     // Get modal element and confirm delete button
 const deleteJobModal = new bootstrap.Modal(document.getElementById('deleteJobModal'));

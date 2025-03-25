@@ -13,70 +13,7 @@
         }
 
 
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100vh;
-            background: #ffffff;
-            padding-top:80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-        }
-        .sidebar.hidden {
-            transform: translateX(-100%);
-        }
-        .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #4a90e2;
-        }
-        .sidebar ul {
-            list-style: none;
-        }
-        .sidebar ul li {
-            margin-bottom: 15px;
-        }
-        .sidebar ul li a {
-            text-decoration: none;
-            color: #333;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: 10px;
-            transition: background 0.3s, color 0.3s;
-        }
-        .sidebar ul li a:hover,
-        .sidebar ul li a.active {
-            background: #eaf4ff;
-            color: #4a90e2;
-        }
-        .sidebar .toggle-btn {
-            position: absolute;
-            top: 20px;
-            right: -40px;
-            background: #4a90e2;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .sidebar .toggle-btn i {
-            color: #fff;
-            font-size: 1.2rem;
-        }
+        
 
 
         .header {
@@ -159,21 +96,7 @@
 
 }
 
-/* Responsive Design for Mobile and Minimized Screens */
-@media (max-width: 768px) {
-    .job-header {
-        display: flex; /* Switch to flexbox for smaller screens */
-        flex-direction: row; /* Stack items vertically */
-        gap: 8px; /* Add spacing between stacked items */
-    }
-    .job-header div {
-        font-size: 0.9rem; /* Reduce font size for better readability */
-    }
-    main {
-        padding-left:0; /* Reduce font size for better readability */
-    }
 
-}
         .job-item {
             display: grid;
             grid-template-columns: 2fr 3fr 1fr 1fr 1fr;
@@ -215,7 +138,10 @@
         .job-item .actions {
             display: flex;
             gap: 10px;
+            justify-content: center; /* Centers the buttons horizontally */
+            align-items: center; /* Ensures the buttons are vertically centered */
         }
+        
         .job-item .actions button {
             background: none;
             border: none;
@@ -224,10 +150,11 @@
             cursor: pointer;
             transition: color 0.3s;
         }
+        
         .job-item .actions button:hover {
             color: #357abd;
         }
-
+        
         /* Pagination */
         .pagination {
             display: flex;
@@ -254,13 +181,12 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
+
     /* Hide Description and Date columns */
     .job-header div:nth-child(2), /* Hide Description column */
     .job-header div:nth-child(4) { /* Hide Date column */
         display: none;
+        
     }
 
     .job-item .description, /* Hide Description in job items */
@@ -276,6 +202,7 @@
         padding: 10px 0;
         text-align: left;
         font-weight: bold;
+        text-align: center;
     }
 
     /* Flex layout for job items */
@@ -318,6 +245,28 @@
         font-size: 0.9rem; /* Reduce font size slightly for better mobile fit */
     }
 }
+
+
+/* Responsive Design for Mobile and Minimized Screens */
+@media (max-width: 768px) {
+    .job-header {
+        display: flex; /* Switch to flexbox for smaller screens */
+        flex-direction: row; /* Stack items vertically */
+        gap: 8px; /* Add spacing between stacked items */
+        
+    }
+    .job-header div {
+        font-size: 0.9rem; /* Reduce font size for better readability */
+        text-align: center; /* Center the text in the header columns */
+    }
+    main {
+        padding-left:0; /* Reduce font size for better readability */
+    }
+
+}
+
+
+
 
         /* Increase height for search input, select dropdowns, and button */
  .form-control,

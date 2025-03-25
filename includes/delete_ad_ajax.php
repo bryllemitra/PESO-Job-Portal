@@ -1,6 +1,6 @@
 <?php
 include '../includes/config.php';
-include '../includes/restrictions.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ad_id = intval($_POST['ad_id']);

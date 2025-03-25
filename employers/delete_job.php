@@ -14,21 +14,37 @@ if (!isset($_GET['id']) || empty($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $id = $_GET['id'];
 
+// Fetch the job details (thumbnail and photo paths) before deletion
+$stmt = $conn->prepare("SELECT thumbnail, photo, employer_id FROM jobs WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$stmt->store_result();
+
+if ($stmt->num_rows === 0) {
+    die("Job not found.");
+}
+
+$stmt->bind_result($thumbnail_path, $photo_path, $employer_id);
+$stmt->fetch();
+$stmt->close();
+
 // If the user is an employer, check if they are the employer of this job
 if ($_SESSION['role'] === 'employer') {
     $user_id = $_SESSION['user_id'];
 
-    // Fetch the employer_id of the job to ensure the employer can only delete their own jobs
-    $stmt = $conn->prepare("SELECT employer_id FROM jobs WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $stmt->bind_result($employer_id);
-    $stmt->fetch();
-    $stmt->close();
-
     if ($employer_id !== $user_id) {
         die("You do not have permission to delete this job.");
     }
+}
+
+// Delete the thumbnail file if it exists
+if ($thumbnail_path && file_exists("../" . $thumbnail_path)) {
+    unlink("../" . $thumbnail_path);
+}
+
+// Delete the photo file if it exists
+if ($photo_path && file_exists("../" . $photo_path)) {
+    unlink("../" . $photo_path);
 }
 
 // Use a prepared statement for security and delete the job

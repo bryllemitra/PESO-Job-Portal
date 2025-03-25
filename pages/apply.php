@@ -9,6 +9,58 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] === 'admin') {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Check if the user has completed their profile information
+$profile_query = "SELECT first_name, last_name, gender, birth_date, age, phone_number, civil_status, zip_code, street_address, barangay, city 
+                  FROM users 
+                  WHERE id = ?";
+$stmt = $conn->prepare($profile_query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$profile_result = $stmt->get_result();
+$profile_data = $profile_result->fetch_assoc();
+
+// Check if any required profile fields are empty
+$required_fields = ['first_name', 'last_name', 'gender', 'birth_date', 'age', 'phone_number', 'civil_status', 'zip_code', 'street_address', 'barangay', 'city'];
+$missing_fields = [];
+
+foreach ($required_fields as $field) {
+    if (empty($profile_data[$field])) {
+        $missing_fields[] = $field;
+    }
+}
+
+// Check if the user has work experience, skills, languages, and education
+$tables_to_check = ['work_experience', 'skills', 'languages', 'education'];
+foreach ($tables_to_check as $table) {
+    $query = "SELECT COUNT(*) as count FROM $table WHERE user_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    if ($row['count'] == 0) {
+        $missing_fields[] = $table;
+    }
+}
+
+// If any fields are missing, show SweetAlert and redirect to profile.php
+if (!empty($missing_fields)) {
+    $missing_fields_str = implode(", ", $missing_fields);
+    $message = "Please complete the following information in your profile before applying for a job: " . $missing_fields_str;
+
+    // Return JSON response for SweetAlert
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'error',
+        'message' => $message,
+        'redirect' => 'profile.php'
+    ]);
+    exit();
+}
+
+// Original logic for job application
 $job_id = $_POST['job_id'] ?? null;
 
 // Validate job ID
@@ -52,8 +104,7 @@ if ($_POST['resume_option'] === 'existing') {
 } elseif ($_POST['resume_option'] === 'new' && isset($_FILES['resume']) && $_FILES['resume']['size'] > 0) {
     // Upload a new resume
     $target_dir = "../uploads/resumes/"; // Ensure this directory exists and is writable
-    $target_file = $target_dir . basename($_FILES["resume"]["name"]);
-    $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    $fileType = strtolower(pathinfo($_FILES["resume"]["name"], PATHINFO_EXTENSION));
     $allowed_types = ['pdf'];
 
     // Validate file type
@@ -68,12 +119,45 @@ if ($_POST['resume_option'] === 'existing') {
         exit();
     }
 
-    // Move the uploaded file to the target directory
-    if (move_uploaded_file($_FILES["resume"]["tmp_name"], $target_file)) {
-        $resume_attached = true;
-        $resume_file_to_attach = $target_file; // Use the newly uploaded resume file
+    // Fetch the username from the database
+    $query = "SELECT username, resume_file FROM users WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Check if user data is fetched correctly
+    if ($user = $result->fetch_assoc()) {
+        // Sanitize the username and ensure it's safe for use in a file name
+        $sanitized_username = preg_replace("/[^a-zA-Z0-9-_]/", "_", $user['username']); // Replace unsafe characters with underscore
+        $new_file_name = $sanitized_username . "." . $fileType; // Use username as the filename
+        $target_file = $target_dir . $new_file_name;
+
+        // If a previous resume exists, delete it
+        if (!empty($user['resume_file']) && file_exists($user['resume_file'])) {
+            unlink($user['resume_file']);
+        }
+
+        // Move the uploaded file to the target directory
+        if (move_uploaded_file($_FILES["resume"]["tmp_name"], $target_file)) {
+            // Save the new file path in the database
+            $update_query = "UPDATE users SET resume_file = ? WHERE id = ?";
+            $stmt = $conn->prepare($update_query);
+            $stmt->bind_param("si", $target_file, $user_id);
+
+            if ($stmt->execute()) {
+                $resume_attached = true;
+                $resume_file_to_attach = $target_file; // Use the newly uploaded resume file
+            } else {
+                echo "<div class='alert alert-danger text-center'>Error updating resume file in the database.</div>";
+                exit();
+            }
+        } else {
+            echo "<div class='alert alert-danger text-center'>Sorry, there was an error uploading your file.</div>";
+            exit();
+        }
     } else {
-        echo "<div class='alert alert-danger text-center'>Sorry, there was an error uploading your file.</div>";
+        echo "<div class='alert alert-danger text-center'>User not found.</div>";
         exit();
     }
 } else {
@@ -165,8 +249,8 @@ if ($resume_attached) {
         }
 
         // Success message and redirect
-        echo "<div class='alert alert-success text-center'>Application submitted successfully!</div>";
-        header("Location: job.php?id=$job_id&message=Application successful");
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'success', 'message' => 'Application submitted successfully!', 'redirect' => "job.php?id=$job_id"]);
         exit();
     } else {
         echo "<div class='alert alert-danger text-center'>Error submitting application. Please try again later.</div>";

@@ -4,16 +4,88 @@
     box-sizing: border-box;
 }
 
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+    /* Left Dropdown */
+    .custom-header-container #navbarNav {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: auto;
+        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
+        z-index: 1000;
+        padding: 10px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    /* Right Dropdown (For User and Notification Icons) */
+    .custom-header-container #rightNav {
+        position: absolute;
+        top: 70px;
+        right: 0; /* Align dropdown with the right edge */
+        width: auto;
+        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
+        z-index: 1000;
+        padding: 10px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    /* Adjust the Notification Dropdown Position */
+    #notification-dropdown {
+        right: 0; /* Align the notification dropdown to the right edge */
+        transform: translateX(0); /* Reset any translation */
+    }
+
+    /* Ensure the Navbar Toggler is pushed to the right */
+    .custom-header-container .navbar-toggler {
+        margin-left: auto; /* Push the toggler button to the right */
+    }
+
+    /* Adjust Notification and User Icon's Position */
+    .nav-item.dropdown .dropdown-menu {
+        position: absolute;
+        right: 0;
+        transform: translateX(0); /* Reset the transformation applied on desktop */
+    }
+
+    /* Adjusting the dropdown when it's on mobile */
+    .nav-item.dropdown .dropdown-menu {
+        width: auto; /* Ensure the width adjusts based on the content */
+    }
+
+    /* Optional: Adjust the icons */
+    .navbar-nav .nav-link i {
+        font-size: 1.5em; /* Adjust the size of the icons for better readability */
+    }
+    
+
+}
+
+/* Ensure content is not hidden behind the fixed header */
+body {
+    padding-top: 70px; /* Matches the height of the fixed header */
+}
+
+@media (max-width: 991.98px) {
+    body {
+        padding-top: 70px; /* Slightly more padding for smaller screens if needed */
+    }
+
+
+
+}
+
+
 
 /* Futuristic Header Styles */
 .custom-header {
     background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
     color: rgb(0, 0, 0);
-    border-bottom: 2px solid #ffffff30;
+    
     position: fixed;
     width: 100%;
     z-index: 1000;
-    height: 60px; /* Explicitly define the height of the header */
+    height: 70px; /* Explicitly define the height of the header */
 }
 
 .navbar-brand img {
@@ -111,49 +183,12 @@
     }
 }
 
-/* Responsive Styles */
-@media (max-width: 991.98px) {
-    /* Left Dropdown */
-    .custom-header-container #navbarNav {
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: auto;
-        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
-        z-index: 1000;
-        padding: 10px;
-        border-radius: 0 0 10px 10px;
-    }
-
-    /* Right Dropdown */
-    .custom-header-container #rightNav {
-        position: absolute;
-        top: 60px;
-        right: 0;
-        width: auto;
-        background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
-        z-index: 1000;
-        padding: 10px;
-        border-radius: 0 0 10px 10px;
-    }
-
-    .custom-header-container .navbar-toggler {
-        margin-left: auto;
-    }
-}
 
 
 
-/* Ensure content is not hidden behind the fixed header */
-body {
-    padding-top: 60px; /* Matches the height of the fixed header */
-}
 
-@media (max-width: 991.98px) {
-    body {
-        padding-top: 70px; /* Slightly more padding for smaller screens if needed */
-    }
-}
+
+
 
 
 
@@ -308,17 +343,37 @@ body {
     
 }
 
+/* Ensure the user dropdown aligns perfectly to the right */
+.nav-item.dropdown .dropdown-menu {
+    position: absolute; /* Position dropdown relative to the parent item */
+    top: 55px; /* Adjust this to position it below the user icon */
+    right: 0; /* Align it to the right side without any extra space */
+    margin-top: 0; /* Remove any margin */
+    transform: translateX(25px); /* Moves the dropdown slightly to the right */
+    padding: 0; /* Ensure no padding is added */
+    z-index: 1050; /* Ensure it appears above other content */
+    
+}
+
+
+
+
+
 /* Dropdown Container */
 #notification-dropdown {
+    position: absolute; /* Keeps the dropdown positioned correctly */
+    top: 55px; /* Adjust this to control the vertical positioning */
+    right: 0; /* Align it to the right edge of the parent (bell icon) */
+    transform: translateX(15px); /* Moves the dropdown slightly to the left */
     max-height: 600px; /* Fixed height for the dropdown */
-    min-width: 400px; /* Minimum width for readability */
-    max-width: 90vw; /* Maximum width is 90% of the viewport width */
-    overflow-y: auto; /* Vertical scrolling */
-    overflow-x: hidden; /* Disable horizontal scrolling */
+    min-width: 350px; /* Minimum width for readability */
+    max-width: 90vw; /* Maximum width for responsive design */
+    overflow-y: auto; /* Vertical scrolling if content overflows */
     width: auto; /* Adjust width based on content */
     border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     background-color: #ffffff; /* White background */
+    z-index: 1111; /* Ensure it appears above other content */
 }
 
 /* Scrollbar Styling */
@@ -606,7 +661,19 @@ body {
 }
 
 
+.btn-outline-customss {
+    background-color: #007bff !important;
+    color:white !important;
+    box-shadow: none !important;
+
+}
 
 
+.btn-outline-customss:hover {
+    background-color: #124ebe !important;
+    color: #ffffff !important;
+    transform: scale(1.05); /* Slightly enlarge button on hover */
+
+}
 
 

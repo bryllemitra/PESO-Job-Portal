@@ -2,6 +2,7 @@
 include '../includes/config.php';
 include '../includes/header.php';
 include '../includes/restrictions.php';
+include('../includes/sidebar.php');
 
 // Handle search and sort
 $search = isset($_GET['search']) ? trim($_GET['search']) : ''; // Trim whitespace from search term
@@ -64,24 +65,7 @@ $total_pages = ceil($total_requests / $limit); // Calculate total pages
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Admin Panel</h2>
-        <ul>
-            <li><a href="admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="employer_hiring.php" class="active"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">

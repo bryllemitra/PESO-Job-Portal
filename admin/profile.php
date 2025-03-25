@@ -62,131 +62,105 @@ if ($result->num_rows === 0) {
 $user = $result->fetch_assoc();
 
 
-// Handle Cover Photo Upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['cover_photo'])) {
-    if ($_FILES["cover_photo"]["size"] == 0) {
-        echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
-    } else {
-        $target_dir = "../uploads/"; // Ensure this directory exists and is writable
-        $file_name = uniqid() . '_' . basename($_FILES["cover_photo"]["name"]); // Generate unique file name
-        $target_file = $target_dir . $file_name;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-        // Check if the uploaded file is a valid image
-        if (getimagesize($_FILES["cover_photo"]["tmp_name"])) {
-            // Allow only certain image formats
-            if ($imageFileType == "jpg" || $imageFileType == "jpeg" || $imageFileType == "png" || $imageFileType == "gif") {
-                if (move_uploaded_file($_FILES["cover_photo"]["tmp_name"], $target_file)) {
-                    // Update the database with the new cover photo path
-                    $update_query = "UPDATE users SET cover_photo = ? WHERE id = ?";
-                    $stmt = $conn->prepare($update_query);
-                    $stmt->bind_param("si", $target_file, $user_id);
-
-                    if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Cover photo updated successfully.</div>";
-                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
-                        exit();
-                    } else {
-                        echo "<div class='alert alert-danger'>Error updating cover photo in the database.</div>";
-                    }
-                } else {
-                    echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
-                }
-            } else {
-                echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
-            }
-        } else {
-            echo "<div class='alert alert-danger'>File is not a valid image.</div>";
-        }
-    }
-}
-
-// Handle Cover Photo Removal
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_cover_photo'])) {
-    // Check if a cover photo exists
-    $query = "SELECT cover_photo FROM users WHERE id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-
-    if (!empty($user['cover_photo'])) {
-        // Clear the cover_photo column in the database
-        $update_query = "UPDATE users SET cover_photo = NULL WHERE id = ?";
-        $stmt = $conn->prepare($update_query);
-        $stmt->bind_param("i", $user_id);
-
-        if ($stmt->execute()) {
-            // Optionally delete the file from the server
-            if (file_exists($user['cover_photo'])) {
-                unlink($user['cover_photo']);
-            }
-
-            echo "<div class='alert alert-success'>Cover photo removed successfully.</div>";
-            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
-            exit();
-        } else {
-            echo "<div class='alert alert-danger'>Error removing cover photo from the database.</div>";
-        }
-    } else {
-        echo "<div class='alert alert-danger'>No cover photo found to remove.</div>";
-    }
-}
 
 
 // Handle profile picture upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_pic'])) {
     if ($_FILES["profile_pic"]["size"] == 0) {
-        echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
+        // No file selected, just refresh the page
+        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        exit();
     } else {
-        $target_dir = "../uploads/"; // Ensure this directory exists and is writable
-        $target_file = $target_dir . basename($_FILES["profile_pic"]["name"]);
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+        $target_dir = "../uploads/profile_admin/"; // Ensure this directory exists and is writable
+        $fileType = strtolower(pathinfo($_FILES["profile_pic"]["name"], PATHINFO_EXTENSION));
 
-        // Check if the uploaded file is a valid image
-        if (getimagesize($_FILES["profile_pic"]["tmp_name"])) {
-            if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_file)) {
-                $update_query = "UPDATE users SET uploaded_file = ? WHERE id = ?";
-                $stmt = $conn->prepare($update_query);
-                $stmt->bind_param("si", $target_file, $user_id);
+        // Fetch the current profile picture and username from the database
+        $query = "SELECT uploaded_file, username FROM users WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-                if ($stmt->execute()) {
-                    echo "<div class='alert alert-success'>Profile picture updated successfully.</div>";
+        // Check if user data is fetched correctly
+        if ($user = $result->fetch_assoc()) {
+            // Sanitize the username and ensure it's safe for use in a file name
+            $sanitized_username = preg_replace("/[^a-zA-Z0-9-_]/", "_", $user['username']); // Replace unsafe characters with underscore
+            $new_file_name = $sanitized_username . "." . $fileType; // Use username as the filename
+            $target_file = $target_dir . $new_file_name;
+
+            // Check if the uploaded file is a valid image
+            if (getimagesize($_FILES["profile_pic"]["tmp_name"])) {
+                // Check if there is already an existing profile picture
+                if (!empty($user['uploaded_file']) && file_exists($user['uploaded_file'])) {
+                    // Delete the old profile picture
+                    unlink($user['uploaded_file']);
+                }
+
+                // Move the new file to the target directory
+                if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_file)) {
+                    // Update the database with the new file path
+                    $update_query = "UPDATE users SET uploaded_file = ? WHERE id = ?";
+                    $stmt = $conn->prepare($update_query);
+                    $stmt->bind_param("si", $target_file, $user_id);
+
+                    if ($stmt->execute()) {
+                        // Successfully uploaded, refresh the page immediately
+                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        exit();
+                    } else {
+                        // If there is an error updating the database, just refresh the page
+                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        exit();
+                    }
+                } else {
+                    // Error uploading the file, just refresh the page
                     echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
                     exit();
-                } else {
-                    echo "<div class='alert alert-danger'>Error updating profile picture.</div>";
                 }
             } else {
-                echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
+                // Invalid image, refresh the page
+                echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                exit();
             }
         } else {
-            echo "<div class='alert alert-danger'>File is not a valid image.</div>";
+            // If no user is found, log and return an error
+            echo "<div class='alert alert-danger'>No user found with ID: $user_id</div>";
+            exit();
         }
     }
 }
-
-
 
 // Handle profile picture removal when the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_profile_pic'])) {
     // Check if a profile picture exists
     if (!empty($user['uploaded_file'])) {
-        // Clear the uploaded_file column in the database (do not delete the file from the server)
+        // Path to the file to be deleted from the server
+        $filePath = $user['uploaded_file'];
+
+        // Delete the file from the server
+        if (file_exists($filePath)) {
+            unlink($filePath); // Delete the file from the server
+        }
+
+        // Clear the uploaded_file column in the database (remove profile picture reference)
         $update_query = "UPDATE users SET uploaded_file = NULL WHERE id = ?";
         $stmt = $conn->prepare($update_query);
         $stmt->bind_param("i", $user_id);
 
         if ($stmt->execute()) {
-            echo "<div class='alert alert-success'>Profile picture removed successfully.</div>";
+            // Refresh the page immediately after successful removal
             echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
             exit();
         } else {
-            echo "<div class='alert alert-danger'>Error removing profile picture from the database.</div>";
+            // If there was an error removing from the database, you could log it or handle it, but we aren't showing an alert
+            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+            exit();
         }
     } else {
-        echo "<div class='alert alert-danger'>No profile picture found to remove.</div>";
+        // If there's no profile picture, just refresh the page without an alert
+        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        exit();
     }
 }
 
@@ -593,7 +567,24 @@ $applicants_per_week_json = json_encode($applicants_per_week);
     padding: 30px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
-    </style>
+
+/* Button Styling */
+.btn-outline-custom {
+    color:#333;
+    text-decoration: none; /* Removes underline */
+    background: transparent; /* Keeps it transparent */
+    border:1.5px solid #333; /* Adds a black border */
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-outline-custom:hover {
+    background: transparent;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Soft shadow effect */
+    border-color: #4c6ef5;
+    color: #4c6ef5;
+}
+
+</style>
 </head>
 <body>
 <?php $isOwnProfile = ($user_id == $_SESSION['user_id']); // Check if it's the user's own profile ?>
@@ -601,7 +592,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
     <div class="row justify-content-center">
         <div class="col-lg-10 fade-in">
             <!-- Tab Navigation -->
-            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <ul class="nav nav-tabs custom-tabs" id="profileTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
     </li>
@@ -618,7 +609,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
                         <div class="profile-card mt-4 p-4 mb-4">
             <!-- Cover Photo -->
             <div class="cover-photo-container position-relative" style="height: 340px; overflow: hidden;">
-                <img src="<?php echo $user['cover_photo'] ? $user['cover_photo'] : 'default-cover.jpg'; ?>" alt="Cover Photo" class="cover-photo w-100 h-100 object-fit-cover" style="object-position: center;">
+                <img src="<?php echo $user['cover_photo'] ? $user['cover_photo'] : '/JOB/uploads/default/COVER.jpg'; ?>" alt="Cover Photo" class="cover-photo w-100 h-100 object-fit-cover" style="object-position: center;">
 <!-- Edit Cover Photo Button -->
 <?php if ($user_id == $_SESSION['user_id']): ?>
     <!-- Edit Cover Photo Button (Only visible to the profile owner) -->
@@ -651,13 +642,13 @@ $applicants_per_week_json = json_encode($applicants_per_week);
                                 </p>
                                 <!-- Edit Bio Button -->
                                 <?php if ($isOwnProfile): ?>
-                                    <button id="edit-bio-button" class="btn btn-light rounded-pill mb-3">Edit Bio</button>
+                                    <button id="edit-bio-button" class="btn btn-outline-custom btn-sm mb-3">Edit Bio</button>
                                 <?php endif; ?>
                                 <!-- Caption Update Form (Hidden Initially) -->
                                 <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" id="bio-form" style="display:none;" class="mb-3">
                                     <textarea name="caption" class="form-control rounded-pill my-3" placeholder="Enter your caption or saying..."><?php echo htmlspecialchars($user['caption']); ?></textarea>
                                     <button type="submit" class="btn btn-primary rounded-pill me-2">Save</button>
-                                    <button type="button" id="cancel-bio-button" class="btn btn-secondary rounded-pill">Cancel</button>
+                                    <button type="button" id="cancel-bio-button" class="btn btn-light rounded-pill">Cancel</button>
                                 </form>
                             </div>
                         </div>
@@ -837,7 +828,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
             </div>
             <div class="modal-body text-center">
                 <!-- Full-Sized Image -->
-                <img src="../uploads/<?= htmlspecialchars($user['cover_photo'] ?? 'default_cover.jpg') ?>" alt="Cover Photo" id="fullSizedImage" class="img-fluid" style="max-height: 80vh;">
+                <img src="../uploads/<?= htmlspecialchars($user['cover_photo'] ?? '/JOB/uploads/default/COVER.jpg') ?>" alt="Cover Photo" id="fullSizedImage" class="img-fluid" style="max-height: 80vh;">
          </div>
         </div>
     </div>
@@ -1001,7 +992,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
                     <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mb-3">
                         <div class="mb-3">
                             <label for="profile_pic" class="form-label fw-bold">Upload New Profile Picture</label>
-                            <input type="file" name="profile_pic" id="profile_pic" class="form-control rounded-pill" required>
+                            <input type="file" name="profile_pic" id="profile_pic" class="form-control rounded-pill" accept="image/*" required>
                         </div>
                         <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-upload"></i> Upload Picture</button>
                     </form>
@@ -1087,7 +1078,7 @@ $applicants_per_week_json = json_encode($applicants_per_week);
 
 <!-- Modal for Editing Name -->
 <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="nameModalLabel">Edit Name</h5>
@@ -1125,7 +1116,7 @@ function removeCoverPhoto() {
     // REMOVE COVER PHOTO
     document.getElementById('confirmRemoveCoverPhotoBtn').addEventListener('click', function() {
         // Send AJAX request to remove the cover photo
-        fetch('../pages/remove_cover_photo.php', {
+        fetch('../admin/update_cover_photo.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1191,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const fullSizedImage = document.getElementById('fullSizedImage');
 
     // Set the initial image source to the current cover photo
-    fullSizedImage.src = fullSizedImage.src || '../uploads/<?= htmlspecialchars($user['cover_photo'] ?? "default_cover.jpg") ?>';
+    fullSizedImage.src = fullSizedImage.src || '../uploads/<?= htmlspecialchars($user['cover_photo'] ?? "/JOB/uploads/default/COVER.jpg") ?>';
 
     // Update the image preview when a new file is selected
     coverPhotoInput.addEventListener('change', function (event) {

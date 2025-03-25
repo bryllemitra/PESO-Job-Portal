@@ -60,8 +60,9 @@ body[data-tab="applications"] #edit-profile-button {
 }
 
 .resume-section {
-    border-left: 4px solid #0d6efd;
-    padding-left: 1rem;
+    border-left: 2px solid #0d6efd;
+    padding-left: 0.8rem;
+    
 }
 
 .no-data {
@@ -160,12 +161,12 @@ body[data-tab="applications"] .tab-pane#profile {
 
 .btn:hover {
     transform: translateY(-2px); /* Slight hover effect */
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+   
 }
 
 .btn:active {
     transform: translateY(0); /* Reset on click */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
 }
 
 /* Common Button Styles */
@@ -211,10 +212,47 @@ body[data-tab="applications"] .tab-pane#profile {
     color: #17a2b8;
 }
 
+
+
+
+/* SECTION EDIT AND DELETE BUTTONS */
+.btn-download:hover {
+    
+    color: #4c6ef5;
+}
+
+
+.btn-view:hover {
+    
+    color: #28a745;
+}
+
+
+.btn-remove:hover {
+    
+    color: #dc3545;
+}
+
+
+.btn-upload:hover {
+    
+    color: #fd7e14;
+}
+
+
+.btn-create:hover {
+    
+    color: #17a2b8;
+}
+
+
+
 /* Hover Effects */
 .btn:hover {
     transform: translateY(-2px);
 }
+
+
 
 
 /* Icon Styling */
@@ -246,27 +284,26 @@ body[data-tab="applications"] .tab-pane#profile {
     position: relative;
 }
 
-/* Default Tab Style */
-.nav-tabs .nav-link {
+/* Default Tab Style for custom-tabs */
+.custom-tabs .nav-link {
     color: #333; /* Default text color */
     border: none;
-
 }
 
-/* Hover Effect */
-.nav-tabs .nav-link:hover {
+/* Hover Effect for custom-tabs */
+.custom-tabs .nav-link:hover {
     color: #007bff !important; /* Turns blue on hover */
 }
 
-/* Active Tab Style */
-.nav-tabs .nav-link.active {
+/* Active Tab Style for custom-tabs */
+.custom-tabs .nav-link.active {
     color: #007bff !important; /* Blue text for active tab */
     font-weight: bold; /* Makes active tab stand out */
     border-bottom: 2px solid #007bff; /* Adds an underline effect */
     transition: width 0.3s ease-in-out;
 }
 
-.nav-link::after {
+.custom-tabs .nav-link::after {
     content: '';
     position: absolute;
     width: 0;
@@ -277,9 +314,11 @@ body[data-tab="applications"] .tab-pane#profile {
     transition: width 0.3s ease-in-out;
 }
 
-.nav-link:hover::after {
+/* Hover effect for the after pseudo-element */
+.custom-tabs .nav-link:hover::after {
     width: 100%;
 }
+
 
 
 /* Custom button styling */
@@ -368,3 +407,105 @@ body[data-tab="applications"] .tab-pane#profile {
     z-index: 1000; /* Ensure it appears above other elements */
 }
 
+
+
+
+/* NEW SECTIONS CSS */
+
+
+/* Simple hover animation */
+.skill-item {
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.skill-item:hover {
+    background: linear-gradient(145deg, #ffffff, #e9f0f7);
+    transform: scale(1.05);
+    background-color: #e9ecef;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+
+/* Simple hover animation for languages */
+.language-item {
+transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.language-item:hover {
+background: linear-gradient(145deg, #ffffff, #e9f0f7);
+transform: scale(1.05);
+background-color: #e9ecef;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+cursor: pointer;
+}
+
+/* Hover Animation for Education, Work Experience, Achievements, and Certificates */
+.education-item,
+.work-experience-item,
+.achievement-item,
+.reference-item,
+.certificate-item
+{
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+border: 1px solid #ddd; /* Add a border for better visibility */
+background-color: #fff; /* Default background color */
+}
+
+.education-item:hover,
+.work-experience-item:hover,
+.achievement-item:hover,
+.reference-item:hover,
+.job-preferences-item:hover,
+.certificate-item:hover {
+transform: translateY(-5px); /* Slightly lift the item */
+box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a stronger shadow */
+background: linear-gradient(145deg, #ffffff, #e9f0f7); /* Subtle gradient effect */
+}
+
+/* Header Hover Effect */
+.education-item .d-flex,
+.work-experience-item .d-flex,
+.achievement-item .d-flex,
+.reference-item .d-flex,
+.job-preferences-item .d-flex,
+.certificate-item .d-flex {
+transition: background-color 0.3s ease;
+}
+
+
+
+/* Button Hover Effect */
+.education-item .btn-outline-primary:hover,
+.work-experience-item .btn-outline-primary:hover,
+.achievement-item .btn-outline-primary:hover,
+.reference-item .btn-outline-primary:hover,
+.job-preferences-item .btn-outline-primary:hover,
+.certificate-item .btn-outline-primary:hover {
+background-color: #007bff; /* Change background color on hover */
+color: #fff; /* Change text color to white */
+}
+
+
+
+/* Button Styling */
+.btn-outline-custom {
+color:#333;
+text-decoration: none; /* Removes underline */
+background: transparent; /* Keeps it transparent */
+border:1.5px solid #333; /* Adds a black border */
+transition: all 0.3s ease-in-out;
+}
+
+.btn-outline-custom:hover {
+background: transparent;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Soft shadow effect */
+border-color: #4c6ef5;
+color: #4c6ef5;
+}
+
+.striped-border {
+border: 4px dashed #ddd;  /* Creates a dashed border */
+background-color: #f9f9f9; /* Optional: Light background color for no content state */
+padding: 20px; /* Padding to ensure the content doesn’t touch the border */
+}

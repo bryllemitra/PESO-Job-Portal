@@ -98,52 +98,111 @@ $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
 // Handle job update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['role'])) {
     $user_role = $_SESSION['role']; // Get user role (admin or employer)
+    $uploader_username = $_SESSION['username']; // Get uploader's username from session
+    $uploader_id = $_SESSION['user_id']; // Optionally, use user ID instead of username
 
     // Ensure that admin and employer can edit
     if ($user_role === 'admin' || $user_role === 'employer') {
-        $title = $_POST['title'];
-        $description = $_POST['description'];
-        $responsibilities = $_POST['responsibilities'];
-        $requirements = $_POST['requirements'];
-        $preferred_qualifications = $_POST['preferred_qualifications'];
-        $category_ids = $_POST['categories'];  // Multiple categories selected
-        $position_ids = $_POST['positions'];   // Multiple positions selected
-        $location = $_POST['location'];
+        // Sanitize inputs to prevent XSS
+        $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
+        $description = htmlspecialchars(trim($_POST['description']), ENT_QUOTES, 'UTF-8');
+        $responsibilities = htmlspecialchars(trim($_POST['responsibilities']), ENT_QUOTES, 'UTF-8');
+        $requirements = htmlspecialchars(trim($_POST['requirements']), ENT_QUOTES, 'UTF-8');
+        $preferred_qualifications = htmlspecialchars(trim($_POST['preferred_qualifications']), ENT_QUOTES, 'UTF-8');
+        $category_ids = isset($_POST['categories']) ? array_map('intval', $_POST['categories']) : []; // Ensure array input
+        $position_ids = isset($_POST['positions']) ? array_map('intval', $_POST['positions']) : []; // Ensure array input
+        $location = htmlspecialchars(trim($_POST['location']), ENT_QUOTES, 'UTF-8');
 
-        // Convert selected categories and positions into comma-separated values
+        // Convert selected categories and positions into comma-separated values (for internal processing)
         $category_list = implode(',', $category_ids);
         $position_list = implode(',', $position_ids);
 
+        // Set directory paths based on user role
+if ($user_role === 'admin') {
+    // Admin directories
+    $thumbnail_target_dir = "../uploads/admin_job_thumbnail/";
+    $photo_target_dir = "../uploads/admin_job_photo/";
+} else {
+    // Employer directories
+    $thumbnail_target_dir = "../uploads/employer_job_thumbnail/";
+    $photo_target_dir = "../uploads/employer_job_photo/";
+}
 
-    // Handle file uploads (Thumbnail & Photo)
-    $thumbnail_path = $job['thumbnail'];
-    if (!empty($_FILES['thumbnail']['name'])) {
-        $target_dir = "../uploads/";
-        $target_file = $target_dir . basename($_FILES["thumbnail"]["name"]);
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+// Ensure the target directories exist, if not, create them
+if (!is_dir($thumbnail_target_dir)) {
+    mkdir($thumbnail_target_dir, 0777, true); // Create directory if it doesn't exist
+}
+if (!is_dir($photo_target_dir)) {
+    mkdir($photo_target_dir, 0777, true); // Create directory if it doesn't exist
+}
 
-        if (in_array($imageFileType, $allowed_types) && move_uploaded_file($_FILES["thumbnail"]["tmp_name"], $target_file)) {
-            $thumbnail_path = "uploads/" . basename($_FILES["thumbnail"]["name"]);
-        } else {
-            echo "<script>alert('Error uploading thumbnail image.');</script>";
+// Function to handle file uploads with unique naming
+function uploadFile($file, $target_dir, $uploader_identifier) {
+    if (!empty($file['name'])) {
+        // Allowed file types
+        $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
+
+        // File type and size validation
+        $fileType = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        $max_size = 5 * 1024 * 1024; // 5MB max file size
+        if (in_array($fileType, $allowed_types) && $file['size'] <= $max_size) {
+            // Generate a unique file name using the uploader's identifier
+            $original_name = pathinfo($file["name"], PATHINFO_FILENAME); // Get the original file name without extension
+            $safe_file_name = preg_replace("/[^a-zA-Z0-9\.\-_]/", "", $original_name); // Sanitize file name
+            $unique_file_name = $uploader_identifier . '_' . uniqid() . '.' . $fileType; // Add uploader identifier and unique ID
+
+            $target_file = $target_dir . $unique_file_name;
+
+            // Move the uploaded file to the target directory
+            if (move_uploaded_file($file["tmp_name"], $target_file)) {
+                return str_replace("../", "", $target_dir) . $unique_file_name; // Return relative path
+            }
         }
     }
+    return null;
+}
 
-    $photo_path = $job['photo'];
-    if (!empty($_FILES['photo']['name'])) {
-        $photo_target_dir = "../uploads/";
-        $photo_target_file = $photo_target_dir . basename($_FILES["photo"]["name"]);
-        $photoFileType = strtolower(pathinfo($photo_target_file, PATHINFO_EXTENSION));
+// Track old file paths for deletion later
+$old_thumbnail_path = $job['thumbnail'];
+$old_photo_path = $job['photo'];
 
-        if (in_array($photoFileType, $allowed_types) && move_uploaded_file($_FILES["photo"]["tmp_name"], $photo_target_file)) {
-            $photo_path = "uploads/" . basename($_FILES["photo"]["name"]);
-        } else {
-            echo "<script>alert('Error uploading job photo.');</script>";
+// Handle thumbnail upload
+$thumbnail_path = $old_thumbnail_path; // Default to existing thumbnail if no new file is uploaded
+if (!empty($_FILES['thumbnail']['name'])) {
+    $thumbnail_path = uploadFile($_FILES['thumbnail'], $thumbnail_target_dir, $uploader_username);
+    if (!$thumbnail_path) {
+        echo "<script>alert('Error uploading thumbnail image.');</script>";
+    } else {
+        // Delete the old thumbnail file if it exists
+        if ($old_thumbnail_path && file_exists("../" . $old_thumbnail_path)) {
+            unlink("../" . $old_thumbnail_path);
         }
     }
+}
 
-        // Set the job status based on user role
-        $status = ($user_role === 'admin') ? 'approved' : 'pending';  // Admin gets 'approved' status, others get 'pending'
+// Handle photo upload
+$photo_path = $old_photo_path; // Default to existing photo if no new file is uploaded
+if (!empty($_FILES['photo']['name'])) {
+    $photo_path = uploadFile($_FILES['photo'], $photo_target_dir, $uploader_username);
+    if (!$photo_path) {
+        echo "<script>alert('Error uploading job photo.');</script>";
+    } else {
+        // Delete the old photo file if it exists
+        if ($old_photo_path && file_exists("../" . $old_photo_path)) {
+            unlink("../" . $old_photo_path);
+        }
+    }
+}
+
+
+        // Set the job status based on current job status and user role
+        if ($job['status'] === 'approved') {
+            // If the job is already approved, keep it as 'approved'
+            $status = 'approved';
+        } else {
+            // If it's not approved yet, set it as 'pending' if an employer is editing
+            $status = ($user_role === 'admin') ? 'approved' : 'pending';
+        }
 
         // Prepare the update query
         $query = "
@@ -158,7 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['role'])) {
         $update_stmt = $conn->prepare($query);
 
         // Retrieve `specific_location` from the form input
-        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) ? trim($_POST['specific_location']) : null;
+        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) 
+                              ? htmlspecialchars(trim($_POST['specific_location']), ENT_QUOTES, 'UTF-8') 
+                              : null;
 
         // Bind parameters
         $update_stmt->bind_param(
@@ -229,6 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['role'])) {
         }
     }
 }
+
 ?>
 
 
@@ -336,14 +398,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['role'])) {
                 </div>
                 
                 <div>
-                    <label class="block font-medium text-gray-700">Job Thumbnail</label>
-                    <input type="file" name="thumbnail" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]">
-                </div>
-                
-                <div>
-                    <label class="block font-medium text-gray-700">Attach Photo</label>
-                    <input type="file" name="photo" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]">
-                </div>
+    <label class="block font-medium text-gray-700">Job Thumbnail</label>
+    <!-- Display the current thumbnail if exists -->
+    <?php if (!empty($job['thumbnail'])): ?>
+        <div class="mb-2">
+            <img src="../<?= $job['thumbnail'] ?>" alt="Current Thumbnail" class="w-32 h-32 object-cover rounded-md" />
+        </div>
+    <?php endif; ?>
+    <input type="file" name="thumbnail" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" accept="image/*">
+</div>
+
+<!-- Attach Photo -->
+<div>
+    <label class="block font-medium text-gray-700">Attach Photo</label>
+    <!-- Display the current photo if exists -->
+    <?php if (!empty($job['photo'])): ?>
+        <div class="mb-2">
+            <img src="../<?= $job['photo'] ?>" alt="Current Photo" class="w-32 h-32 object-cover rounded-md" />
+        </div>
+    <?php endif; ?>
+    <input type="file" name="photo" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1976d2]" accept="image/*">
+</div>
+
             </div>
             
             <div class="flex justify-between mt-6">

@@ -113,7 +113,7 @@ $total_pages = ceil($total_notifications / $notifications_per_page);
     <link rel="stylesheet" href="/JOB/assets/notification.css">
     <style>
         body {
-            background-color: #F0F8FF !important;
+            background-color: #f1f3f5 !important;
         }
     </style>
 </head>
@@ -233,10 +233,10 @@ $total_pages = ceil($total_notifications / $notifications_per_page);
         data-bs-toggle="dropdown" 
         aria-haspopup="true" 
         aria-expanded="false"
-        style="border-radius: 30px; padding: 0.5rem 1rem;"
+        style=" padding: 0.5rem 1rem;"
     >
         <!-- The button text can be customized here -->
-        Options
+        
     </button>
     <div 
         class="dropdown-menu dropdown-menu-end p-0" 

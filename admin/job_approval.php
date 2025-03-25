@@ -1,6 +1,9 @@
 <?php
 include '../includes/config.php';
 include '../includes/header.php';
+include '../includes/restrictions.php';
+include('../includes/sidebar.php');
+
 
 // Check if the admin is logged in
 if ($_SESSION['role'] !== 'admin') {
@@ -81,21 +84,7 @@ $result = $conn->query($query);
 </head>
 <body>
 
-<!-- Sidebar (Admin Navigation) -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Admin Panel</h2>
-        <ul>
-            <li><a href="admin.php" ><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="job_approval.php " class="active"><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            
-        </ul>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
@@ -130,7 +119,7 @@ $result = $conn->query($query);
 <!-- Job List -->
 <div class="user-list">
     <!-- Table Header -->
-    <div class="user-header">
+    <div class="user-header text-center">
         <div>Job Title</div>
         <div>Employer Name</div>
         <div>Employer Email</div>
@@ -141,7 +130,7 @@ $result = $conn->query($query);
     <!-- Job Items -->
     <?php if ($result->num_rows > 0): ?>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="user-item">
+            <div class="user-item text-center">
                 <!-- Job Title -->
                 <div class="job-title">
                     <a href="../pages/job.php?id=<?= $row['id'] ?>" class="text-decoration-none text-primary fw-semibold">
@@ -194,7 +183,7 @@ $result = $conn->query($query);
 
 <!-- Modal for Rejecting with Remarks -->
 <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog  modal-dialog-centered"">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="actionModalLabel">Confirm Action</h5>
@@ -215,7 +204,7 @@ $result = $conn->query($query);
 
 <!-- Success Modal for Approving -->
 <div class="modal fade" id="approveSuccessModal" tabindex="-1" aria-labelledby="approveSuccessModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="approveSuccessModalLabel">Success</h5>
@@ -233,7 +222,7 @@ $result = $conn->query($query);
 
 <!-- Success Modal for Rejecting -->
 <div class="modal fade" id="rejectSuccessModal" tabindex="-1" aria-labelledby="rejectSuccessModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="rejectSuccessModalLabel">Success</h5>

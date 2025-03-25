@@ -17,7 +17,7 @@ $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
 $query = "SELECT cover_photo FROM homepage ORDER BY id DESC LIMIT 1";
 $result = mysqli_query($conn, $query);
 $row = mysqli_fetch_assoc($result);
-$cover_photo = $row ? "/JOB/uploads/" . htmlspecialchars($row['cover_photo']) : "/JOB/uploads/default/COVER.jpg"; // Default if no cover photo is set
+$cover_photo = $row ? "/JOB/uploads/index_cover/" . htmlspecialchars($row['cover_photo']) : "/JOB/uploads/default/COVER.jpg"; // Default if no cover photo is set
 
 
 
@@ -110,7 +110,6 @@ if (isset($_SESSION['login_message'])) {
             border: none;
             padding: 10px 20px;
             font-size: 0.8rem;
-            border-radius: 30px;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -139,6 +138,100 @@ h3{
     color: #000;
 }
 
+  /* Media query for mobile devices */
+  @media (max-width: 768px) {
+        .features {
+            flex-direction: column; /* Stack cards vertically */
+            align-items: center; /* Center the cards */
+        }
+
+        .feature-card {
+            margin-bottom: 20px; /* Add space between the cards */
+            width: 80%; /* Control width on smaller screens */
+        }
+    }
+
+/* No ads sliding messages */
+.no-ads-slider {
+        position: relative;
+        width: 100%;
+        height: 50px;
+        overflow: hidden;
+    }
+    .no-ads-slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        line-height: 50px;
+        text-align: center;
+        font-size: 26px;
+        opacity: 0;
+        animation: slideMessage 9s infinite;
+        
+    }
+    .no-ads-slide:nth-child(1) {
+        animation-delay: 0s;
+    }
+    .no-ads-slide:nth-child(2) {
+        animation-delay: 3s;
+    }
+    .no-ads-slide:nth-child(3) {
+        animation-delay: 6s;
+    }
+
+    @keyframes slideMessage {
+        0%, 33% { opacity: 0; transform: translateY(100%); }
+        10%, 20% { opacity: 1; transform: translateY(0); }
+        30%, 100% { opacity: 0; transform: translateY(-100%); }
+    }
+
+
+/* Adjust job card layout for small screens */
+@media (max-width: 900px) {
+  .carousel-item .job-card .row {
+    flex-direction: column; /* Stack elements vertically */
+  }
+
+  /* Center the thumbnail and adjust size */
+  .carousel-item .card-thumbnail {
+    width: 100%; 
+    height: auto; 
+    max-height: 200px; /* Limit thumbnail height */
+    object-fit: cover;
+    margin-bottom: 12px;
+    border-radius: 10px;
+  }
+
+  /* Show only essential info */
+  .carousel-item .card-body {
+    text-align: center;
+  }
+
+  .carousel-item .card-title {
+    font-size: 1.4rem;
+  }
+
+  .carousel-item .card-category,
+  .carousel-item .card-location {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  /* Hide additional content on small screens */
+  .carousel-item .card-positions,
+  .carousel-item .card-description,
+  .carousel-item .extra-details {
+    display: none;
+  }
+
+  /* Adjust View Details button */
+  .carousel-item .btn-outline-primary {
+    display: block;
+    margin-top: 12px;
+  }
+}
+
+
     </style>
 </head>
 <body>  
@@ -148,18 +241,16 @@ h3{
     <?php if ($user_role === 'admin'): ?>
         <!-- Admin sees "Edit Cover" -->
         <button type="button" class="btn edit-cover-btn" data-bs-toggle="modal" data-bs-target="#editCoverModal">
-            <i class="fas fa-camera"></i> Edit Cover
+            <i class="fas fa-camera"></i> 
         </button>
     <?php else: ?>
         <!-- Non-admins/guests see "View Photo" -->
         <button type="button" class="btn edit-cover-btn" data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
-        <i class="fas fa-camera"></i> View Cover
+        <i class="fas fa-camera"></i> 
         </button>
     <?php endif; ?>
     
-    <div class="header-content">
-        <button class="cta-button" onclick="window.location.href='about.php'">Discover More...</button>
-    </div>
+
 </div>
 
 <!-- Cover Photo Modal (Only for Admins) -->
@@ -176,7 +267,7 @@ h3{
                     <input type="hidden" name="action" value="upload">
                     <div class="mb-3">
                         <label for="coverPhoto" class="form-label">Upload New Cover Photo</label>
-                        <input type="file" class="form-control" name="cover_photo" id="coverPhoto" required>
+                        <input type="file" class="form-control" name="cover_photo" id="coverPhoto" accept="image/*" required>
                     </div>
                     <div class="modal-actions d-flex justify-content-between align-items-center">
                         <!-- View Photo Button -->
@@ -237,7 +328,7 @@ h3{
     </div>
 
 <!-- Features Section -->
-<div style="margin-bottom:100px;" class="container features">
+<div  class="container features">
     <div class="feature-card">
         <a href="../pages/browse.php"> <!-- Link to Browse page for Job Listings -->
             <i class="fas fa-briefcase"></i>
@@ -261,21 +352,35 @@ h3{
     </div>
 </div>
 
+<div class="header-content">
+        <button class="btn btn-primary" onclick="window.location.href='about.php'">Discover More...</button>
+    </div>
+
     </div>
 
         <!-- Ads Section -->
-        <div class="container ads-section">
-        <h2></h2>
-        <?php if ($user_role === 'admin'): ?>
-            <a href="../admin/add_ad.php" class="post-ad-button">Add Advertisement</a>
-        <?php endif; ?>
+<div class="container ads-section">
+    <h2></h2>
+    <?php if ($user_role === 'admin'): ?>
+        <a href="../admin/add_ad.php" class="post-ad"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-dashed-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8.56 3.69a9 9 0 0 0 -2.92 1.95" /><path d="M3.69 8.56a9 9 0 0 0 -.69 3.44" /><path d="M3.69 15.44a9 9 0 0 0 1.95 2.92" /><path d="M8.56 20.31a9 9 0 0 0 3.44 .69" /><path d="M15.44 20.31a9 9 0 0 0 2.92 -1.95" /><path d="M20.31 15.44a9 9 0 0 0 .69 -3.44" /><path d="M20.31 8.56a9 9 0 0 0 -1.95 -2.92" /><path d="M15.44 3.69a9 9 0 0 0 -3.44 -.69" /><path d="M9 12h6" /><path d="M12 9v6" /></svg></a>
+    <?php endif; ?>
+    
+    <?php if (empty($ads)): ?>
+        <!-- Displaying the no ads message and sliding it -->
+        <div class="no-ads-slider">
+        <div class="no-ads-slide">Currently, no ads available. Check back soon.</div>
+            <div class="no-ads-slide">Looking for your next career move? Stay tuned for upcoming job listings and opportunities!</div>
+            <div class="no-ads-slide">Job seekers, keep an eye out! New job opportunities will be posted soon.</div>
+        </div>
+    <?php else: ?>
+        <!-- Ads slider if ads exist -->
         <div class="ad-slider" id="adSlider">
             <?php foreach ($ads as $ad): ?>
                 <div class="ad-card-wrapper" data-ad-id="<?= htmlspecialchars($ad['id']) ?>">
                     <a href="<?= htmlspecialchars($ad['link_url']) ?>" target="_blank" class="ad-card-link">
                         <div class="ad-card">
                             <img 
-                                src="/JOB/uploads/<?= htmlspecialchars($ad['image_file']) ?>" 
+                                src="/JOB/uploads/ads_thumbnail/<?= htmlspecialchars($ad['image_file']) ?>" 
                                 alt="<?= htmlspecialchars($ad['title']) ?>" 
                                 onerror="this.onerror=null; this.src='/JOB/uploads/default/PESO.png';"
                             >
@@ -298,7 +403,8 @@ h3{
                 <button data-index="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>"></button>
             <?php endforeach; ?>
         </div>
-    </div>
+    <?php endif; ?>
+</div>
 
 <!-- Announcement Section -->
 <div class="container announcement-section py-5">
@@ -378,10 +484,7 @@ h3{
             while ($row = mysqli_fetch_assoc($result)) {
                 $id = htmlspecialchars($row['id']);
                 $title = htmlspecialchars($row['title']);
-                $short_description = htmlspecialchars(substr($row['description'], 0, 100)) . '...'; // Short excerpt
-                $responsibilities = htmlspecialchars(substr($row['responsibilities'], 0, 100)) . '...'; // Short excerpt
-                $requirements = htmlspecialchars(substr($row['requirements'], 0, 100)) . '...'; // Short excerpt
-                $preferred_qualifications = htmlspecialchars(substr($row['preferred_qualifications'], 0, 100)) . '...'; // Short excerpt
+                $description = htmlspecialchars(substr($row['description'], 0, 1000)) . '...'; // Short excerpt
                 $created_at = htmlspecialchars(date('F j, Y', strtotime($row['created_at'])));
                 $categories = htmlspecialchars($row['categories']); // Comma-separated list of categories
                 $positions = htmlspecialchars($row['positions']); // Comma-separated list of positions
@@ -402,21 +505,17 @@ h3{
                                 <div class="card-body">
                                     <h4 class="card-title"><?= $title ?></h4>
                                     <p class="card-category"><i class="fas fa-briefcase me-2"></i><?= $categories ?></p> <!-- All categories -->
-                                    <p class="card-positions"><i class="fas fa-users me-2"></i><?= $positions ?></p> <!-- All positions -->
+                                    <p style="color:dimgrey;" class="card-positions"><i class="fas fa-users me-2"></i><?= $positions ?></p> <!-- All positions -->
                                     <p class="card-location"><i class="fas fa-map-marker-alt me-2"></i><?= $location ?></p>
-                                    <p class="card-description"><?= $short_description ?></p>
+                                    <p class="card-description"><?= $description ?></p>
                                     <!-- Add Responsibilities, Requirements, and Preferred Qualifications -->
-                                    <div class="extra-details mt-2">
-                                        <p><strong>Responsibilities:</strong> <?= $responsibilities ?></p>
-                                        <p><strong>Requirements:</strong> <?= $requirements ?></p>
-                                        <p><strong>Preferred Qualifications:</strong> <?= $preferred_qualifications ?></p>
-                                    </div>
+
                                     <a href="job.php?id=<?= $id ?>" class="btn btn-outline-primary w-30">View Details</a>
                                 </div>
                             </div>
                             <!-- Thumbnail -->
                             <div class="col-md-4">
-                                <img src="<?= $thumbnail_url ?>" alt="<?= $title ?>" class="card-thumbnail">
+                            <img src="<?= $thumbnail_url ?>" alt="<?= $title ?>" class="card-thumbnail img-fluid rounded" style="object-fit: cover; height: 250px; width: 90%;">
                             </div>
                         </div>
                     </div>
@@ -480,35 +579,53 @@ h3{
 
 
     <script>
-        // Get the message from the URL query parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const message = urlParams.get('message');
-
-        // Display SweetAlert2 notification if there is a message
-        if (message) {
-            Swal.fire({
-                title: "Successfully logged in!",
-                text: message,
-                icon: "success", // You can remove this line if you don't want any icon
-                showConfirmButton: true, // Show the close button
-                confirmButtonText: "Close", // Customize the close button text
-                timer: 5000, // Auto-close after 3 seconds
-                timerProgressBar: true, // Show a progress bar
-                showClass: {
-                    popup: 'swal2-noanimation', // Disable animation for the popup
-                    backdrop: 'swal2-noanimation' // Disable animation for the backdrop
-                },
-                hideClass: {
-                    popup: '', // No special class for hiding the popup
-                    backdrop: '' // No special class for hiding the backdrop
-                }
-            }).then(() => {
-                // Remove the 'message' query parameter from the URL
-                urlParams.delete('message');
-                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-                window.history.replaceState({}, document.title, newUrl);
-            });
+// Function to escape HTML entities
+function escapeHtml(str) {
+    return str.replace(/[&<>"'/]/g, function (char) {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            case '/': return '&#x2F;';
         }
+    });
+}
+
+// Get the message from the URL query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const message = urlParams.get('message');
+
+// Display SweetAlert2 notification if there is a message
+if (message) {
+    // Escape the message to avoid XSS
+    const sanitizedMessage = escapeHtml(message);
+
+    Swal.fire({
+        title: "Successfully logged in!",
+        text: sanitizedMessage,
+        icon: "success", // You can remove this line if you don't want any icon
+        showConfirmButton: true, // Show the close button
+        confirmButtonText: "Close", // Customize the close button text
+        timer: 5000, // Auto-close after 5 seconds
+        timerProgressBar: true, // Show a progress bar
+        showClass: {
+            popup: 'swal2-noanimation', // Disable animation for the popup
+            backdrop: 'swal2-noanimation' // Disable animation for the backdrop
+        },
+        hideClass: {
+            popup: '', // No special class for hiding the popup
+            backdrop: '' // No special class for hiding the backdrop
+        }
+    }).then(() => {
+        // Remove the 'message' query parameter from the URL
+        urlParams.delete('message');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, document.title, newUrl);
+    });
+}
+
 
 
 
@@ -633,6 +750,20 @@ function deleteAd(adId) {
             wrap: true      // Loop back to the first slide after the last
         });
     });
+
+
+
+    // Auto-slide messages for the no-ads case
+    if (document.querySelector('.no-ads-slider')) {
+        let slides = document.querySelectorAll('.no-ads-slide');
+        let currentIndex = 0;
+
+        setInterval(() => {
+            slides[currentIndex].style.opacity = 0;
+            currentIndex = (currentIndex + 1) % slides.length;
+            slides[currentIndex].style.opacity = 1;
+        }, 3000); // Change message every 3 seconds
+    }
     </script>
 
     

@@ -144,17 +144,13 @@ body {
 .section table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* Ensures equal column widths */
     margin-bottom: 20px;
 }
 
-.section table th,
-.section table td {
+.section table th, .section table td {
     border: 1px solid #e2e8f0;
-    padding: 12px; /* Increased padding for better spacing */
+    padding: 10px;
     text-align: left;
-    vertical-align: middle; /* Aligns content to middle */
-    word-wrap: break-word; /* Prevents text from overflowing */
 }
 
 .section table th {
@@ -170,11 +166,4 @@ body {
 
 .section table tr:nth-child(even) td {
     background-color: #f7fafc;
-}
-
-/* Responsive Fix for Smaller Screens */
-@media (max-width: 600px) {
-    .section table {
-        font-size: 0.9rem; /* Slightly smaller text for small screens */
-    }
 }

@@ -2,6 +2,7 @@
 include '../includes/config.php';
 include '../includes/header.php';
 include '../includes/restrictions.php';
+include('../includes/sidebar.php');
 
 // Check if the user is logged in and is an admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -133,24 +134,7 @@ if ($result === false) {
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Admin Panel</h2>
-        <ul>
-            <li><a href="admin.php" ><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
-            <li><a href="feedback_bin.php" class="active"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
@@ -188,7 +172,7 @@ if ($result === false) {
         <!-- Feedback List -->
 <div class="user-list">
     <!-- Feedback Header -->
-    <div class="user-header">
+    <div class="user-header text-center">
         <div>ID</div>
         <div>Name</div>
         <div>Email</div>
@@ -201,7 +185,7 @@ if ($result === false) {
     <!-- Feedback Items -->
     <?php if ($result->num_rows > 0): ?>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="user-item">
+            <div class="user-item text-center">
                 <div><?= htmlspecialchars($row['id']) ?></div>
                 <div><?= htmlspecialchars($row['name']) ?></div>
                 <div><?= htmlspecialchars($row['email']) ?></div>

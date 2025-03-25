@@ -87,131 +87,104 @@ $user = $result->fetch_assoc();
 
 
 
-// Handle Cover Photo Upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['cover_photo'])) {
-    if ($_FILES["cover_photo"]["size"] == 0) {
-        echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
-    } else {
-        $target_dir = "../uploads/"; // Ensure this directory exists and is writable
-        $file_name = uniqid() . '_' . basename($_FILES["cover_photo"]["name"]); // Generate unique file name
-        $target_file = $target_dir . $file_name;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-        // Check if the uploaded file is a valid image
-        if (getimagesize($_FILES["cover_photo"]["tmp_name"])) {
-            // Allow only certain image formats
-            if ($imageFileType == "jpg" || $imageFileType == "jpeg" || $imageFileType == "png" || $imageFileType == "gif") {
-                if (move_uploaded_file($_FILES["cover_photo"]["tmp_name"], $target_file)) {
-                    // Update the database with the new cover photo path
-                    $update_query = "UPDATE users SET cover_photo = ? WHERE id = ?";
-                    $stmt = $conn->prepare($update_query);
-                    $stmt->bind_param("si", $target_file, $user_id);
-
-                    if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Cover photo updated successfully.</div>";
-                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
-                        exit();
-                    } else {
-                        echo "<div class='alert alert-danger'>Error updating cover photo in the database.</div>";
-                    }
-                } else {
-                    echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
-                }
-            } else {
-                echo "<div class='alert alert-danger'>Only JPG, JPEG, PNG, and GIF files are allowed.</div>";
-            }
-        } else {
-            echo "<div class='alert alert-danger'>File is not a valid image.</div>";
-        }
-    }
-}
-
-// Handle Cover Photo Removal
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_cover_photo'])) {
-    // Check if a cover photo exists
-    $query = "SELECT cover_photo FROM users WHERE id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-
-    if (!empty($user['cover_photo'])) {
-        // Clear the cover_photo column in the database
-        $update_query = "UPDATE users SET cover_photo = NULL WHERE id = ?";
-        $stmt = $conn->prepare($update_query);
-        $stmt->bind_param("i", $user_id);
-
-        if ($stmt->execute()) {
-            // Optionally delete the file from the server
-            if (file_exists($user['cover_photo'])) {
-                unlink($user['cover_photo']);
-            }
-
-            echo "<div class='alert alert-success'>Cover photo removed successfully.</div>";
-            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
-            exit();
-        } else {
-            echo "<div class='alert alert-danger'>Error removing cover photo from the database.</div>";
-        }
-    } else {
-        echo "<div class='alert alert-danger'>No cover photo found to remove.</div>";
-    }
-}
 
 
 // Handle profile picture upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_pic'])) {
     if ($_FILES["profile_pic"]["size"] == 0) {
-        echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
+        // No file selected, just refresh the page
+        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        exit();
     } else {
-        $target_dir = "../uploads/"; // Ensure this directory exists and is writable
-        $target_file = $target_dir . basename($_FILES["profile_pic"]["name"]);
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+        $target_dir = "../uploads/profile_employer/"; // Ensure this directory exists and is writable
+        $fileType = strtolower(pathinfo($_FILES["profile_pic"]["name"], PATHINFO_EXTENSION));
 
-        // Check if the uploaded file is a valid image
-        if (getimagesize($_FILES["profile_pic"]["tmp_name"])) {
-            if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_file)) {
-                $update_query = "UPDATE users SET uploaded_file = ? WHERE id = ?";
-                $stmt = $conn->prepare($update_query);
-                $stmt->bind_param("si", $target_file, $user_id);
+        // Fetch the current profile picture and username from the database
+        $query = "SELECT uploaded_file, username FROM users WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-                if ($stmt->execute()) {
-                    echo "<div class='alert alert-success'>Profile picture updated successfully.</div>";
+        // Check if user data is fetched correctly
+        if ($user = $result->fetch_assoc()) {
+            // Sanitize the username and ensure it's safe for use in a file name
+            $sanitized_username = preg_replace("/[^a-zA-Z0-9-_]/", "_", $user['username']); // Replace unsafe characters with underscore
+            $new_file_name = $sanitized_username . "." . $fileType; // Use username as the filename
+            $target_file = $target_dir . $new_file_name;
+
+            // Check if the uploaded file is a valid image
+            if (getimagesize($_FILES["profile_pic"]["tmp_name"])) {
+                // Check if there is already an existing profile picture
+                if (!empty($user['uploaded_file']) && file_exists($user['uploaded_file'])) {
+                    // Delete the old profile picture
+                    unlink($user['uploaded_file']);
+                }
+
+                // Move the new file to the target directory
+                if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_file)) {
+                    // Update the database with the new file path
+                    $update_query = "UPDATE users SET uploaded_file = ? WHERE id = ?";
+                    $stmt = $conn->prepare($update_query);
+                    $stmt->bind_param("si", $target_file, $user_id);
+
+                    if ($stmt->execute()) {
+                        // Successfully uploaded, refresh the page immediately
+                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        exit();
+                    } else {
+                        // If there is an error updating the database, just refresh the page
+                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        exit();
+                    }
+                } else {
+                    // Error uploading the file, just refresh the page
                     echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
                     exit();
-                } else {
-                    echo "<div class='alert alert-danger'>Error updating profile picture.</div>";
                 }
             } else {
-                echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
+                // Invalid image, refresh the page
+                echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                exit();
             }
         } else {
-            echo "<div class='alert alert-danger'>File is not a valid image.</div>";
+            // If no user is found, log and return an error
+            echo "<div class='alert alert-danger'>No user found with ID: $user_id</div>";
+            exit();
         }
     }
 }
-
-
 
 // Handle profile picture removal when the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_profile_pic'])) {
     // Check if a profile picture exists
     if (!empty($user['uploaded_file'])) {
-        // Clear the uploaded_file column in the database (do not delete the file from the server)
+        // Path to the file to be deleted from the server
+        $filePath = $user['uploaded_file'];
+
+        // Delete the file from the server
+        if (file_exists($filePath)) {
+            unlink($filePath); // Delete the file from the server
+        }
+
+        // Clear the uploaded_file column in the database (remove profile picture reference)
         $update_query = "UPDATE users SET uploaded_file = NULL WHERE id = ?";
         $stmt = $conn->prepare($update_query);
         $stmt->bind_param("i", $user_id);
 
         if ($stmt->execute()) {
-            echo "<div class='alert alert-success'>Profile picture removed successfully.</div>";
+            // Refresh the page immediately after successful removal
             echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
             exit();
         } else {
-            echo "<div class='alert alert-danger'>Error removing profile picture from the database.</div>";
+            // If there was an error removing from the database, you could log it or handle it, but we aren't showing an alert
+            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+            exit();
         }
     } else {
-        echo "<div class='alert alert-danger'>No profile picture found to remove.</div>";
+        // If there's no profile picture, just refresh the page without an alert
+        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        exit();
     }
 }
 
@@ -301,36 +274,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
     if ($_FILES["resume"]["size"] == 0) {
         echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
     } else {
-        $target_dir = "../uploads/resumes/"; // Ensure this directory exists and is writable
-        $target_file = $target_dir . basename($_FILES["resume"]["name"]);
-        $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+        $target_dir = "../uploads/company_docu/"; // Ensure this directory exists and is writable
+        $fileType = strtolower(pathinfo($_FILES["resume"]["name"], PATHINFO_EXTENSION));
+
         // Allowed file types
         $allowed_types = ['pdf'];
+
         // Check if the file type is allowed
         if (!in_array($fileType, $allowed_types)) {
-            echo "<div class='alert alert-danger'>Only PDF, DOC, and DOCX files are allowed.</div>";
+            echo "<div class='alert alert-danger'>Only PDF files are allowed.</div>";
         } elseif ($_FILES["resume"]["size"] > 5 * 1024 * 1024) { // Limit file size to 5MB
             echo "<div class='alert alert-danger'>File size must not exceed 5MB.</div>";
         } else {
-            // If a previous resume exists, delete it
-            if (!empty($user['resume_file']) && file_exists($user['resume_file'])) {
-                unlink($user['resume_file']);
-            }
-            // Move the uploaded file to the target directory
-            if (move_uploaded_file($_FILES["resume"]["tmp_name"], $target_file)) {
-                // Save the file path in the database
-                $update_query = "UPDATE users SET resume_file = ? WHERE id = ?";
-                $stmt = $conn->prepare($update_query);
-                $stmt->bind_param("si", $target_file, $user_id);
-                if ($stmt->execute()) {
-                    echo "<div class='alert alert-success'>Resume uploaded successfully.</div>";
-                    echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
-                    exit();
+            // Fetch the username from the database
+            $query = "SELECT username FROM users WHERE id = ?";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            // Check if user data is fetched correctly
+            if ($user = $result->fetch_assoc()) {
+                // Sanitize the username and ensure it's safe for use in a file name
+                $sanitized_username = preg_replace("/[^a-zA-Z0-9-_]/", "_", $user['username']); // Replace unsafe characters with underscore
+                $new_file_name = $sanitized_username . "." . $fileType; // Use username as the filename
+                $target_file = $target_dir . $new_file_name;
+
+                // If a previous resume exists, delete it
+                if (!empty($user['resume_file']) && file_exists($user['resume_file'])) {
+                    unlink($user['resume_file']);
+                }
+
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($_FILES["resume"]["tmp_name"], $target_file)) {
+                    // Save the new file path in the database
+                    $update_query = "UPDATE users SET resume_file = ? WHERE id = ?";
+                    $stmt = $conn->prepare($update_query);
+                    $stmt->bind_param("si", $target_file, $user_id);
+
+                    if ($stmt->execute()) {
+                        echo "<div class='alert alert-success'>Resume uploaded successfully.</div>";
+                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        exit();
+                    } else {
+                        echo "<div class='alert alert-danger'>Error updating resume file in the database.</div>";
+                    }
                 } else {
-                    echo "<div class='alert alert-danger'>Error updating resume file in the database.</div>";
+                    echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
                 }
             } else {
-                echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
+                echo "<div class='alert alert-danger'>User not found.</div>";
             }
         }
     }
@@ -340,22 +333,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_resume'])) {
     // Check if a resume exists
     if (!empty($user['resume_file'])) {
-        // Clear the resume_file column in the database (do not delete the actual file)
+        // Path to the resume file to be deleted from the server
+        $resumeFilePath = $user['resume_file'];
+
+        // Delete the file from the server
+        if (file_exists($resumeFilePath)) {
+            unlink($resumeFilePath);  // Deletes the file from the server
+        }
+
+        // Clear the resume_file column in the database (removes the reference)
         $update_query = "UPDATE users SET resume_file = NULL WHERE id = ?";
         $stmt = $conn->prepare($update_query);
         $stmt->bind_param("i", $user_id);
+
         if ($stmt->execute()) {
-            echo "<div class='alert alert-success'>Resume removed from profile successfully.</div>";
+            // Refresh the page immediately after the resume is deleted
             echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
             exit();
         } else {
-            echo "<div class='alert alert-danger'>Error removing resume from the database.</div>";
+            // Error in database update, refresh the page anyway
+            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+            exit();
         }
     } else {
-        echo "<div class='alert alert-danger'>No resume found to remove.</div>";
+        // If no resume file exists, just refresh the page without an alert
+        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        exit();
     }
 }
-
 
 
 // Fetch applied jobs for the user with status
@@ -371,6 +376,20 @@ $stmt = $conn->prepare($query_jobs);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result_jobs = $stmt->get_result();
+
+
+// Check if there's a session message
+if (isset($_SESSION['message'])) {
+    // Retrieve message details
+    $message = $_SESSION['message'];
+    $messageType = $message['type'];
+    $messageText = $message['text'];
+
+    // Unset the session message so it doesn't persist across page loads
+    unset($_SESSION['message']);
+}
+
+
 
 ?>
 
@@ -388,174 +407,317 @@ $result_jobs = $stmt->get_result();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.20/dist/sweetalert2.min.css" rel="stylesheet">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.20/dist/sweetalert2.min.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/JOB/assets/profile.css">
     <style>
 
 
-.hover-link:hover {
-    border-color: #ff6700;
-    color: #ff6700;
-    background-color: transparent;
+
+
+/* Button Styling */
+.btn-outline-custom {
+    color:#333;
+    text-decoration: none; /* Removes underline */
+    background: transparent; /* Keeps it transparent */
+    border:1.5px solid #333; /* Adds a black border */
+    transition: all 0.3s ease-in-out;
 }
+
+.btn-outline-custom:hover {
+    background: transparent;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Soft shadow effect */
+    border-color: #4c6ef5;
+    color: #4c6ef5;
+}
+
+.striped-border {
+    border: 4px dashed #ddd;  /* Creates a dashed border */
+    background-color: #f9f9f9; /* Optional: Light background color for no content state */
+    padding: 20px; /* Padding to ensure the content doesn’t touch the border */
+}
+
+
 </style>
 </head>
-<body>
-<?php $isOwnProfile = ($user_id == $_SESSION['user_id']); // Check if it's the user's own profile ?>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 fade-in">
-            <!-- Tab Navigation -->
-            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Management</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Documents</button>
-    </li>
-</ul>
+    <body>
+    <?php $isOwnProfile = ($user_id == $_SESSION['user_id']); // Check if it's the user's own profile ?>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 fade-in">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs custom-tabs" id="profileTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Management</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Documents</button>
+        </li>
+    </ul>
 
-                <!-- Tab Content -->
-                <div class="tab-content" id="profileTabsContent">
-                    <!-- Profile Tab -->
-                    <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                        <!-- Profile Card -->
-                        <div class="profile-card mt-4 p-4 mb-4">
-            <!-- Cover Photo -->
-            <div class="cover-photo-container position-relative" style="height: 340px; overflow: hidden;">
-                <img src="<?php echo $user['cover_photo'] ? $user['cover_photo'] : 'default-cover.jpg'; ?>" alt="Cover Photo" class="cover-photo w-100 h-100 object-fit-cover" style="object-position: center;">
-<!-- Edit Cover Photo Button -->
-<?php if ($user_id == $_SESSION['user_id']): ?>
-    <!-- Edit Cover Photo Button (Only visible to the profile owner) -->
-    <button type="button" class="btn btn-light position-absolute top-0 end-0 m-3" data-bs-toggle="modal" data-bs-target="#coverPhotoModal">
-        <i class="fas fa-camera"></i> Edit Cover
-    </button>
-<?php elseif ($user_role === 'admin'): ?>
-    <!-- View Cover Photo Button (Only visible to admins) -->
-    <button type="button" class="btn btn-outline-secondary position-absolute top-0 end-0 m-3" data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
-        <i class="fas fa-camera"></i> View Cover
-    </button>
-<?php endif; ?>
-            </div>
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="profileTabsContent">
+                        <!-- Profile Tab -->
+                        <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                            <!-- Profile Card -->
+                            <div class="profile-card mt-4 p-4 mb-4">
+                <!-- Cover Photo -->
+                <div class="cover-photo-container position-relative" style="height: 340px; overflow: hidden;">
+                    <img src="<?php echo $user['cover_photo'] ? $user['cover_photo'] : '/JOB/uploads/default/COVER.jpg'; ?>" alt="Cover Photo" class="cover-photo w-100 h-100 object-fit-cover" style="object-position: center;">
+    <!-- Edit Cover Photo Button -->
+    <?php if ($user_id == $_SESSION['user_id']): ?>
+        <!-- Edit Cover Photo Button (Only visible to the profile owner) -->
+        <button type="button" class="btn btn-light position-absolute top-0 end-0 m-3" data-bs-toggle="modal" data-bs-target="#coverPhotoModal">
+            <i class="fas fa-camera"></i> Edit Cover
+        </button>
+    <?php elseif ($user_role === 'admin'): ?>
+        <!-- View Cover Photo Button (Only visible to admins) -->
+        <button type="button" class="btn btn-outline-secondary position-absolute top-0 end-0 m-3" data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
+            <i class="fas fa-camera"></i> View Cover
+        </button>
+    <?php endif; ?>
+                </div>
 
-            <!-- Profile Picture -->
-            <div class="text-center position-relative" style="margin-top: -100px;">
-            <div class="profile-picture mb-3" data-bs-toggle="modal" data-bs-target="#profilePictureModal">
-    <img src="<?php echo $user['uploaded_file'] ? $user['uploaded_file'] : '../uploads/default/default_profile.png'; ?>" alt="Profile Picture" class="rounded-circle shadow-sm" style="width: 200px; height: 200px; object-fit: cover; border: 4px solid #fff;">
+                <!-- Profile Picture -->
+                <div class="text-center position-relative" style="margin-top: -100px;">
+                <div class="profile-picture mb-3" data-bs-toggle="modal" data-bs-target="#profilePictureModal">
+        <img src="<?php echo $user['uploaded_file'] ? $user['uploaded_file'] : '../uploads/default/default_profile.png'; ?>" alt="Profile Picture" class="rounded-circle shadow-sm" style="width: 200px; height: 200px; object-fit: cover; border: 4px solid #fff;">
+    </div>
+
+    <!-- User Name Display (Clickable) -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <h2>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#editUserNameModal" style="color: black; text-decoration: none;">
+                <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['middle_name'] . ' ' . $user['last_name'] . ' ' . $user['ext_name']); ?>
+            </a>
+        </h2>
+    <?php else: ?>
+        <!-- Display the name normally for users who are not the owner -->
+        <h2>
+            <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['middle_name'] . ' ' . $user['last_name'] . ' ' . $user['ext_name']); ?>
+        </h2>
+    <?php endif; ?>
+                                    <!-- Caption -->
+                                    <p class="text-muted caption-text" id="bio-display">
+                                        <?php echo !empty($user['caption']) ? htmlspecialchars($user['caption']) : 'No caption set'; ?>
+                                    </p>
+                                    <!-- Edit Bio Button -->
+                                    <?php if ($isOwnProfile): ?>
+                                        <button id="edit-bio-button" class="btn btn-outline-custom btn-sm mb-3"><i class="fas fa-edit"></i>Edit Bio</button>
+                                    <?php endif; ?>
+                                    <!-- Caption Update Form (Hidden Initially) -->
+                                    <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" id="bio-form" style="display:none;" class="mb-3">
+                                        <textarea name="caption" class="form-control rounded-pill my-3" placeholder="Enter your caption or saying..."><?php echo htmlspecialchars($user['caption']); ?></textarea>
+                                        <button type="submit" class="btn btn-primary rounded-pill me-2">Save</button>
+                                        <button type="button" id="cancel-bio-button" class="btn btn-light rounded-pill">Cancel</button>
+                                    </form>
+                                </div>
+                            </div>
+
+<!-- Personal Information -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Personal Information</h3>
+        <button id="toggle-personal-info-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    <div id="personal-info-section" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-6">
+            <p class="mb-3"><strong><i class="fas fa-envelope me-2" style="color: #17A2B8;"></i>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+            <p class="mb-3"><strong><i class="fas fa-venus-mars me-2" style="color: #FFC107;"></i>Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
+            <p class="mb-3"><strong><i class="fas fa-birthday-cake me-2" style="color: #28A745;"></i>Birth Date:</strong> <?php echo htmlspecialchars($user['birth_date']); ?></p>
+            <p class="mb-3"><strong><i class="fas fa-hourglass-half me-2" style="color: #DC3545;"></i>Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-6">
+            <p class="mb-3"><strong><i class="fas fa-ring me-2" style="color: #6F42C1;"></i>Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
+            <p class="mb-3"><strong><i class="fas fa-phone me-2" style="color: #FD7E14;"></i>Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
+            <p class="mb-3"><strong><i class="fas fa-map-marker-alt me-2" style="color: #6610F2;"></i>Address:</strong>
+                <?php
+                // Query to fetch the barangay name based on the barangay ID
+                $barangay_query = "SELECT name FROM barangay WHERE id = ?";
+                if ($stmt = $conn->prepare($barangay_query)) {
+                    $stmt->bind_param("i", $user['barangay']); // Bind the barangay ID from the user's data
+                    $stmt->execute();
+                    $stmt->bind_result($barangay_name);
+                    $stmt->fetch();
+                    $stmt->close();
+
+                    // Display the address with the barangay name
+                    echo htmlspecialchars($user['street_address']) . ', ' . htmlspecialchars($barangay_name) . ', ' . htmlspecialchars($user['city']);
+                }
+                ?>
+            </p>
+            <p class="mb-3"><strong><i class="fas fa-map-pin me-2" style="color: #6C757D;"></i>Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
+        </div>
+    </div>
+
+    <!-- Edit Button -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <div class="mt-4">
+            <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal" >
+                <i class="fas fa-edit me-2"></i> Edit Info
+            </button>
+        </div>
+    <?php endif; ?>
+</div>
 </div>
 
-                                <!-- User Name -->
-                                <h2><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h2>
-                                <!-- Caption -->
-                                <p class="text-muted caption-text" id="bio-display">
-                                    <?php echo !empty($user['caption']) ? htmlspecialchars($user['caption']) : 'No caption set'; ?>
-                                </p>
-                                <!-- Edit Bio Button -->
-                                <?php if ($isOwnProfile): ?>
-                                    <button id="edit-bio-button" class="btn btn-light rounded-pill mb-3">Edit Bio</button>
-                                <?php endif; ?>
-                                <!-- Caption Update Form (Hidden Initially) -->
-                                <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" id="bio-form" style="display:none;" class="mb-3">
-                                    <textarea name="caption" class="form-control rounded-pill my-3" placeholder="Enter your caption or saying..."><?php echo htmlspecialchars($user['caption']); ?></textarea>
-                                    <button type="submit" class="btn btn-primary rounded-pill me-2">Save</button>
-                                    <button type="button" id="cancel-bio-button" class="btn btn-secondary rounded-pill">Cancel</button>
-                                </form>
-                            </div>
-                        </div>
 
-                    <!-- Personal Information -->
-                    <div class="profile-card p-4 mb-4 fade-in">
-                        <h3 class="section-title">Personal Information</h3>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong><i style="color:gray;" class="fas fa-envelope"></i> Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-venus-mars"></i> Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-birthday-cake"></i> Birth Date:</strong> <?php echo htmlspecialchars($user['birth_date']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-hourglass-half"></i> Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong><i style="color:gray;" class="fas fa-ring"></i> Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-phone"></i>  Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-map-marker-alt"> </i>  Address:</strong> <?php echo htmlspecialchars($user['street_address'] . ', ' . $user['barangay'] . ', ' . $user['city']); ?></p>
-                                <p><strong><i style="color:gray;" class="fas fa-map-pin"></i> Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
-                            </div>
-                        </div>
-                    </div>
-
-                                            <!-- Educational Background -->
-                                            <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Educational Background</h3>
-                            <p><strong><i style="color:gray;" class="fas fa-graduation-cap"></i> Education Level:</strong> <?php echo htmlspecialchars($user['education_level']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-school"></i> School:</strong> <?php echo htmlspecialchars($user['school_name']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-calendar-check"></i> Completion Year:</strong> <?php echo htmlspecialchars($user['completion_year']); ?></p>
-                            <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Inclusive Years:</strong> <?php echo htmlspecialchars($user['inclusive_years']); ?></p>
-                        </div>
-
-                        <!-- Employer Information (Always visible, even if no data exists) -->
+                            <!-- Employer Information (Always visible, even if no data exists) -->
 
 <!-- Company Name -->
-<div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title">Company Name</h3>
-    <p class="no-data"><?php echo !empty($employer['company_name']) ? htmlspecialchars($employer['company_name']) : 'No company name added yet.'; ?></p>
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">Company Name</h3>
+    <p class="no-data <?php echo empty($employer['company_name']) ? 'striped-border' : ''; ?>">
+        <?php 
+        // Ensure $employer is valid before checking its content
+        if (isset($employer) && is_array($employer)) {
+            echo isset($employer['company_name']) && !is_null($employer['company_name']) && !empty($employer['company_name']) 
+                ? htmlspecialchars($employer['company_name']) 
+                : 'No company name added yet.';
+        } else {
+            echo 'No company name added yet.';
+        }
+        ?>
+    </p>
+    <!-- Edit Button (always visible if it's the logged-in user) -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editCompanyNameModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
 </div>
 
 <!-- Company Description -->
-<div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title">Company Description</h3>
-    <p class="no-data"><?php echo !empty($employer['company_description']) ? htmlspecialchars($employer['company_description']) : 'No company description added yet.'; ?></p>
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">Company Description</h3>
+    <p class="no-data <?php echo empty($employer['company_description']) ? 'striped-border' : ''; ?>">
+        <?php 
+        if (isset($employer) && is_array($employer)) {
+            echo isset($employer['company_description']) && !is_null($employer['company_description']) && !empty($employer['company_description']) 
+                ? htmlspecialchars($employer['company_description']) 
+                : 'No company description added yet.';
+        } else {
+            echo 'No company description added yet.';
+        }
+        ?>
+    </p>
+    <!-- Edit Button (always visible if it's the logged-in user) -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editCompanyDescriptionModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
 </div>
 
 <!-- Location -->
-<div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title">Location</h3>
-    <p class="no-data"><?php echo !empty($employer['location']) ? htmlspecialchars($employer['location']) : 'No location added yet.'; ?></p>
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">Location</h3>
+    <p class="no-data <?php echo empty($employer['location']) ? 'striped-border' : ''; ?>">
+        <?php 
+        if (isset($employer) && is_array($employer)) {
+            echo isset($employer['location']) && !is_null($employer['location']) && !empty($employer['location']) 
+                ? htmlspecialchars($employer['location']) 
+                : 'No location added yet.';
+        } else {
+            echo 'No location added yet.';
+        }
+        ?>
+    </p>
+    <!-- Edit Button (always visible if it's the logged-in user) -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editLocationModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
 </div>
 
 <!-- Company Website -->
-<div class="profile-card p-4 mb-4 fade-in">
-    <h3 class="section-title">Company Website / Social Links</h3>
-    <p class="no-data">
-        <?php if (!empty($employer['company_website'])): ?>
-            <a href="<?php echo htmlspecialchars($employer['company_website']); ?>" target="_blank" class="btn btn-light btn-sm rounded-pill hover-link">
-    <i class="fas fa-globe"></i> Visit Website
-</a>
-
-        <?php else: ?>
-            No website added yet.
-        <?php endif; ?>
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">Social Links</h3>
+    <p class="no-data <?php echo empty($employer['company_website']) ? 'striped-border' : ''; ?>">
+        <?php 
+        if (isset($employer) && is_array($employer)) {
+            if (isset($employer['company_website']) && !is_null($employer['company_website']) && !empty($employer['company_website'])) {
+                echo '<a href="' . htmlspecialchars($employer['company_website']) . '" target="_blank" class="btn btn-view-resume btn-sm rounded-pill hover-link">
+                    <i class="fas fa-globe"></i> Visit Website
+                </a>';
+            } else {
+                echo 'No website added yet.';
+            }
+        } else {
+            echo 'No website added yet.';
+        }
+        ?>
     </p>
+    <!-- Edit Button (always visible if it's the logged-in user) -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editCompanyWebsiteModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
 </div>
 
 
 
-                        <!-- LinkedIn Profile -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">LinkedIn Profile</h3>
-                            <p class="no-data">
-                                <?php if (!empty($user['linkedin_profile'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill hover-link"><i class="fab fa-linkedin"></i> View LinkedIn</a>
-                                <?php else: ?>
-                                    No LinkedIn profile added.
-                                <?php endif; ?>
-                            </p>
-                        </div>
+<!-- LinkedIn Profile -->
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">LinkedIn Profile</h3>
+    <p class="no-data <?php echo empty($user['linkedin_profile']) ? 'striped-border' : ''; ?>">
+        <?php if (!empty($user['linkedin_profile'])): ?>
+            <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-create-resume btn-sm rounded-pill hover-link">
+                <i class="fab fa-linkedin"></i> View LinkedIn
+            </a>
+        <?php else: ?>
+            No LinkedIn profile added yet.
+        <?php endif; ?>
+    </p>
+    <!-- Edit Button for the User -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editLinkedInModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
+</div>
 
-                        <!-- Portfolio -->
-                        <div class="profile-card p-4 mb-4 fade-in">
-                            <h3 class="section-title">Portfolio</h3>
-                            <p class="no-data">
-                                <?php if (!empty($user['portfolio_url'])): ?>
-                                    <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-success btn-sm rounded-pill hover-link"><i class="fas fa-globe"></i> View Portfolio</a>
-                                <?php else: ?>
-                                    No portfolio added.
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        </div>
-                        </div>
+<!-- Portfolio URL -->
+<div class="profile-card p-4 mb-4 fade-in position-relative">
+    <h3 class="section-title resume-section text-primary">Portfolio URL</h3>
+    <p class="no-data <?php echo empty($user['portfolio_url']) ? 'striped-border' : ''; ?>">
+        <?php if (!empty($user['portfolio_url'])): ?>
+            <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-download-resume btn-sm rounded-pill hover-link">
+                <i class="fas fa-globe"></i> Visit Portfolio
+            </a>
+        <?php else: ?>
+            No portfolio added yet.
+        <?php endif; ?>
+    </p>
+    <!-- Edit Button for the User -->
+    <?php if ($_SESSION['user_id'] == $user['id']): ?>
+        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editPortfolioModal">
+            <i class="fas fa-edit"></i>
+        </button>
+    <?php endif; ?>
+</div>
+
+
+
+                            </div>
+                            </div>
 
 
 
@@ -849,8 +1011,8 @@ $result_jobs = $stmt->get_result();
 <!-- Edit Profile Button -->
 <?php if ($isOwnProfile): ?>
     <div id="edit-profile-button" style="margin-bottom: 30px;" class="text-center fade-in">
-        <a href="edit_profile.php" class="btn btn-custom rounded-pill px-4">
-            <i class="fas fa-edit"></i> Edit Profile
+        <a href="dashboard.php" class="btn btn-custom rounded-pill px-4">
+            <i class="fas fa-edit"></i> Employer Panel
         </a>
     </div>
 <?php endif; ?>
@@ -884,7 +1046,7 @@ $result_jobs = $stmt->get_result();
                     <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mb-3">
                         <div class="mb-3">
                             <label for="profile_pic" class="form-label fw-bold">Upload New Profile Picture</label>
-                            <input type="file" name="profile_pic" id="profile_pic" class="form-control rounded-pill" required>
+                            <input type="file" name="profile_pic" id="profile_pic" class="form-control rounded-pill" accept="image/*" required>
                         </div>
                         <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-upload"></i> Upload Picture</button>
                     </form>
@@ -968,6 +1130,270 @@ $result_jobs = $stmt->get_result();
     </div>
 </div>
 
+<!-- Modal for Editing User Name -->
+<div class="modal fade" id="editUserNameModal" tabindex="-1" aria-labelledby="editUserNameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserNameModalLabel">Edit User Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/JOB/pages/update_user_name.php" method="POST">
+                    <!-- First Name -->
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                    </div>
+                    
+                    <!-- Middle Name -->
+                    <div class="mb-3">
+                        <label for="middle_name" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($user['middle_name']); ?>">
+                    </div>
+                    
+                    <!-- Last Name -->
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                    </div>
+                    
+                    <!-- Extension Name (Optional) -->
+                    <div class="mb-3">
+                        <label for="ext_name" class="form-label">Extension Name (Optional)</label>
+                        <input type="text" class="form-control" id="ext_name" name="ext_name" value="<?php echo htmlspecialchars($user['ext_name']); ?>">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing Personal Information -->
+<div class="modal fade" id="editPersonalInfoModal" tabindex="-1" aria-labelledby="editPersonalInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPersonalInfoModalLabel">Edit Personal Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="update_personal_info.php" method="POST">
+                    <div class="mb-3">
+
+                        <label for="email" class="form-label">Email</label>
+                        <!-- Set the email field to readonly so it's not editable -->
+                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender" required>
+                            <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                            <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                            <option value="Non-Binary" <?php echo ($user['gender'] == 'Non-Binary') ? 'selected' : ''; ?>>Non-Binary</option>
+                            <option value="LGBTQ+" <?php echo ($user['gender'] == 'LGBTQ+') ? 'selected' : ''; ?>>LGBTQ+</option>
+                            <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">Birth Date</label>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="civil_status" class="form-label">Civil Status</label>
+                        <select class="form-select" id="civil_status" name="civil_status" required>
+                            <option value="Single" <?php echo ($user['civil_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
+                            <option value="Married" <?php echo ($user['civil_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
+                            <option value="Divorced" <?php echo ($user['civil_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
+                            <option value="Widowed" <?php echo ($user['civil_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="street_address" class="form-label">Street Address</label>
+                        <input type="text" class="form-control" id="street_address" name="street_address" value="<?php echo htmlspecialchars($user['street_address']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="barangay" class="form-label">Barangay</label>
+                        <select name="barangay" id="barangay" class="form-select" required>
+                            <option value="">Select Barangay</option>
+                            <?php
+                            // Fetch barangays from the database
+                            $query = "SELECT * FROM barangay";
+                            $result = $conn->query($query);
+
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    // Checking if the current barangay is the selected one (e.g., pre-populate if editing)
+                                    $selected = ($row['id'] == $user['barangay']) ? 'selected' : '';
+                                    echo "<option value='" . $row['id'] . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                                }
+                            } else {
+                                echo "<option value=''>No Barangays Available</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($user['city']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zip_code" class="form-label">Zip Code</label>
+                        <input type="text" class="form-control" id="zip_code" name="zip_code" value="<?php echo htmlspecialchars($user['zip_code']); ?>" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing Company Name -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editCompanyNameModal" tabindex="-1" aria-labelledby="editCompanyNameModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCompanyNameModalLabel">Edit Company Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="company_name" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="company_name" name="company_name" value="<?php echo isset($employer['company_name']) ? htmlspecialchars($employer['company_name']) : ''; ?>" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Editing Company Description -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editCompanyDescriptionModal" tabindex="-1" aria-labelledby="editCompanyDescriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCompanyDescriptionModalLabel">Edit Company Description</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="company_description" class="form-label">Company Description</label>
+                            <textarea class="form-control" id="company_description" name="company_description" rows="4" required><?php echo isset($employer['company_description']) ? htmlspecialchars($employer['company_description']) : ''; ?></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Editing Location -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editLocationModal" tabindex="-1" aria-labelledby="editLocationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editLocationModalLabel">Edit Location</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" value="<?php echo isset($employer['location']) ? htmlspecialchars($employer['location']) : ''; ?>" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Editing Company Website -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editCompanyWebsiteModal" tabindex="-1" aria-labelledby="editCompanyWebsiteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCompanyWebsiteModalLabel">Edit Company Website</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="company_website" class="form-label">Company Website</label>
+                            <input type="url" class="form-control" id="company_website" name="company_website" value="<?php echo isset($employer['company_website']) ? htmlspecialchars($employer['company_website']) : ''; ?>">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Editing LinkedIn Profile -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editLinkedInModal" tabindex="-1" aria-labelledby="editLinkedInModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editLinkedInModalLabel">Edit LinkedIn Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="linkedin_profile" class="form-label">LinkedIn Profile URL</label>
+                            <input type="url" class="form-control" id="linkedin_profile" name="linkedin_profile" value="<?php echo isset($user['linkedin_profile']) ? htmlspecialchars($user['linkedin_profile']) : ''; ?>" placeholder="https://linkedin.com/in/your-profile">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Editing Portfolio URL -->
+<?php if (isset($user) && is_array($user) && $_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="editPortfolioModal" tabindex="-1" aria-labelledby="editPortfolioModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPortfolioModalLabel">Edit Portfolio URL</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="update_employer_info.php" method="POST">
+                        <div class="mb-3">
+                            <label for="portfolio_url" class="form-label">Portfolio URL</label>
+                            <input type="url" class="form-control" id="portfolio_url" name="portfolio_url" value="<?php echo isset($employer['portfolio_url']) ? htmlspecialchars($employer['portfolio_url']) : ''; ?>" placeholder="https://your-portfolio.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+
+
 
 
 
@@ -982,7 +1408,7 @@ function removeCoverPhoto() {
     // REMOVE COVER PHOTO
     document.getElementById('confirmRemoveCoverPhotoBtn').addEventListener('click', function() {
         // Send AJAX request to remove the cover photo
-        fetch('../pages/remove_cover_photo.php', {
+        fetch('/JOB/employers/update_cover_photo.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1048,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const fullSizedImage = document.getElementById('fullSizedImage');
 
     // Set the initial image source to the current cover photo
-    fullSizedImage.src = fullSizedImage.src || '../uploads/<?= htmlspecialchars($user['cover_photo'] ?? "default_cover.jpg") ?>';
+    fullSizedImage.src = fullSizedImage.src || '../uploads/<?= htmlspecialchars($user['cover_photo'] ?? "/JOB/uploads/default/COVER.jpg") ?>';
 
     // Update the image preview when a new file is selected
     coverPhotoInput.addEventListener('change', function (event) {
@@ -1172,7 +1598,65 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 });
+
+
+// TOGGLE TO HIDE PERSONAL INFORMATION SECTION
+document.addEventListener("DOMContentLoaded", function() {
+    var personalInfoSection = document.getElementById("personal-info-section");
+    var toggleButton = document.getElementById("toggle-personal-info-section");
+
+    // Initially, personal information section is visible
+    personalInfoSection.style.display = "block"; // Show by default
+    toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i>'; // Show up arrow when visible
+
+    // Add event listener to toggle button
+    toggleButton.addEventListener("click", function() {
+        // Toggle visibility of the personal information section
+        if (personalInfoSection.style.display === "none") {
+            personalInfoSection.style.display = "block"; // Show the section
+            toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i>'; // Change icon to up arrow
+        } else {
+            personalInfoSection.style.display = "none"; // Hide the section
+            toggleButton.innerHTML = '<i class="fas fa-chevron-down"></i>'; // Change icon to down arrow
+        }
+    });
+});
+
+
+
+
+    // Check if we have any messages to display from the session or custom PHP variables
+    <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message']) || (isset($messageType) && isset($messageText))): ?>
+        <?php
+            // Determine which message to show based on the session or custom variables
+            if (isset($_SESSION['success_message'])) {
+                $messageType = 'success';
+                $messageText = $_SESSION['success_message'];
+                unset($_SESSION['success_message']);
+            } elseif (isset($_SESSION['error_message'])) {
+                $messageType = 'error';
+                $messageText = $_SESSION['error_message'];
+                unset($_SESSION['error_message']);
+            } elseif (isset($messageType) && isset($messageText)) {
+                // Using the PHP variables for custom messages (from other scripts)
+                // If messageType and messageText are set, use them
+            } else {
+                // If no message is set, don't show anything
+                exit;
+            }
+        ?>
+
+        // Display the SweetAlert based on the messageType and messageText
+        Swal.fire({
+            icon: '<?php echo $messageType; ?>',  // success or error
+            title: '<?php echo $messageType === 'success' ? 'Success' : 'Error'; ?>',
+            text: '<?php echo $messageText; ?>',
+            confirmButtonText: 'OK'
+        });
+
+    <?php endif; ?>
 </script>
+
 
 
 </body>

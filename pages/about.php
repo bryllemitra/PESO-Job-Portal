@@ -1,97 +1,170 @@
-    <?php
-    // Start output buffering to prevent headers already sent errors
-    ob_start();
+<?php
+// Start output buffering to prevent headers already sent errors
+ob_start();
 
-    include '../includes/config.php'; // Include your database connection file
-    include '../includes/header.php';
+include '../includes/config.php'; // Include your database connection file
+include '../includes/header.php';
 
-    // Fetch user role from session if available
-    $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
-    $is_admin = ($user_role === 'admin'); // Check if the user is an admin
+// Fetch user role from session if available
+$user_role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
+$is_admin = ($user_role === 'admin'); // Check if the user is an admin
 
-    // Fetch data from the database
-    $query = "SELECT * FROM about WHERE id = 1"; // Assuming there's only one row for 'about'
-    $result = mysqli_query($conn, $query);
+// Fetch data from the database using prepared statement
+$query = "SELECT * FROM about WHERE id = 1"; // Assuming there's only one row for 'about'
+$stmt = $conn->prepare($query);
+$stmt->execute();
+$result = $stmt->get_result();
 
-    if (!$result || mysqli_num_rows($result) === 0) {
-        // Provide default values if no data is found
-        $about = [
-            'id' => 1,
-            'cover_photo' => '/JOB/uploads/default/COVER.jpg',
-            'carousel_images' => '[]',
-            'mission' => 'Default mission text.',
-            'vision' => 'Default vision text.',
-            
-        ];
-    } else {
-        $about = mysqli_fetch_assoc($result);
-    }
+if ($result->num_rows === 0) {
+    // Provide default values if no data is found
+    $about = [
+        'id' => 1,
+        'cover_photo' => '/JOB/uploads/default/COVER.jpg',
+        'carousel_images' => '[]',
+        'mission' => 'Default mission text.',
+        'vision' => 'Default vision text.',
+    ];
+} else {
+    $about = $result->fetch_assoc();
+}
 
+$query = "SELECT cover_photo FROM about WHERE id = 1";
+$stmt = $conn->prepare($query);
+$stmt->execute();
+$cover_photo_result = $stmt->get_result();
+$row = $cover_photo_result->fetch_assoc();
+$cover_photo = isset($row['cover_photo']) ? $row['cover_photo'] : '/JOB/uploads/default/COVER.jpg';
 
-    $query = "SELECT cover_photo FROM about WHERE id=1";
-    $result = mysqli_query($conn, $query);
-    $row = mysqli_fetch_assoc($result);
-    $cover_photo = isset($row['cover_photo']) ? $row['cover_photo'] : '/JOB/uploads/default/COVER.jpg';
-    // Handle form submissions for updating mission, vision, and uploading images
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if ($is_admin) { // Only allow admins to perform these actions
-            if (isset($_POST['update_mission'])) {
-                $mission = mysqli_real_escape_string($conn, $_POST['mission']);
-                $updateQuery = "UPDATE about SET mission='$mission' WHERE id=1";
-                mysqli_query($conn, $updateQuery);
-
-                // Redirect using JavaScript instead of header()
-                echo '<script>window.location.href = "about.php";</script>';
-                exit();
-            }
-
-
-            if (isset($_POST['update_vision'])) {
-                $vision = mysqli_real_escape_string($conn, $_POST['vision']);
-                $updateQuery = "UPDATE about SET vision='$vision' WHERE id=1";
-                mysqli_query($conn, $updateQuery);
-
-                // Redirect using JavaScript instead of header()
-                echo '<script>window.location.href = "about.php";</script>';
-                exit();
-            }
-
-
-                // Update Hero Text
-                if (isset($_POST['update_hero_text'])) {
-                    $hero_text = mysqli_real_escape_string($conn, $_POST['hero_text']);
-                    $updateQuery = "UPDATE about SET hero_text='$hero_text' WHERE id=1";
-                    mysqli_query($conn, $updateQuery);
+// Handle form submissions for updating mission, vision, and uploading images
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($is_admin) { // Only allow admins to perform these actions
         
-                    // Redirect using JavaScript instead of header()
-                    echo '<script>window.location.href = "about.php";</script>';
-                    exit();
-                }
+        // Update Mission
+        if (isset($_POST['update_mission'])) {
+            $mission = mysqli_real_escape_string($conn, $_POST['mission']); // Prevent XSS
+            $updateQuery = "UPDATE about SET mission=? WHERE id=1";
+            $stmt = $conn->prepare($updateQuery);
+            $stmt->bind_param("s", $mission);
+            $stmt->execute();
 
-            if (isset($_FILES['cover_photo'])) {
-                $target_dir = "../uploads/";
-                $target_file = $target_dir . basename($_FILES["cover_photo"]["name"]);
-                move_uploaded_file($_FILES["cover_photo"]["tmp_name"], $target_file);
-                $updateQuery = "UPDATE about SET cover_photo='" . basename($_FILES["cover_photo"]["name"]) . "' WHERE id=1";
-                mysqli_query($conn, $updateQuery);
+            // Redirect using JavaScript
+            echo '<script>window.location.href = "about.php";</script>';
+            exit();
+        }
 
-                // Redirect using JavaScript instead of header()
-                echo '<script>window.location.href = "about.php";</script>';
-                exit();
-            }
+        // Update Vision
+        if (isset($_POST['update_vision'])) {
+            $vision = mysqli_real_escape_string($conn, $_POST['vision']); // Prevent XSS
+            $updateQuery = "UPDATE about SET vision=? WHERE id=1";
+            $stmt = $conn->prepare($updateQuery);
+            $stmt->bind_param("s", $vision);
+            $stmt->execute();
 
-            if (isset($_POST['delete_cover_photo'])) {
-                $updateQuery = "UPDATE about SET cover_photo='/JOB/uploads/default/COVER.jpg' WHERE id=1";
-                mysqli_query($conn, $updateQuery);
+            // Redirect using JavaScript
+            echo '<script>window.location.href = "about.php";</script>';
+            exit();
+        }
 
-                // Redirect using JavaScript instead of header()
-                echo '<script>window.location.href = "about.php";</script>';
-                exit();
+        // Update Hero Text
+        if (isset($_POST['update_hero_text'])) {
+            $hero_text = mysqli_real_escape_string($conn, $_POST['hero_text']); // Prevent XSS
+            $updateQuery = "UPDATE about SET hero_text=? WHERE id=1";
+            $stmt = $conn->prepare($updateQuery);
+            $stmt->bind_param("s", $hero_text);
+            $stmt->execute();
+
+            // Redirect using JavaScript
+            echo '<script>window.location.href = "about.php";</script>';
+            exit();
+        }
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Handle Cover Photo Upload
+if (isset($_FILES['cover_photo'])) {
+    // Sanitize file input
+    $target_dir = "../uploads/about_cover/";
+    $file_name = basename($_FILES["cover_photo"]["name"]);
+    $target_file = $target_dir . $file_name;
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
+
+    if (in_array($imageFileType, $allowed_types)) {
+        // First, fetch the current cover photo file path from the database
+        $selectQuery = "SELECT cover_photo FROM about WHERE id = 1";
+        $result = $conn->query($selectQuery);
+        $row = $result->fetch_assoc();
+
+        if ($row) {
+            $current_cover_photo = $row['cover_photo'];
+            $file_path = "../uploads/about_cover/" . basename($current_cover_photo);
+
+            // If a previous cover photo exists, delete it
+            if (file_exists($file_path)) {
+                unlink($file_path); // Delete the old cover photo
             }
         }
 
+        // Move the new uploaded cover photo to the target directory
+        if (move_uploaded_file($_FILES["cover_photo"]["tmp_name"], $target_file)) {
+            // Prevent SQL Injection by using prepared statements
+            $updateQuery = "UPDATE about SET cover_photo=? WHERE id=1";
+            $stmt = $conn->prepare($updateQuery);
+
+            // Now, bind the variable correctly
+            $stmt->bind_param("s", $file_name);  // Bind the variable properly
+
+            $stmt->execute();
+
+            // Redirect using header() instead of JavaScript
+            header("Location: about.php");
+            exit(); // Ensure the script stops execution after the redirect
+        } else {
+            // Handle error during file upload
+            echo "<script>alert('Error uploading cover photo.');</script>";
+        }
+    } else {
+        // Handle invalid file type
+        echo "<script>alert('Invalid file type for cover photo.');</script>";
     }
-    ?>
+}
+
+
+// Handle Cover Photo Deletion
+if (isset($_POST['delete_cover_photo'])) {
+    // First, fetch the current cover photo file path from the database
+    $selectQuery = "SELECT cover_photo FROM about WHERE id = 1";
+    $result = $conn->query($selectQuery);
+    $row = $result->fetch_assoc();
+
+    if ($row) {
+        $current_cover_photo = $row['cover_photo'];
+        $file_path = "../uploads/about_cover/" . basename($current_cover_photo);
+
+        // Delete the current cover photo file if it exists
+        if (file_exists($file_path)) {
+            unlink($file_path); // Delete the old cover photo
+        }
+    }
+
+    // Update the database to set the cover photo to the default one
+    $updateQuery = "UPDATE about SET cover_photo='/JOB/uploads/default/COVER.jpg' WHERE id=1";
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->execute();
+
+    // Redirect using JavaScript
+    echo '<script>window.location.href = "about.php";</script>';
+    exit();
+}
+
+    }
+}
+?>
+
+
+
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -128,7 +201,7 @@
 .hero-section .btn-light {
     background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
     padding: 10px 20px;
-    border-radius: 30px;
+    
     transition: 0.3s ease-in-out;
 }
 
@@ -140,36 +213,53 @@
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Button Placement */
-@media (max-width: 768px) {
-    .hero-section .position-absolute {
-        top: 5px;
-        right: 5px;
-        padding: 6px 10px;
-    }
+/* Adjust title, subtitle, and button size for small screens */
+@media (max-width: 900px) {
+  .hero-section {
+    padding-top: 5px;
+    background-size: cover;
+    background-position: center;
+  }
 
-    .hero-section .btn-light {
-        font-size: 14px;
-        padding: 6px 10px;
-    }
+  /* Minimize the title */
+  .hero-section h1 {
+    font-size: 1.6rem; /* Reduced from default */
+  }
+
+  /* Minimize the subtitle */
+  .hero-section p {
+    font-size: 0.9rem; /* Slightly smaller */
+  }
+
+  /* Adjust the camera button for admins and users */
+  .btn-light {
+    font-size: 0.8rem;
+    padding: 6px 10px; /* Smaller padding */
+  }
+
+  /* Center content properly */
+  .hero-content {
+    padding: 20px;
+  }
 }
+
 
         </style>
     </head>
     <body>
 <!-- Hero Section -->
-<div class="hero-section position-relative" style="background-image: url('../uploads/<?php echo htmlspecialchars($about['cover_photo']); ?>'); background-size: cover; background-position: center;">
+<div class="hero-section position-relative" style="background-image: url('../uploads/about_cover/<?php echo htmlspecialchars($about['cover_photo']); ?>'); background-size: cover; background-position: center;">
     <!-- Button Wrapper -->
     <div class="position-absolute top-0 end-0 p-3">
         <?php if ($is_admin): ?>
             <!-- Admin sees "Edit Cover" -->
             <button type="button" class="btn btn-light shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadCoverPhotoModal">
-                <i class="fas fa-camera"></i> Edit Cover
+                <i class="fas fa-camera"></i>
             </button>
         <?php else: ?>
             <!-- Non-admins/guests see "View Cover" -->
             <button type="button" class="btn btn-light shadow-sm" data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
-                <i class="fas fa-camera"></i> View Cover
+                <i class="fas fa-camera"></i>
             </button>
         <?php endif; ?>
     </div>
@@ -228,7 +318,7 @@
 
         <!-- Modal for Editing Hero Text -->
         <div class="modal fade" id="editHeroTextModal" tabindex="-1" aria-labelledby="editHeroTextModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form method="POST">
                     <div class="modal-header">
@@ -254,13 +344,13 @@
 <div class="modal fade" id="uploadCoverPhotoModal" tabindex="-1" aria-labelledby="uploadCoverPhotoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data" id="uploadCoverPhotoForm">
+            <form method="POST" enctype="multipart/form-data" id="uploadCoverPhotoForm" >
                 <div class="modal-header">
                     <h5 class="modal-title" id="uploadCoverPhotoModalLabel">Upload Cover Photo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="file" class="form-control" name="cover_photo" id="coverPhotoInput" required>
+                    <input type="file" class="form-control" name="cover_photo" id="coverPhotoInput" accept="image/*" required>
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                     <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
@@ -277,6 +367,7 @@
 </div>
 <?php endif; ?>
 
+
 <!-- View Photo Modal (For Everyone) -->
 <div class="modal fade" id="viewPhotoModal" tabindex="-1" aria-labelledby="viewPhotoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -287,7 +378,7 @@
             </div>
             <div class="modal-body text-center">
                 <!-- Full-Sized Image -->
-                <img src="../uploads/<?= htmlspecialchars($cover_photo) ?>" alt="Cover Photo" id="fullSizedImage" class="img-fluid" style="max-height: 80vh;">
+                <img src="../uploads/about_cover/<?= htmlspecialchars($cover_photo) ?>" alt="Cover Photo" id="fullSizedImage" class="img-fluid" style="max-height: 80vh;">
             </div>
         </div>
     </div>
@@ -318,7 +409,7 @@
 
         <!-- Edit Mission Modal -->
         <div class="modal fade" id="editMissionModal" tabindex="-1" aria-labelledby="editMissionModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="POST">
                         <div class="modal-header">
@@ -340,7 +431,7 @@
 
         <!-- Edit Vision Modal -->
         <div class="modal fade" id="editVisionModal" tabindex="-1" aria-labelledby="editVisionModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="POST">
                         <div class="modal-header">
@@ -371,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const fullSizedImage = document.getElementById('fullSizedImage');
 
     // Set the initial image source to the current cover photo
-    fullSizedImage.src = fullSizedImage.src || '../uploads/<?= htmlspecialchars($cover_photo) ?>';
+    fullSizedImage.src = fullSizedImage.src || '../uploads/about_cover/<?= htmlspecialchars($cover_photo) ?>';
 
     // Update the image preview when a new file is selected
     coverPhotoInput.addEventListener('change', function (event) {
@@ -389,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
             reader.readAsDataURL(file);
         } else {
             // If no file is selected, revert to the current cover photo
-            fullSizedImage.src = '../uploads/<?= htmlspecialchars($cover_photo) ?>';
+            fullSizedImage.src = '../uploads/about_cover/<?= htmlspecialchars($cover_photo) ?>';
         }
     });
 });

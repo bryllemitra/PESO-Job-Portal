@@ -150,8 +150,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Left Section -->
     <div class="bg-blue-900 flex flex-col justify-center px-8 py-6 text-white md:w-2/5">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-center md:text-left">Take the First Step...</h2><br>
-        <p class="text-3xl md:text-5xl font-bold text-center md:text-left">
-            FIND YOUR <span class="text-red-500">PLACE,</span>
+        <p class="text-3xl md:text-5xl font-bold text-center md:text-right">
+            FIND YOUR <span class="text-red-500"> PLACE,</span>
         </p>
         <p class="text-3xl md:text-5xl font-bold text-center md:text-right mb-4">
         KICKSTART <span class="text-red-500">YOUR CAREER!</span>
@@ -166,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Registration Form -->
     <div class="bg-white flex flex-col justify-center px-10 py-8 md:w-3/5 space-y-6">
         <div class="flex justify-center mb-6">
-            <img src="/JOB/uploads/OFFICIAL.png" alt="Logo" class="w-36 rotating-logo">
+            <img src="/JOB/uploads/PESO LOGO/OFFICIAL.png" alt="Logo" class="w-36 rotating-logo">
         </div>
         <?php if (!empty($errors)): ?>
             <div class="text-red-500 text-sm mb-4">
@@ -207,42 +207,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Account Credentials -->
-    <div>
-        <h4 class="text-lg font-semibold mb-4">Account Credentials</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-user-tag mr-2"></i> Username
-                </label>
-                <input type="text" id="username" name="username" placeholder="Username" required maxlength="50"
-                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-envelope mr-2"></i> Email
-                </label>
-                <input type="email" id="email" name="email" placeholder="Email" required maxlength="100"
-                    oninput="this.value = this.value.toLowerCase();"
-                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <span id="emailError" class="text-red-500 text-sm hidden">Please enter a valid email address.</span>
-            </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-lock mr-2"></i> Password
-                </label>
+   <!-- Account Credentials -->
+<div>
+    <h4 class="text-lg font-semibold mb-4">Account Credentials</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div>
+            <label for="username" class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-user-tag mr-2"></i> Username
+            </label>
+            <input type="text" id="username" name="username" placeholder="Username" required maxlength="50"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+        <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-envelope mr-2"></i> Email
+            </label>
+            <input type="email" id="email" name="email" placeholder="Email" required maxlength="100"
+                oninput="this.value = this.value.toLowerCase();"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <span id="emailError" class="text-red-500 text-sm hidden">Please enter a valid email address.</span>
+        </div>
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-lock mr-2"></i> Password
+            </label>
+            <div class="relative">
                 <input type="password" id="password" name="password" placeholder="Password" required minlength="8"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <i id="togglePassword" class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"></i>
             </div>
-            <div>
-                <label for="confirm_password" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-lock mr-2"></i> Confirm Password
-                </label>
+        </div>
+        <div>
+            <label for="confirm_password" class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-lock mr-2"></i> Confirm Password
+            </label>
+            <div class="relative">
                 <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required minlength="8"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <i id="toggleConfirmPassword" class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"></i>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Register Button -->
     <button type="submit"
@@ -307,6 +313,29 @@ document.getElementById('registrationForm').addEventListener('submit', function(
         emailError.classList.add('hidden');
     }
 });
+
+
+    // Toggle password visibility for password field
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordField = document.getElementById("password");
+
+    togglePassword.addEventListener("click", function () {
+        const type = passwordField.type === "password" ? "text" : "password";
+        passwordField.type = type;
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
+
+    // Toggle password visibility for confirm password field
+    const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+    const confirmPasswordField = document.getElementById("confirm_password");
+
+    toggleConfirmPassword.addEventListener("click", function () {
+        const type = confirmPasswordField.type === "password" ? "text" : "password";
+        confirmPasswordField.type = type;
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
     </script>
 
     <!-- Bootstrap JS -->

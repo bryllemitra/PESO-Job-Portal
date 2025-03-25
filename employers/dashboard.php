@@ -1,6 +1,7 @@
 <?php
 include '../includes/config.php';
 include '../includes/header.php';
+include('../includes/sidebar_employer.php');
 
 // Check if the session role is set
 if (!isset($_SESSION['role'])) {
@@ -196,20 +197,7 @@ if (isset($_SESSION['login_message'])) {
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Employer Panel</h2>
-        <ul>
-            <li><a href="employer.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> My Jobs</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Applicants</a></li>
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="main-content mt-4" id="mainContent">
@@ -288,35 +276,54 @@ if (isset($_SESSION['login_message'])) {
 
 <!-- Chart.js Script -->
 <script>
-        // Get the message from the URL query parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const message = urlParams.get('message');
-
-        // Display SweetAlert2 notification if there is a message
-        if (message) {
-            Swal.fire({
-                title: "Successfully logged in!",
-                text: message,
-                icon: "success", // You can remove this line if you don't want any icon
-                showConfirmButton: true, // Show the close button
-                confirmButtonText: "Close", // Customize the close button text
-                timer: 5000, // Auto-close after 3 seconds
-                timerProgressBar: true, // Show a progress bar
-                showClass: {
-                    popup: 'swal2-noanimation', // Disable animation for the popup
-                    backdrop: 'swal2-noanimation' // Disable animation for the backdrop
-                },
-                hideClass: {
-                    popup: '', // No special class for hiding the popup
-                    backdrop: '' // No special class for hiding the backdrop
-                }
-            }).then(() => {
-                // Remove the 'message' query parameter from the URL
-                urlParams.delete('message');
-                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-                window.history.replaceState({}, document.title, newUrl);
-            });
+// Function to escape HTML entities
+function escapeHtml(str) {
+    return str.replace(/[&<>"'/]/g, function (char) {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            case '/': return '&#x2F;';
         }
+    });
+}
+
+// Get the message from the URL query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const message = urlParams.get('message');
+
+// Display SweetAlert2 notification if there is a message
+if (message) {
+    // Escape the message to avoid XSS
+    const sanitizedMessage = escapeHtml(message);
+
+    Swal.fire({
+        title: "Successfully logged in!",
+        text: sanitizedMessage,
+        icon: "success", // You can remove this line if you don't want any icon
+        showConfirmButton: true, // Show the close button
+        confirmButtonText: "Close", // Customize the close button text
+        timer: 5000, // Auto-close after 5 seconds
+        timerProgressBar: true, // Show a progress bar
+        showClass: {
+            popup: 'swal2-noanimation', // Disable animation for the popup
+            backdrop: 'swal2-noanimation' // Disable animation for the backdrop
+        },
+        hideClass: {
+            popup: '', // No special class for hiding the popup
+            backdrop: '' // No special class for hiding the backdrop
+        }
+    }).then(() => {
+        // Remove the 'message' query parameter from the URL
+        urlParams.delete('message');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, document.title, newUrl);
+    });
+}
+
+
 // Applicant Status (Bar Chart)
 const ctxApplicantStatus = document.getElementById('applicantStatusChart').getContext('2d');
 const applicantStatusChart = new Chart(ctxApplicantStatus, {

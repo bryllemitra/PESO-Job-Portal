@@ -130,6 +130,9 @@ $job_remarks = $job['remarks'] ?? '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link rel="stylesheet" href="/JOB/assets/job.css">
 </head>
 <body>
@@ -242,7 +245,7 @@ $job_remarks = $job['remarks'] ?? '';
         <?php if (($job['status'] ?? '') === 'pending'): ?>
             <!-- If the job is pending for approval, show a message -->
             <div class="alert alert-info">
-                Your post is still waiting for approval.
+            Your post is still awaiting approval. Please note that you can update your post while it is pending.
             </div>
         <?php elseif (($job['status'] ?? '') !== 'rejected'): ?>
             <!-- If the job is not rejected and not pending, show the Manage Applicants button -->
@@ -466,13 +469,13 @@ function goBackOrCancel() {
 }
 
 
-
 document.addEventListener('DOMContentLoaded', function () {
     const resumeOptionSelect = document.getElementById('resume_option');
     const resumeUploadField = document.getElementById('resume_upload_field');
     const resumeFileInput = document.getElementById('resume');
     const applyButton = document.getElementById('applyButton');
     const positionSelect = document.getElementById('position_ids');
+    const applyForm = document.getElementById('applyForm');
 
     // Function to check if the form is valid
     function validateForm() {
@@ -505,7 +508,95 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initial validation
     validateForm();
+
+    // Handle form submission with AJAX and SweetAlert2
+    applyForm.addEventListener('submit', function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(applyForm); // Collect form data
+
+    fetch('apply.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json()) // Parse JSON response
+    .then(data => {
+        if (data.status === 'success') {
+            // Show success SweetAlert
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                // Redirect after the user clicks "OK"
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            });
+        } else {
+            // Show error SweetAlert
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: data.message,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                // Redirect after the user clicks "OK" if a redirect URL is provided
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'An unexpected error occurred. Please try again later.',
+            confirmButtonText: 'OK'
+        });
+    });
 });
+});
+
+
+
+// Check if there is a success or error status in the URL
+<?php if (isset($_GET['status'])): ?>
+    var status = "<?php echo $_GET['status']; ?>";
+    if (status === 'success') {
+        Swal.fire({
+            title: 'Success!',
+            text: 'Your application has been canceled successfully. You can reapply after 10 minutes.',
+            icon: 'success',
+            confirmButtonText: 'Okay'
+        }).then(() => {
+            // Remove the status parameter from the URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('status');
+            window.history.replaceState({}, document.title, url.toString());
+        });
+    } else if (status === 'error') {
+        Swal.fire({
+            title: 'Error!',
+            text: 'There was an error canceling your application. Please try again later.',
+            icon: 'error',
+            confirmButtonText: 'Okay'
+        }).then(() => {
+            // Remove the status parameter from the URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('status');
+            window.history.replaceState({}, document.title, url.toString());
+        });
+    }
+<?php endif; ?>
+
+
+
+
+
 
 </script>
 

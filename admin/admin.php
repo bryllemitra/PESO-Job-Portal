@@ -2,6 +2,7 @@
 include '../includes/config.php';
 include '../includes/header.php';
 include '../includes/restrictions.php';
+include('../includes/sidebar.php');
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../pages/index.php");
@@ -185,24 +186,7 @@ if (isset($_SESSION['login_message'])) {
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2 >Admin Panel</h2>
-        <ul>
-            <li><a href="admin.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="mt-4 main-content" id="mainContent">
@@ -611,43 +595,55 @@ const myChart = new Chart(ctx, {
 
 
 <script>
-        // Get the message from the URL query parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const message = urlParams.get('message');
-
-        // Display SweetAlert2 notification if there is a message
-        if (message) {
-            Swal.fire({
-                title: "Successfully logged in!",
-                text: message,
-                icon: "success", // You can remove this line if you don't want any icon
-                showConfirmButton: true, // Show the close button
-                confirmButtonText: "Close", // Customize the close button text
-                timer: 5000, // Auto-close after 3 seconds
-                timerProgressBar: true, // Show a progress bar
-                showClass: {
-                    popup: 'swal2-noanimation', // Disable animation for the popup
-                    backdrop: 'swal2-noanimation' // Disable animation for the backdrop
-                },
-                hideClass: {
-                    popup: '', // No special class for hiding the popup
-                    backdrop: '' // No special class for hiding the backdrop
-                }
-            }).then(() => {
-                // Remove the 'message' query parameter from the URL
-                urlParams.delete('message');
-                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-                window.history.replaceState({}, document.title, newUrl);
-            });
+// Function to escape HTML entities
+function escapeHtml(str) {
+    return str.replace(/[&<>"'/]/g, function (char) {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            case '/': return '&#x2F;';
         }
+    });
+}
+
+// Get the message from the URL query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const message = urlParams.get('message');
+
+// Display SweetAlert2 notification if there is a message
+if (message) {
+    // Escape the message to avoid XSS
+    const sanitizedMessage = escapeHtml(message);
+
+    Swal.fire({
+        title: "Successfully logged in!",
+        text: sanitizedMessage,
+        icon: "success", // You can remove this line if you don't want any icon
+        showConfirmButton: true, // Show the close button
+        confirmButtonText: "Close", // Customize the close button text
+        timer: 5000, // Auto-close after 5 seconds
+        timerProgressBar: true, // Show a progress bar
+        showClass: {
+            popup: 'swal2-noanimation', // Disable animation for the popup
+            backdrop: 'swal2-noanimation' // Disable animation for the backdrop
+        },
+        hideClass: {
+            popup: '', // No special class for hiding the popup
+            backdrop: '' // No special class for hiding the backdrop
+        }
+    }).then(() => {
+        // Remove the 'message' query parameter from the URL
+        urlParams.delete('message');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, document.title, newUrl);
+    });
+}
 
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        sidebar.classList.toggle('hidden');
-        mainContent.classList.toggle('hidden');
-    }
+
 </script>
 
 </body>

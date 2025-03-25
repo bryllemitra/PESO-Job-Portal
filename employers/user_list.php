@@ -1,6 +1,7 @@
 <?php
 include '../includes/config.php';
 include '../includes/header.php';
+include('../includes/sidebar_employer.php');
 
 // Check if the employer is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employer') {
@@ -101,20 +102,7 @@ $total_pages = ceil($total_applicants / $limit); // Calculate total pages
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Employer Panel</h2>
-        <ul>
-            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="job_list.php"><i class="fas fa-briefcase"></i> My Jobs</a></li>
-            <li><a href="user_list.php" class="active"><i class="fas fa-users"></i> Applicants</a></li>
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">

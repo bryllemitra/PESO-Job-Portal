@@ -203,11 +203,32 @@ $cover_photo = $cover_row ? $cover_row['cover_photo'] : '/JOB/uploads/default/CO
 // Handle Cover Photo Upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_cover'])) {
     if (!empty($_FILES['cover_photo']['name'])) {
-        $target_dir = "../uploads/covers/";
+        $target_dir = "../uploads/browse_cover/";
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true); // Ensure directory exists
         }
 
+        // First, check if there's an existing cover photo in the database
+        $select_query = "SELECT cover_photo FROM browse LIMIT 1";
+        $result = $conn->query($select_query);
+        $row = $result->fetch_assoc();
+
+        // If a cover photo already exists, delete it
+        if ($row) {
+            $old_cover_photo = $row['cover_photo'];
+            $old_file_path = "../uploads/browse_cover/" . basename($old_cover_photo);
+
+            // Delete the old cover photo file from the server if it exists
+            if (file_exists($old_file_path)) {
+                unlink($old_file_path); // Delete the file from the server
+            }
+
+            // Also, delete the old cover photo entry from the database
+            $delete_query = "DELETE FROM browse";
+            $conn->query($delete_query);
+        }
+
+        // Now proceed to upload the new cover photo
         $file_name = uniqid() . '_' . basename($_FILES["cover_photo"]["name"]);
         $target_file = $target_dir . $file_name;
         $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
@@ -215,10 +236,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_cover'])) {
         // Validate image type
         if (in_array($imageFileType, ['jpg', 'jpeg', 'png', 'gif'])) {
             if (move_uploaded_file($_FILES["cover_photo"]["tmp_name"], $target_file)) {
-                // Store in database
+                // Store the new cover photo in the database
                 $stmt = $conn->prepare("INSERT INTO browse (cover_photo) VALUES (?)");
                 $stmt->bind_param("s", $target_file);
-                
+
                 if ($stmt->execute()) {
                     $_SESSION['success'] = "Cover photo updated successfully.";
                     echo '<script>window.location.href="browse.php";</script>';
@@ -237,15 +258,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_cover'])) {
     }
 }
 
+
 // Handle Cover Photo Deletion (Admin Only)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_cover']) && $user_role === 'admin') {
-    $delete_query = "DELETE FROM browse";
-    if ($conn->query($delete_query)) {
-        $_SESSION['success'] = "Cover photo removed successfully.";
-        echo '<script>window.location.href="browse.php";</script>';
-        exit();
+    // First, fetch the current cover photo file path from the database
+    $select_query = "SELECT cover_photo FROM browse LIMIT 1";
+    $result = $conn->query($select_query);
+    $row = $result->fetch_assoc();
+
+    if ($row) {
+        $cover_photo = $row['cover_photo'];
+        $file_path = "../uploads/browse_cover/" . basename($cover_photo);
+
+        // Delete the cover photo file from the server if it exists
+        if (file_exists($file_path)) {
+            unlink($file_path); // Delete the file from the server
+        }
+
+        // Now, delete the cover photo entry from the database
+        $delete_query = "DELETE FROM browse";
+        if ($conn->query($delete_query)) {
+            $_SESSION['success'] = "Cover photo removed successfully.";
+            echo '<script>window.location.href="browse.php";</script>';
+            exit();
+        } else {
+            $_SESSION['error'] = "Failed to delete cover photo from the database.";
+        }
     } else {
-        $_SESSION['error'] = "Failed to delete cover photo.";
+        $_SESSION['error'] = "No cover photo found to remove.";
     }
 }
 
@@ -282,6 +322,13 @@ if ($browse_data) {
     $hero_subtitle = 'Search for the jobs that fit your expertise and apply with confidence.';
 }
 
+// Check if there is a login message to display
+if (isset($_SESSION['login_message'])) {
+    $message = $_SESSION['login_message'];
+    unset($_SESSION['login_message']); // Clear the message after displaying it
+} else {
+    $message = '';
+}
 ?>
 
 
@@ -319,7 +366,7 @@ if ($browse_data) {
 .hero-section .btn-light {
     background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
     padding: 10px 20px;
-    border-radius: 30px;
+    
     transition: 0.3s ease-in-out;
 }
 
@@ -347,6 +394,158 @@ if ($browse_data) {
     color: rgba(255, 255, 255, 0.8);
 }
 
+.transparent-dropdown {
+        background-color: transparent; /* Transparent background */
+        color: #fff; /* White text color */
+        border: 2px solid #fff; /* White border to make it look consistent with dark background */
+    }
+
+    /* Option Styling */
+    .transparent-dropdown option {
+        background-color: white; /* Dark background for options */
+        color:dimgrey; /* White text for options */
+    }
+
+/* Adjust dropdown size and alignment for small screens */
+@media (max-width: 900px) {
+  .hero-section {
+    padding-top: 20px; /* Prevent content from being hidden by the fixed header */
+  }
+
+  /* Slightly reduce the title and subtitle size */
+  .hero-section h1 {
+    font-size: 1.4rem; /* Reduced from 1.8rem */
+  }
+
+  .hero-section p {
+    font-size: 0.8rem; /* Reduced from 1rem */
+  }
+
+  #search-input {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  /* Adjust filter dropdowns to be smaller and stay horizontal */
+  #filters-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* Add spacing between the dropdowns */
+    flex-wrap: nowrap; /* Prevent wrapping */
+  }
+
+  .filter-item select {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    min-width: 100px; /* Ensure they remain aligned horizontally */
+    border-radius: 15px; /* Adjust the roundness */
+  }
+
+  /* Optional: Limit the max-width if needed */
+  .filter-item {
+    flex: 1 1 auto;
+    max-width: 150px;
+  }
+
+  /* Hide tabs */
+  .hero-nav-tabs-wrapper {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Minimize the Post Job button */
+  .btn-outline-customs {
+    font-size: 0.8rem; /* Slightly smaller */
+    padding: 8px 15px; /* Adjusted padding */
+  }
+
+  
+}
+
+/* Example of a simple media query for mobile */
+@media (max-width: 768px) {
+    #search-input::placeholder {
+        content: "Type a keyword";
+    }
+}
+
+
+
+/* MOBILE LIST VIEW */
+@media (max-width: 900px) {
+    /* Stack the job card content vertically */
+    .job-card .row {
+        flex-direction: column; /* Stack the image and job details */
+    }
+
+    /* Adjust job thumbnail to be on top and full width */
+    .job-thumbnail {
+        width: 100%;  /* Full width of the container */
+        height: auto; /* Maintain aspect ratio */
+        max-height: 300px; /* Set a max height for the thumbnail */
+        object-fit: cover; /* Ensure the image doesn't stretch or distort */
+        margin-bottom: 12px; /* Space below the thumbnail */
+    }
+
+    /* Job details (title, description, etc.) */
+    .job-card .card-body {
+        padding: 15px;
+        text-align: center; /* Center align the text */
+    }
+
+    /* Job title */
+    .job-card .job-title {
+        font-size: 1.5rem; /* Slightly larger font for mobile */
+        margin-bottom: 8px;
+    }
+
+    /* Job description */
+    .job-card .card-description {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        display:none;
+    }
+
+    /* Adjust the View Details button */
+    .job-card .btn-outline-primary {
+        width: 100%; /* Make button span the full width */
+        margin-top: 15px; /* Add some space above the button */
+    }
+}
+
+/* Button Styling */
+.btn-outline-primary {
+    color: black; /* Text color */
+    text-decoration: none; /* Removes underline */
+    background: transparent; /* Keeps it transparent */
+    border: 1px solid black; /* Adds a black border */
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-outline-primary:hover {
+    background: transparent;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Soft shadow effect */
+    border-color: #4c6ef5;
+    color: #4c6ef5;
+}
+
+/* Active state styling */
+.btn-outline-primary.active {
+    background:transparent;
+    color: #ff4500; /* Text color when active */
+    border-color: #ff4500;
+}
+
+/* Media query to hide the toggle button on mobile devices */
+@media (max-width: 768px) {
+    .btn-group {
+        display: none; /* Hides the toggle button group */
+    }
+}
+
+
+
+
     </style>
 </head>
 <body>
@@ -364,7 +563,7 @@ if ($browse_data) {
     <div class="position-absolute top-0 end-0 p-3">
         <button type="button" class="btn btn-light shadow-sm" data-bs-toggle="modal" 
                 data-bs-target="<?php echo $user_role === 'admin' ? '#uploadCoverPhotoModal' : '#viewPhotoModal'; ?>">
-            <i class="fas fa-camera"></i> <?php echo $user_role === 'admin' ? 'Edit Cover' : 'View Cover'; ?>
+            <i class="fas fa-camera"></i> <?php echo $user_role === 'admin' ? '' : ''; ?>
         </button>
     </div>
 
@@ -397,63 +596,97 @@ if ($browse_data) {
 
 
 
-        <!-- Search and Filter Form (Original Layout & Styling Preserved) -->
-        <form action="" method="get" class="row gx-2 gy-2 justify-content-center">
-        <!-- Hidden Input for Active Tab -->
-        <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
-            <!-- Search Bar -->
-            <div class="col-lg-2 col-md-3 col-6">
-                <input type="text" name="search" class="form-control form-control-m rounded-pill" placeholder="Search..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
-            </div>
-            <!-- Category Dropdown -->
-            <div class="col-lg-2 col-md-3 col-6">
-                <select name="category" class="form-select form-select-m rounded-pill">
-                    <option value="">Category</option>
-                    <?php while ($category = $category_result->fetch_assoc()): ?>
-                        <option value="<?= $category['id'] ?>" <?= isset($_GET['category']) && $_GET['category'] == $category['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($category['name']) ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <!-- Position Dropdown -->
-            <div class="col-lg-2 col-md-3 col-6">
-                <select name="position" class="form-select form-select-m rounded-pill">
-                    <option value="">Position</option>
-                    <?php while ($position = $position_result->fetch_assoc()): ?>
-                        <option value="<?= $position['id'] ?>" <?= isset($_GET['position']) && $_GET['position'] == $position['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($position['position_name']) ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <!-- Location Dropdown -->
-            <div class="col-lg-2 col-md-3 col-6">
-                <select name="location" class="form-select form-select-m rounded-pill">
-                    <option value="">Location</option>
-                    <?php if ($barangay_result->num_rows > 0): ?>
-                        <?php while ($row = $barangay_result->fetch_assoc()): ?>
-                            <?php $barangay_name = htmlspecialchars($row['name']); ?>
-                            <option value="<?= $barangay_name ?>" <?= isset($_GET['location']) && $_GET['location'] == $barangay_name ? 'selected' : '' ?>>
-                                <?= $barangay_name ?>
-                            </option>
-                        <?php endwhile; ?>
-                    <?php endif; ?>
-                </select>
-            </div>
+<!-- Search and Filter Form -->
+<form action="" method="get" class="row gx-2 gy-2 justify-content-center" id="search-form">
+    <!-- Hidden Input for Active Tab -->
+    <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
 
-            <!-- Submit Button -->
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-customs btn-lg w-100 rounded-pill">Filter</button>
-            </div>
-        </form>
+<!-- Search Bar and Toggle Button Container -->
+<div class="col-lg-8 col-md-10 col-12 d-flex justify-content-center align-items-center position-relative">
+<!-- Search Bar -->
+<div class="flex-grow-1">
+    <input type="text" name="search" class="form-control form-control-lg w-100 text-center" 
+        placeholder="Looking for something specific? Try a job title or category..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" id="search-input">
+</div>
+
+
+    <!-- Toggle Button (SVG Icon) -->
+    <button type="button" id="toggle-filter" style="border:none;" class="btn btn-outline-customz  position-absolute end-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-adjustments-plus">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+            <path d="M6 4v4" />
+            <path d="M6 12v8" />
+            <path d="M13.958 15.592a2 2 0 1 0 -1.958 2.408" />
+            <path d="M12 4v10" />
+            <path d="M12 18v2" />
+            <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+            <path d="M18 4v1" />
+            <path d="M18 9v3" />
+            <path d="M16 19h6" />
+            <path d="M19 16v6" />
+        </svg>
+    </button>
+</div>
+
+
+    <!-- Filters Container (Initially Hidden) -->
+    <div id="filters-container" class="row gx-2 gy-2 mt-3 w-100 justify-content-center" style="display: none;">
+        <!-- Category Dropdown -->
+        <div class="col-lg-2 col-md-3 col-6 filter-item">
+            <select name="category" class="form-select form-select-m rounded-pill transparent-dropdown" onchange="submitForm()">
+                <option value="">Category</option>
+                <?php while ($category = $category_result->fetch_assoc()): ?>
+                    <option value="<?= $category['id'] ?>" <?= isset($_GET['category']) && $_GET['category'] == $category['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($category['name']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <!-- Position Dropdown -->
+        <div class="col-lg-2 col-md-3 col-6 filter-item">
+            <select name="position" class="form-select form-select-m rounded-pill transparent-dropdown" onchange="submitForm()">
+                <option value="">Position</option>
+                <?php while ($position = $position_result->fetch_assoc()): ?>
+                    <option value="<?= $position['id'] ?>" <?= isset($_GET['position']) && $_GET['position'] == $position['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($position['position_name']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <!-- Location Dropdown -->
+        <div class="col-lg-2 col-md-3 col-6 filter-item">
+            <select name="location" class="form-select form-select-m rounded-pill transparent-dropdown" onchange="submitForm()">
+                <option value="">Location</option>
+                <?php if ($barangay_result->num_rows > 0): ?>
+                    <?php while ($row = $barangay_result->fetch_assoc()): ?>
+                        <?php $barangay_name = htmlspecialchars($row['name']); ?>
+                        <option value="<?= $barangay_name ?>" <?= isset($_GET['location']) && $_GET['location'] == $barangay_name ? 'selected' : '' ?>>
+                            <?= $barangay_name ?>
+                        </option>
+                    <?php endwhile; ?>
+                <?php endif; ?>
+            </select>
+        </div>
+    </div>
+</form>
 
 <!-- Admin and Employer Buttons: Post a New Job -->
 <?php if ($user_role === 'admin' || $user_role === 'employer'): ?>
     <div class="text-center mt-4">
-        <a href="../admin/post_job.php" class="btn btn-outline-custom btn-lg rounded-pill">Post a New Job</a>
+        <?php if ($user_role === 'admin'): ?>
+            <!-- Redirects to admin's post job page -->
+            <a href="../admin/post_job.php" class="btn btn-outline-customs btn-lg rounded-pill">Post a New Job</a>
+        <?php elseif ($user_role === 'employer'): ?>
+            <!-- Redirects to employer's post job page -->
+            <a href="../employers/post_job.php" class="btn btn-outline-customs btn-lg rounded-pill">Post a New Job</a>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
+
+
 
     </div>
 
@@ -466,7 +699,7 @@ if ($browse_data) {
         </li>
         <?php if ($user_id): ?>
             <li class="hero-nav-item">
-                <a class="hero-nav-link <?= $active_tab === 'saved' ? 'active' : '' ?>" href="?tab=saved">Saved Jobs</a>
+                <a class="hero-nav-link <?= $active_tab === 'saved' ? 'active' : '' ?>" href="?tab=saved">Saved</a>
             </li>
             <!-- New Tab for Jobs Applied (Visible to Users Only) -->
             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
@@ -540,10 +773,171 @@ if ($browse_data) {
 
 </section>
 
+<!-- Toggle Button -->
+<br>
+<div class="container mb-4 d-flex justify-content-center">
+    <div class="btn-group" role="group" aria-label="View Toggle">
+        <button type="button" class="btn btn-outline-primary active" id="list-view-btn">
+            <i class="fas fa-list"></i>
+        </button>
+        <button type="button" class="btn btn-outline-primary" id="grid-view-btn">
+            <i class="fas fa-th-large"></i>
+        </button>
+    </div>
+</div>
 
-<!-- Job Listings -->
 
-<div class="album py-5 bg-light" >
+
+<!-- List View Container -->
+<div id="list-view" class="album py-5 bg-light">
+    <div class="container">
+        <div class="row row-cols-1 g-4">
+            <?php if ($result->num_rows > 0): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <div class="col">
+                        <div class="card h-100 shadow-sm job-card position-relative">
+                            
+                            <!-- Dropdown Button on Top Left Corner -->
+                            <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || ($row['employer_id'] == $_SESSION['user_id']))): ?>
+                                <div class="dropdown position-absolute top-0 start-0 m-2">
+                                    <button class="btn btn-light dropdown-toggle btn-minimal" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <li><a class="dropdown-item" href="edit_job_browse.php?id=<?= $row['id'] ?>&source=browse">Edit</a></li>
+                                        <li><button class="dropdown-item btn-delete" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal" data-job-id="<?= $row['id'] ?>">Delete</button></li>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="row g-0">
+                                <!-- Thumbnail on the left -->
+                                <div class="col-md-4 position-relative"> <!-- Use col-md-4 for larger screens -->
+                                    <?php if (!empty($row['thumbnail'])): ?>
+                                        <img src="../<?= htmlspecialchars($row['thumbnail']) ?>" class="job-thumbnail" alt="Job Thumbnail" style="object-fit: cover; height: 290px; width: 100%;"> <!-- Original size on desktop -->
+                                    <?php else: ?>
+                                        <div class="job-thumbnail-placeholder" style="height: 250px; width: 100%;">No Image</div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Job Details on the right -->
+                                <div class="col">
+                                    <div class="card-body d-flex flex-column">
+                                        <!-- Job Title -->
+                                        <h5 class="card-title job-title"><?= htmlspecialchars($row['title']) ?></h5>
+
+                                        <!-- Created At -->
+                                        <small class="text-muted"><?= time_elapsed_string($row['created_at']) ?></small><br>
+
+                                        <!-- Job Description -->
+                                        <p class="card-description"><?= htmlspecialchars(substr($row['description'], 0, 333)) ?>...</p>
+
+                                        <!-- Categories -->
+                                        <?php if (!empty($row['categories'])): ?>
+                                            <p class="card-category"><i class="fas fa-briefcase me-2"></i><?= htmlspecialchars($row['categories']) ?></p>
+                                        <?php endif; ?>
+
+                                        <!-- Additional Job Info: Positions, Location -->
+                                        <?php if (!empty($row['positions'])): ?>
+                                            <p class="card-positions"><i class="fas fa-users me-2"></i><?= htmlspecialchars($row['positions']) ?></p>
+                                        <?php endif; ?>
+                                        <p class="card-location"><i class="fas fa-map-marker-alt me-2"></i><?= htmlspecialchars($row['location']) ?></p>
+
+                                        <!-- Job Approval Status or Response Indicators -->
+                                        <?php if ($active_tab === 'applied' && isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
+                                            <?php
+                                            // Query to check if the job has a response
+                                            $job_response_query = "
+                                                SELECT status, user_viewed 
+                                                FROM applications 
+                                                WHERE job_id = {$row['id']} AND user_id = $user_id
+                                            ";
+                                            $job_response_result = $conn->query($job_response_query);
+                                            $job_response = $job_response_result->fetch_assoc();
+                                            if ($job_response && in_array($job_response['status'], ['accepted', 'rejected'])): ?>
+                                                <span class="badge <?= $job_response['status'] === 'accepted' ? 'bg-success' : 'bg-danger' ?>">
+                                                    <?= ucfirst($job_response['status']) ?>
+                                                </span>
+                                                <?php if ($job_response['user_viewed'] == 0): ?>
+                                                    <span class="badge bg-primary">New</span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+<!-- New Applicant Indicator for Admin or Employer -->
+<div class="mt-auto">
+    <a href="job.php?id=<?= $row['id'] ?>&mark_as_read=true" class="btn btn-outline-primary btn-sm">
+        View Details 
+        <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer')): ?>
+            <?php
+            // If the user is an admin or employer, show the "New" badge if applicable
+            if ($_SESSION['role'] === 'admin') {
+                // For admin, show the new applicants for all jobs
+                $new_applicants_query = "
+                    SELECT COUNT(*) AS count 
+                    FROM applications 
+                    WHERE job_id = {$row['id']} AND status = 'pending'
+                ";
+            } elseif ($_SESSION['role'] === 'employer') {
+                // For employer, show the new applicants only for their own jobs
+                $new_applicants_query = "
+                    SELECT COUNT(*) AS count 
+                    FROM applications 
+                    WHERE job_id = {$row['id']} AND status = 'pending' 
+                    AND job_id IN (SELECT id FROM jobs WHERE employer_id = ?)
+                ";
+            }
+
+            // Execute the query to count new applicants
+            if (isset($new_applicants_query)) {
+                if ($_SESSION['role'] === 'employer') {
+                    $new_applicants_stmt = $conn->prepare($new_applicants_query);
+                    $new_applicants_stmt->bind_param("i", $_SESSION['user_id']);
+                    $new_applicants_stmt->execute();
+                    $new_applicants_result = $new_applicants_stmt->get_result();
+                } else {
+                    $new_applicants_result = $conn->query($new_applicants_query);
+                }
+
+                $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
+            }
+            ?>
+            <?php if ($new_applicants_count > 0): ?>
+                <span class="badge bg-primary ms-2"><?= $new_applicants_count ?> New</span>
+            <?php endif; ?>
+        <?php endif; ?>
+    </a>
+</div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save Flag positioned at the top-right of the card -->
+                            <?php if ($user_id): ?>
+                                <div title="Save job" class="save-flag position-absolute top-0 end-0 m-2" data-job-id="<?= $row['id'] ?>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+                                    </svg>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <p class="text-center text-muted fs-5">No jobs found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Reset the result pointer before using it in the grid view -->
+<?php mysqli_data_seek($result, 0); ?>
+
+<!-- Grid View Container -->
+<div id="grid-view" class="album py-5 bg-light" style="display: none;">
     <div class="container">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
             <?php if ($result->num_rows > 0): ?>
@@ -571,137 +965,92 @@ if ($browse_data) {
                                     </div>
                                 <?php endif; ?>
 
-
                                 <!-- Save Flag -->
                                 <?php if ($user_id): ?>
                                     <div title="Save job" class="save-flag" data-job-id="<?= $row['id'] ?>">
-                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  
-                                    stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-bookmark">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" /></svg></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-bookmark">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z"/>
+                                        </svg>
                                     </div>
                                 <?php endif; ?>
-
                             </div>
 
-<!-- Card Body -->
-<div class="card-body d-flex flex-column">
-    <h5 class="card-title job-title"><?= htmlspecialchars($row['title']) ?></h5>
-    <small class="text-muted"><?= time_elapsed_string($row['created_at']) ?></small><br>
+                            <!-- Card Body -->
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title job-title"><?= htmlspecialchars($row['title']) ?></h5>
+                                <small class="text-muted"><?= time_elapsed_string($row['created_at']) ?></small><br>
 
-    <!-- Response Indicator for User -->
-    <?php if ($active_tab === 'applied' && isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
-        <?php
-        // Query to check if the job has a response
-        $job_response_query = "
-            SELECT status, user_viewed 
-            FROM applications 
-            WHERE job_id = {$row['id']} AND user_id = $user_id
-        ";
-        $job_response_result = $conn->query($job_response_query);
-        $job_response = $job_response_result->fetch_assoc();
-        if ($job_response && in_array($job_response['status'], ['accepted', 'rejected'])): ?>
-            <!-- Status Badge -->
-            <span class="badge <?= $job_response['status'] === 'accepted' ? 'bg-success' : 'bg-danger' ?>">
-                <?= ucfirst($job_response['status']) ?>
-            </span>
-            <!-- New Indicator -->
-            <?php if ($job_response['user_viewed'] == 0): ?>
-                <span class="badge bg-primary">New</span>
-            <?php endif; ?>
-        <?php endif; ?>
-    <?php endif; ?>
+                                <!-- Response Indicator for User -->
+                                <?php if ($active_tab === 'applied' && isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
+                                    <?php
+                                    // Query to check if the job has a response
+                                    $job_response_query = "
+                                        SELECT status, user_viewed 
+                                        FROM applications 
+                                        WHERE job_id = {$row['id']} AND user_id = $user_id
+                                    ";
+                                    $job_response_result = $conn->query($job_response_query);
+                                    $job_response = $job_response_result->fetch_assoc();
+                                    if ($job_response && in_array($job_response['status'], ['accepted', 'rejected'])): ?>
+                                        <!-- Status Badge -->
+                                        <span class="badge <?= $job_response['status'] === 'accepted' ? 'bg-success' : 'bg-danger' ?>">
+                                            <?= ucfirst($job_response['status']) ?>
+                                        </span>
+                                        <!-- New Indicator -->
+                                        <?php if ($job_response['user_viewed'] == 0): ?>
+                                            <span class="badge bg-primary">New</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                <?php endif; ?>
 
-    <!-- New Applicant Indicator for Admin -->
-    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-        <?php
-        // Query to count new applicants (pending applications) for this job
-        $new_applicants_query = "
-            SELECT COUNT(*) AS count 
-            FROM applications 
-            WHERE job_id = {$row['id']} AND status = 'pending'
-        ";
-        $new_applicants_result = $conn->query($new_applicants_query);
-        $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
-        if ($new_applicants_count > 0): ?>
-            <span class="badge bg-primary mb-1">New Applicant(s): <?= $new_applicants_count ?></span>
-        <?php endif; ?>
-    <?php endif; ?>
-
-<!-- New Applicant Indicator for Employer -->
-<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'employer'): ?>
-    <?php
-    // Query to count new applicants (pending applications) for this employer's job
-    $new_applicants_query = "
-        SELECT COUNT(*) AS count 
-        FROM applications 
-        WHERE job_id = {$row['id']} 
-        AND status = 'pending' 
-        AND job_id IN (SELECT id FROM jobs WHERE employer_id = ?)
-    ";
-    $new_applicants_stmt = $conn->prepare($new_applicants_query);
-    $new_applicants_stmt->bind_param("i", $_SESSION['user_id']); // Ensure the query is filtered by employer's job
-    $new_applicants_stmt->execute();
-    $new_applicants_result = $new_applicants_stmt->get_result();
-    $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
-
-    if ($new_applicants_count > 0): ?>
-        <span class="badge bg-primary mb-1">
-            New Applicant(s): <?= $new_applicants_count ?>
-        </span>
-    <?php endif; ?>
-
-    <!-- Job Approval Status Indicator (Pending/Approved/Rejected) -->
-    <?php
-    // Query to get the job's approval status
-    $job_approval_query = "
-        SELECT status 
-        FROM jobs 
-        WHERE id = {$row['id']} 
-        AND employer_id = ? 
-    ";
-    $job_approval_stmt = $conn->prepare($job_approval_query);
-    $job_approval_stmt->bind_param("i", $_SESSION['user_id']); // Ensure it's filtered by the employer's job
-    $job_approval_stmt->execute();
-    $job_approval_result = $job_approval_stmt->get_result();
-    
-    // Check if the result is not null or empty
-    if ($job_approval_result->num_rows > 0) {
-        $job_approval_status = $job_approval_result->fetch_assoc()['status'];
-    } else {
-        $job_approval_status = null; // If no status found, set it to null
-    }
-    ?>
-
-    <!-- Display the job's approval status only inside the "My Jobs" tab -->
-    <?php if (isset($active_tab) && $active_tab === 'my_jobs'): ?>
-        <div class="approval-status mb-1">
-            <strong>Approval Status: </strong>
+ <!-- New Applicant Indicator for Admin or Employer -->
+<div class="mt-auto">
+    <a href="job.php?id=<?= $row['id'] ?>&mark_as_read=true" class="btn btn-outline-primary btn-sm w-100">
+        View Details
+        <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'employer')): ?>
             <?php
-            // Display the job's approval status with different badge colors
-            switch ($job_approval_status) {
-                case 'approved':
-                    echo '<span class="badge bg-success">Approved</span>';
-                    break;
-                case 'rejected':
-                    echo '<span class="badge bg-danger">Rejected</span>';
-                    break;
-                case 'pending':
-                    echo '<span class="badge bg-warning">Pending</span>';
-                    break;
-                default:
-                    echo '<span class="badge bg-secondary">Unknown</span>';
+            // If the user is an admin or employer, show the "New" badge if applicable
+            if ($_SESSION['role'] === 'admin') {
+                // For admin, show the new applicants for all jobs
+                $new_applicants_query = "
+                    SELECT COUNT(*) AS count 
+                    FROM applications 
+                    WHERE job_id = {$row['id']} AND status = 'pending'
+                ";
+            } elseif ($_SESSION['role'] === 'employer') {
+                // For employer, show the new applicants only for their own jobs
+                $new_applicants_query = "
+                    SELECT COUNT(*) AS count 
+                    FROM applications 
+                    WHERE job_id = {$row['id']} AND status = 'pending' 
+                    AND job_id IN (SELECT id FROM jobs WHERE employer_id = ?)
+                ";
+            }
+
+            // Execute the query to count new applicants
+            if (isset($new_applicants_query)) {
+                if ($_SESSION['role'] === 'employer') {
+                    $new_applicants_stmt = $conn->prepare($new_applicants_query);
+                    $new_applicants_stmt->bind_param("i", $_SESSION['user_id']);
+                    $new_applicants_stmt->execute();
+                    $new_applicants_result = $new_applicants_stmt->get_result();
+                } else {
+                    $new_applicants_result = $conn->query($new_applicants_query);
+                }
+
+                $new_applicants_count = $new_applicants_result->fetch_assoc()['count'];
             }
             ?>
-        </div>
-    <?php endif; ?>
-<?php endif; ?>
-
-
-    <!-- Action Buttons -->
-    <div class="mt-auto">
-        <a href="job.php?id=<?= $row['id'] ?>&mark_as_read=true" class="btn btn-view-job">View Job</a>
-    </div>
+            <?php if ($new_applicants_count > 0): ?>
+                <span class="badge bg-primary ms-2"><?= $new_applicants_count ?> New</span>
+            <?php endif; ?>
+        <?php endif; ?>
+    </a>
 </div>
+
+
+                            </div>
                         </div>
                     </div>
                 <?php endwhile; ?>
@@ -711,6 +1060,11 @@ if ($browse_data) {
         </div>
     </div>
 </div>
+
+
+
+
+
 
 <!--FOR JOB LISTING/// Deletion Confirmation Modal/// FOR JOB LISTING -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -743,7 +1097,7 @@ if ($browse_data) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="file" class="form-control" name="cover_photo" id="coverPhotoInput" required>
+                    <input type="file" class="form-control" name="cover_photo" id="coverPhotoInput" accept="image/*" required>
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
                     <?php if (!empty($cover_photo)): ?>
@@ -859,6 +1213,32 @@ if ($browse_data) {
 
 <!-- JavaScript for Saving Jobs -->
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const listViewBtn = document.getElementById('list-view-btn');
+        const gridViewBtn = document.getElementById('grid-view-btn');
+        const listView = document.getElementById('list-view');
+        const gridView = document.getElementById('grid-view');
+
+        // Default view (list view)
+        listView.style.display = 'block';
+        gridView.style.display = 'none';
+
+        // Toggle to List View
+        listViewBtn.addEventListener('click', function () {
+            listView.style.display = 'block';
+            gridView.style.display = 'none';
+            listViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+        });
+
+        // Toggle to Grid View
+        gridViewBtn.addEventListener('click', function () {
+            listView.style.display = 'none';
+            gridView.style.display = 'block';
+            gridViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+        });
+    });
 
     
 
@@ -941,6 +1321,120 @@ document.querySelectorAll('.save-flag').forEach(flag => {
         });
     });
 });
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleButton = document.getElementById('toggle-filter');
+    const filtersContainer = document.getElementById('filters-container');
+
+    // Check if there's a stored state in localStorage
+    const toggleState = localStorage.getItem('filters-toggled');
+
+    // Default state should be hidden unless stored state says otherwise
+    if (toggleState === 'true') {
+        filtersContainer.style.display = 'flex'; // Show filters
+    } else {
+        filtersContainer.style.display = 'none'; // Hide filters (default)
+    }
+
+    // Add click event listener to toggle button
+    toggleButton.addEventListener('click', function () {
+        // Toggle the visibility of the filters container
+        if (filtersContainer.style.display === 'none' || filtersContainer.style.display === '') {
+            filtersContainer.style.display = 'flex';
+            localStorage.setItem('filters-toggled', 'true'); // Store the state as open
+        } else {
+            filtersContainer.style.display = 'none';
+            localStorage.setItem('filters-toggled', 'false'); // Store the state as closed
+        }
+    });
+});
+
+// Function to automatically submit the form when a filter is changed
+function submitForm() {
+    document.getElementById('search-form').submit();
+}
+
+// Debounce function to delay search input submission (to avoid instant refresh on every keystroke)
+let debounceTimer;
+document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+        submitForm(); // Submit the form after 300ms delay
+    }, 420);
+});
+
+// Call this function on logout or account change
+function resetToggleState() {
+    localStorage.removeItem('filters-toggled'); // Clear the stored toggle state
+}
+
+// Function to escape HTML entities
+function escapeHtml(str) {
+    return str.replace(/[&<>"/]/g, function (char) {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            
+            case '/': return '&#x2F;';
+        }
+    });
+}
+
+// Get the message from the URL query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const message = urlParams.get('message');
+
+// Display SweetAlert2 notification if there is a message
+if (message) {
+    // Escape the message to avoid XSS
+    const sanitizedMessage = escapeHtml(message);
+
+    Swal.fire({
+        title: "Successfully logged in!",
+        text: sanitizedMessage,
+        icon: "success", // You can remove this line if you don't want any icon
+        showConfirmButton: true, // Show the close button
+        confirmButtonText: "Close", // Customize the close button text
+        timer: 5000, // Auto-close after 5 seconds
+        timerProgressBar: true, // Show a progress bar
+        showClass: {
+            popup: 'swal2-noanimation', // Disable animation for the popup
+            backdrop: 'swal2-noanimation' // Disable animation for the backdrop
+        },
+        hideClass: {
+            popup: '', // No special class for hiding the popup
+            backdrop: '' // No special class for hiding the backdrop
+        }
+    }).then(() => {
+        // Remove the 'message' query parameter from the URL
+        urlParams.delete('message');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, document.title, newUrl);
+    });
+}
+
+
+// Function to change placeholder text
+function updatePlaceholder() {
+    const searchInput = document.getElementById('search-input');
+    if (window.innerWidth <= 768) {  // For mobile or small screens
+        searchInput.setAttribute('placeholder', 'Type a keyword (e.g. Animation)');
+    } else {  // For larger screens
+        searchInput.setAttribute('placeholder', 'Looking for something specific? Try a job title or category...');
+    }
+}
+
+// Initial check when the page loads
+updatePlaceholder();
+
+// Update the placeholder on window resize
+window.addEventListener('resize', updatePlaceholder);
+
+
 </script>
 
 <!-- Bootstrap JS (Optional) -->

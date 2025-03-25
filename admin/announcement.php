@@ -33,6 +33,54 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/JOB/assets/announcement.css">
     <style> 
+/* Mobile Layout for Announcements Section */
+@media (max-width: 900px) {
+  .announcement-card {
+    flex-direction: column; /* Stack content vertically */
+    align-items: center; /* Center content */
+    text-align: center; /* Center text */
+  }
+
+  .announcement-thumbnail {
+    margin-bottom: 16px; /* Add space between the thumbnail and the text */
+    margin-right: 0; /* Remove right margin */
+  }
+
+  .announcement-thumbnail img {
+    width: 100%; /* Make the image responsive */
+    max-width: 300px; /* Limit the size */
+    height: auto;
+  }
+
+  .announcement-content {
+    width: 100%; /* Ensure content takes full width */
+  }
+
+  .announcement-title {
+    font-size: 1.4rem; /* Adjust title size */
+  }
+
+  .announcement-date {
+    font-size: 0.9rem; /* Adjust date size */
+  }
+
+  .announcement-content p {
+    font-size: 0.9rem; /* Adjust paragraph size */
+  }
+
+  /* Adjust Admin Action Buttons */
+  .action-buttons {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* Hide the Thumbnail on Mobile (e.g., iPhone SE and similar) */
+@media (max-width: 900px) {
+  .announcement-thumbnail {
+    display: none; /* Completely hide the thumbnail */
+  }
+}
 
 
 
@@ -61,7 +109,7 @@ if ($user_role === 'admin' && isset($_GET['delete_id'])) {
     if (mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
             // Thumbnail and URL setup
-            $thumbnail = $row['thumbnail'] ? '../uploads/' . $row['thumbnail'] : '../uploads/default/PESO.png'; // Default image if no thumbnail
+            $thumbnail = $row['thumbnail'] ? '../uploads/announcement_thumbnail/' . $row['thumbnail'] : '../uploads/default/PESO.png'; // Default image if no thumbnail
             $url_link = $row['url_link'] ? $row['url_link'] : '#'; // Fallback to '#' if no URL
 
             // Check if URL is present to make the announcement clickable

@@ -54,9 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_role === 'user') {
         // If the request is pending, show a message and don't allow the form submission
         $message = "You have already sent a request. Please wait for the admin's approval.";
     } else {
-        $request_message = $_POST['request_message'];
-        $company_name = $_POST['company_name']; // Added company name
-
+        // Sanitize user inputs to prevent XSS
+        $request_message = htmlspecialchars($_POST['request_message'], ENT_QUOTES, 'UTF-8');
+        $company_name = htmlspecialchars($_POST['company_name'], ENT_QUOTES, 'UTF-8'); // Added company name
+        
         // Handle multiple file uploads
         $proof_files = $_FILES['proof_file'];
 
@@ -67,19 +68,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_role === 'user') {
         
         $request_id = $stmt->insert_id; // Get the inserted request's ID
         
-        // Save each proof file
+        // Validate and handle each proof file securely
+        $allowed_file_types = ['image/jpeg', 'image/png', 'application/pdf']; // Example allowed file types
         $file_count = count($proof_files['name']);
         for ($i = 0; $i < $file_count; $i++) {
             $file_name = $proof_files['name'][$i];
             $file_tmp = $proof_files['tmp_name'][$i];
-            $target_dir = "../uploads/";
+            $file_type = $proof_files['type'][$i];
+            $target_dir = "../uploads/company_proofs/";
             $target_file = $target_dir . basename($file_name);
 
-            if (move_uploaded_file($file_tmp, $target_file)) {
-                // Insert the proof file into the employer_request_proofs table
-                $stmt_proof = $conn->prepare("INSERT INTO employer_request_proofs (request_id, file_path) VALUES (?, ?)");
-                $stmt_proof->bind_param("is", $request_id, $target_file);
-                $stmt_proof->execute();
+            // Validate file type
+            if (in_array($file_type, $allowed_file_types)) {
+                if (move_uploaded_file($file_tmp, $target_file)) {
+                    // Insert the proof file into the employer_request_proofs table
+                    $stmt_proof = $conn->prepare("INSERT INTO employer_request_proofs (request_id, file_path) VALUES (?, ?)");
+                    $stmt_proof->bind_param("is", $request_id, $target_file);
+                    $stmt_proof->execute();
+                }
+            } else {
+                $message = "Invalid file type for proof file. Only JPEG, PNG, and PDF files are allowed.";
+                break;
             }
         }
 
@@ -98,6 +107,7 @@ if ($request_check_result->num_rows > 0) {
 
 ?>
 
+<link rel="stylesheet" href="/JOB/assets/dropdown.css">
 <style>
 .btn-outline-secondary:hover{
     background: transparent;
@@ -116,7 +126,7 @@ body{
         <?php if ($user_role === 'admin'): ?>
             Recent Employer Requests
         <?php elseif ($user_role === 'employer'): ?>
-            Welcome to the Employer Community!
+            The search for your next great hire starts here. Welcome to the community!
         <?php elseif ($user_role === 'user'): ?>
             Become a Part of the Employer Community
         <?php endif; ?>
@@ -184,7 +194,7 @@ body{
             <div class="col-lg-8 col-md-10">
                 <div class="card shadow-sm">
                     <div class="card-body text-center">
-                        <h3 class="card-title mb-3">Congratulations, <?= htmlspecialchars($user['first_name']) ?>!</h3>
+                        <h3 class="card-title mb-3">You're all set, <?= htmlspecialchars($user['first_name']) ?>!</h3>
                         <p class="card-text">You’ve officially joined the employer community. You can now post job opportunities, manage applicants, and build your team!</p>
                         <a href="../employers/dashboard.php" class="btn btn-primary">Go to Your Dashboard</a>
                     </div>
@@ -201,29 +211,27 @@ body{
                             <div class="alert alert-danger mb-4"><?= $error ?></div>
                         <?php elseif ($request_check_result->num_rows === 0): ?>
                             <!-- Show the request form only if no request is pending -->
-                            <form method="POST" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="company_name" class="form-label">Company Name</label>
-                                    <input type="text" id="company_name" name="company_name" class="form-control" required>
-                                </div>
+                                <form method="POST" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="company_name" class="form-label">Company Name</label>
+                                        <input type="text" id="company_name" name="company_name" class="form-control" required>
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label for="request_message" class="form-label">Company Description</label>
-                                    <textarea id="request_message" name="request_message" rows="5" class="form-control" required></textarea>
-                                </div>
+                                    <div class="mb-3">
+                                        <label for="request_message" class="form-label">Company Description</label>
+                                        <textarea id="request_message" name="request_message" rows="5" class="form-control" required></textarea>
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label for="proof_file" class="form-label">Upload Proof (e.g., business registration, etc.)</label>
-                                    <input type="file" id="proof_file" name="proof_file[]" class="form-control" required multiple>
-                                </div>
+                                    <div class="mb-3">
+                                        <label for="proof_file" class="form-label">Upload Proof (e.g., business registration, etc.)</label>
+                                        <input type="file" id="proof_file" name="proof_file[]" class="form-control" required multiple accept=".pdf,.png,.jpg,.jpeg">
+                                        <small class="form-text text-muted">You can select multiple files at once by holding down the Ctrl (or Command) key while selecting.<br> Note that only PDF, PNG, and JPG files are allowed.</small>
+                                    </div>
 
-                                <!-- Dynamically added proof file inputs -->
-                                <div id="additionalProofs"></div>
+                                    
+                                    <button type="submit" class="btn btn-primary btn-lg ">Submit Request</button>
+                                </form>
 
-                                <button type="button" class="btn btn-secondary mt-3" id="addProofButton">+ Add Another Proof File</button>
-
-                                <br><button type="submit" class="btn btn-primary btn-lg mt-4">Submit Request</button>
-                            </form>
                         <?php elseif ($request_row['status'] === 'rejected'): ?>
                             <!-- Show rejection remark if the request was rejected -->
                             <div class="alert alert-danger text-center mb-4">

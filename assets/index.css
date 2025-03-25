@@ -1,25 +1,5 @@
 
 
-.cta-button {
-    background-color: #ff6700;
-    border: none;
-    padding: 12px 25px;
-    font-size: 0.9rem;
-    color: white;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(255, 103, 0, 0.3);
-    margin-top: 420px;
-    text-transform: uppercase;
-    
-}
-.cta-button:hover {
-    background-color: #ff4500;
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(255, 103, 0, 0.5);
-    
-}
 
 /* Container Styling */
 .announcement-section {
@@ -126,6 +106,7 @@
         .feature-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(145deg, #ffffff, #e9f0f7);
         }
         .feature-card i {
             font-size: 3rem;
@@ -267,8 +248,9 @@
     }
 
     /* Post Ad Button */
-    .post-ad-button {
+    .post-ad {
         position: absolute;
+        color: black;
         top: 20px;
         right: 20px;
         border: none;
@@ -277,10 +259,12 @@
         border-radius: 30px;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        
     }
-    .post-ad-button:hover {
+    .post-ad:hover {
         transform: translateY(-2px);
+        color: #4c6ef5;
+        
   
     }
 
@@ -364,12 +348,18 @@
 .job-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #ffffff, #e9f0f7);
 }
 
 .card-title {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     margin-bottom: 0.5rem;
     color: #333;
+}
+
+
+.card-title:hover {
+    color: #0d6efd; /* Change title color on hover */
 }
 
 .card-category,

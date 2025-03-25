@@ -2,6 +2,7 @@
 include '../includes/config.php';
 include '../includes/header.php';
 include '../includes/restrictions.php';
+include('../includes/sidebar.php');
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../pages/index.php");
@@ -136,24 +137,7 @@ $barangay_result = $conn->query($barangay_query);
 </head>
 <body>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div>
-        <h2>Admin Panel</h2>
-        <ul>
-            <li><a href="admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="user_list.php"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="employer_hiring.php"><i class="fas fa-person-circle-question"></i> Employer Request</a></li>
-            <li><a href="job_list.php" class="active"><i class="fas fa-briefcase"></i> Job List</a></li>
-            <li><a href="job_approval.php "><i class="fas fa-clipboard-check"></i> Job Approvals</a></li>
-            <li><a href="feedback_bin.php"><i class="fas fa-trash-alt"></i> Feedback Bin</a></li>
-            
-        </ul>
-    </div>
-    <div class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-angle-right"></i>
-    </div>
-</div>
+
 
 <!-- Main Content -->
 <main>
@@ -222,7 +206,7 @@ $barangay_result = $conn->query($barangay_query);
    <!-- Job List -->
    <div class="job-list">
         <!-- Table Header -->
-        <div class="job-header">
+        <div class="job-header text-center">
             <div>Job Title</div>
             <div>Description</div>
             <div>Applicants</div>
@@ -233,15 +217,15 @@ $barangay_result = $conn->query($barangay_query);
         <!-- Job Items -->
         <?php while ($row = $result->fetch_assoc()): ?>
             <div class="job-item">
-                <div class="title"><?= htmlspecialchars($row['title']) ?></div>
+                <div class="title text-center"><?= htmlspecialchars($row['title']) ?></div>
                 <div class="description"><?= htmlspecialchars($row['description']) ?></div>
-                <div class="applicants" onclick="location.href='view_applicants.php?job_id=<?= $row['id'] ?>'">
+                <div class="applicants text-center" onclick="location.href='view_applicants.php?job_id=<?= $row['id'] ?>'">
                     👤 <?= $row['total_applicants'] ?> Applicants
                 </div>
-                <div class="date"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($row['created_at']))) ?></div>
+                <div class="date text-center"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($row['created_at']))) ?></div>
                 <div class="actions">
                 <button onclick="location.href='edit_job.php?id=<?= $row['id'] ?>&source=job_list'"><i class="fas fa-edit"></i></button>
-                    <button data-bs-toggle="modal" data-bs-target="#deleteJobModal" class="btn-delete" data-job-id="<?= $row['id'] ?>"><i class="fas fa-trash"></i></button>
+                <button data-bs-toggle="modal" data-bs-target="#deleteJobModal" class="btn-delete" data-job-id="<?= $row['id'] ?>"><i class="fas fa-trash"></i></button>
                 </div>
 
             </div>
@@ -279,12 +263,7 @@ $barangay_result = $conn->query($barangay_query);
 
 
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        sidebar.classList.toggle('hidden');
-        mainContent.classList.toggle('hidden');
-    }
+
 
     // Get modal element and confirm delete button
 const deleteJobModal = new bootstrap.Modal(document.getElementById('deleteJobModal'));

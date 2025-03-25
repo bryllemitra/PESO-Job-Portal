@@ -37,6 +37,7 @@ $request = $request_result->fetch_assoc();
 <!-- Bootstrap JS (for modals) -->
  <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="/JOB/assets/dropdown.css">
 
 <style>
 .btn-outline-primary:hover {
@@ -71,6 +72,7 @@ $request = $request_result->fetch_assoc();
     color: #4c6ef5;
 }
 
+
 body {
             background-color: #f1f3f5 !important;
         }
@@ -87,8 +89,7 @@ body {
                 <div class="card-body">
                     <!-- Request Information Section -->
                     <div class="mb-4 mt-4">
-                        
-                        <div><strong>Name:</strong> <?= htmlspecialchars($request['first_name']) ?> <?= htmlspecialchars($request['last_name']) ?></div>
+                        <div><strong>Applicant:</strong> <?= htmlspecialchars($request['first_name']) ?> <?= htmlspecialchars($request['last_name']) ?></div>
                         <div><strong>Company Name:</strong> <?= htmlspecialchars($request['company_name']) ?></div>
                         <div><strong>Company Details:</strong>
                             <p class="mb-0"><?= nl2br(htmlspecialchars($request['request_message'])) ?></p>
@@ -98,7 +99,7 @@ body {
 
                     <!-- Proof Files Section -->
                     <div class="mb-4">
-                        <h5>Files Attached:</h5>
+                        <small>Attached Files:</small><br>
                         <?php
                         // Fetch additional proof files for this request
                         $proof_query = "SELECT * FROM employer_request_proofs WHERE request_id = ?";
@@ -109,6 +110,7 @@ body {
 
                         if ($proof_result->num_rows > 0) {
                             while ($proof = $proof_result->fetch_assoc()) {
+                                // Display the attached file and remove it after the request is accepted/rejected
                                 echo '<a href="' . htmlspecialchars($proof['file_path']) . '" target="_blank" class="btn btn-outline-secondary btn-sm mb-2">View Attached File</a><br>';
                             }
                         } else {
@@ -117,12 +119,7 @@ body {
                         ?>
                     </div>
 
-                    <!-- Rejection Reason -->
-                    <?php if ($request['status'] === 'rejected' && !empty($request['remark'])): ?>
-                        <div class="alert alert-danger mb-4">
-                            <strong>Rejection Reason:</strong> <?= htmlspecialchars($request['remark']) ?>
-                        </div>
-                    <?php endif; ?>
+
 
                     <!-- Request Status Section -->
                     <div class="text-center">
@@ -130,11 +127,42 @@ body {
                             <button data-request-id="<?= $request['id'] ?>" class="btn btn-outline-primary btn-approve mb-2">Approve Request</button>
                             <button data-request-id="<?= $request['id'] ?>" class="btn btn-outline-danger btn-reject mb-2">Reject Request</button>
                         <?php elseif ($request['status'] == 'accepted'): ?>
-                            <button class="btn btn-success" disabled>Request Accepted</button>
+                            <!-- Display message when the request is accepted -->
+                            <div class="alert alert-success mb-4">This request has already been accepted.</div>
+                            <?php
+                                // Automatically delete attached files after accepting the request
+                                // Fetch the attached files
+                                $proof_query = "SELECT * FROM employer_request_proofs WHERE request_id = ?";
+                                $proof_stmt = $conn->prepare($proof_query);
+                                $proof_stmt->bind_param("i", $request['id']);
+                                $proof_stmt->execute();
+                                $proof_result = $proof_stmt->get_result();
+
+                                while ($proof = $proof_result->fetch_assoc()) {
+                                    $file_path = $proof['file_path'];
+                                    if (file_exists($file_path)) {
+                                        unlink($file_path);  // Delete file from the server
+                                    }
+                                }
+
+                                // Optionally, delete the proof records from the database
+                                $delete_query = "DELETE FROM employer_request_proofs WHERE request_id = ?";
+                                $delete_stmt = $conn->prepare($delete_query);
+                                $delete_stmt->bind_param("i", $request['id']);
+                                $delete_stmt->execute();
+                            ?>
                         <?php elseif ($request['status'] == 'rejected'): ?>
-                            <button class="btn btn-danger" disabled>Request Rejected</button>
+                            <!-- Display message when the request is rejected -->
+                            <div class="alert alert-danger mb-4">This request has already been rejected.</div>
                         <?php endif; ?>
+                    </div>
+
+                                        <!-- Rejection Reason -->
+                                        <?php if ($request['status'] === 'rejected' && !empty($request['remark'])): ?>
+                        <div class="alert alert-danger mb-4 text-center">
+                            <strong>Rejection Reason:</strong> <?= htmlspecialchars($request['remark']) ?>
                         </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -150,7 +178,7 @@ body {
 
 <!-- Modal for Rejecting Request -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="rejectModalLabel">Reject Employer Request</h5>
@@ -172,7 +200,7 @@ body {
 
 <!-- Modal for Approving Request (Simple Confirmation) -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="approveModalLabel">Approve Employer Request</h5>
@@ -192,6 +220,20 @@ body {
 
 <script>
 
+
+// Function to escape HTML entities (prevents XSS)
+function escapeHtml(str) {
+    return str.replace(/[&<>"'/]/g, function (char) {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            case '/': return '&#x2F;';
+        }
+    });
+}
 
 // Reject Request Button Click
 document.querySelectorAll('.btn-reject').forEach(button => {
@@ -215,32 +257,22 @@ $('#rejectForm').submit(function(e) {
         data: { request_id: requestId, remark: remark },
         dataType: 'json', // Expecting JSON response from the server
         success: function(response) {
-            if (response.status === 'success') {
-                // SweetAlert success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Request Rejected!',
-                    text: 'The employer request has been successfully rejected. ', // Show rejection reason
-                    
-                    confirmButtonText: 'Okay',
-                   
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // If user clicks "Send Again", reload the form to allow resubmission
-                        window.location.reload();
-                    } else {
-                        // If the user cancels, they can choose to leave
-                    }
-                });
-            } else {
-                // SweetAlert error message
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'There was an error while rejecting the request. Please try again.',
-                    confirmButtonText: 'OK'
-                });
-            }
+            const message = response.status === 'success' 
+                ? 'The employer request has been successfully rejected.' 
+                : 'There was an error while rejecting the request. Please try again.';
+            const sanitizedMessage = escapeHtml(message);
+
+            // SweetAlert success message
+            Swal.fire({
+                icon: response.status === 'success' ? 'success' : 'error',
+                title: response.status === 'success' ? 'Request Rejected!' : 'Error!',
+                text: sanitizedMessage, // Ensure message is sanitized
+                confirmButtonText: 'Okay',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload(); // Optionally reload the page
+                }
+            });
         },
         error: function(xhr, status, error) {
             // Handle AJAX request failure
@@ -263,7 +295,6 @@ document.querySelectorAll('.btn-approve').forEach(button => {
     });
 });
 
-
 // Handle Approve Form Submission
 $('#approveForm').submit(function(e) {
     e.preventDefault();
@@ -272,30 +303,24 @@ $('#approveForm').submit(function(e) {
 
     $.ajax({
         type: 'POST',
-        url: 'approve_request.php', // Make sure this URL points to the correct PHP handler
+        url: 'approve_request.php', // Ensure this URL points to the correct PHP handler
         data: { request_id: requestId },
         dataType: 'json', // Expecting JSON response from the server
         success: function(response) {
-            if (response.status === 'success') {
-                // SweetAlert success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Request Approved!',
-                    text: 'The employer request has been successfully approved and the role has been updated.',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    // Optionally, you could reload the page or show some updated information
-                    location.reload(); // This will reload the page to reflect the new role change
-                });
-            } else {
-                // SweetAlert error message if update fails
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'There was an error while approving the request. Please try again.',
-                    confirmButtonText: 'OK'
-                });
-            }
+            const message = response.status === 'success' 
+                ? 'The employer request has been successfully approved and the role has been updated.'
+                : 'There was an error while approving the request. Please try again.';
+            const sanitizedMessage = escapeHtml(message);
+
+            // SweetAlert success message
+            Swal.fire({
+                icon: response.status === 'success' ? 'success' : 'error',
+                title: response.status === 'success' ? 'Request Approved!' : 'Error!',
+                text: sanitizedMessage, // Ensure message is sanitized
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                location.reload(); // Reload the page to reflect the new role
+            });
         },
         error: function(xhr, status, error) {
             // Handle AJAX request failure
@@ -308,6 +333,7 @@ $('#approveForm').submit(function(e) {
         }
     });
 });
+
 
 </script>
 

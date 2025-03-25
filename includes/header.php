@@ -10,6 +10,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Job Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://unpkg.com/heroicons@1.0.6/dist/outline.css" rel="stylesheet">
@@ -69,7 +70,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <div class="d-flex align-items-center">
                 <!-- Brand -->
                 <a class="navbar-brand d-flex align-items-center" href="../pages/index.php">
-                    <img src="/JOB/uploads/OFFICIAL.png" alt="PESO Logo" style="width: 60px; height: auto; margin-right: 10px;">
+                    <img src="/JOB/uploads/PESO LOGO/OFFICIAL.png" alt="PESO Logo" style="width: 60px; height: auto; margin-right: 10px;">
                     <span class="brand-text fw-bold text-uppercase">PESO</span>
                 </a>
                 <!-- Toggler Button for Main Navigation -->
@@ -80,35 +81,35 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <div class="collapse navbar-collapse justify-content-start" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
                     <li class="nav-item">
-    <a class="nav-link <?php echo ($current_page === 'index.php') ? 'custom-active' : ''; ?>" href="../pages/index.php">Home</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link <?php echo ($current_page === 'browse.php') ? 'custom-active' : ''; ?>" href="../pages/browse.php">Browse</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link <?php echo ($current_page === 'announcement.php') ? 'custom-active' : ''; ?>" href="../admin/announcement.php">Announcement</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link <?php echo ($current_page === 'about.php') ? 'custom-active' : ''; ?>" href="../pages/about.php">About Us</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link <?php echo ($current_page === 'contact.php') ? 'custom-active' : ''; ?>" href="../pages/contact.php">Contact</a>
-</li>
+                            <a class="nav-link <?php echo ($current_page === 'index.php') ? 'custom-active' : ''; ?>" href="../pages/index.php">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo ($current_page === 'browse.php') ? 'custom-active' : ''; ?>" href="../pages/browse.php">Browse</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo ($current_page === 'about.php') ? 'custom-active' : ''; ?>" href="../pages/about.php">About Us</a>
+                        </li>
 
-<?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'user'): ?>
-    <li class="nav-item">
-        <a class="nav-link <?php echo ($current_page === 'employer_requests.php') ? 'custom-active' : ''; ?>" href="../pages/employer_requests.php">Hire Now</a>
-    </li>
-<?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo ($current_page === 'announcement.php') ? 'custom-active' : ''; ?>" href="../admin/announcement.php">Announcement</a>
+                        </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo ($current_page === 'contact.php') ? 'custom-active' : ''; ?>" href="../pages/contact.php">Contact</a>
+                        </li>
 
+                        <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'user'): ?>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo ($current_page === 'employer_requests.php') ? 'custom-active' : ''; ?>" href="../pages/employer_requests.php">Hire Now</a>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
             <!-- Right Side: Notification, Message, User Icon -->
             <div class="d-flex align-items-center">
                 <!-- Toggler Button for Right-Side Navigation -->
-                <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#rightNav" aria-controls="rightNav" aria-expanded="false" aria-label="Toggle right navigation">
+                <button class="navbar-toggler border-0 d-lg-none " type="button" data-bs-toggle="collapse" data-bs-target="#rightNav" aria-controls="rightNav" aria-expanded="false" aria-label="Toggle right navigation">
                     <i class="fas fa-user-circle text-white" style="font-size: 1.5em;"></i>
                 </button>
                 <div class="collapse navbar-collapse justify-content-end d-lg-flex" id="rightNav">
@@ -126,7 +127,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <!-- Bell Dropdown for Notifications -->
 <li class="nav-item dropdown position-relative">
-<a class="nav-link d-flex align-items-center" href="#" id="notification-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
+<a class="nav-link d-flex align-items-center " href="#" id="notification-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
     <i class="fas fa-bell notification-icon"></i>
     <span id="notification-count" class="notification-count badge bg-danger rounded-circle" style="display: none;"></span>
 </a>
@@ -179,6 +180,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
 
+
+
         <!-- Dashboard link for Admin -->
         <?php if ($_SESSION['role'] === 'admin'): ?>
             <li><a class="dropdown-item text-white" href="../admin/admin.php"><i class="fas fa-tachometer-alt me-2"></i> Admin Panel</a></li>
@@ -191,11 +194,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <li><hr class="dropdown-divider"></li>
 
+        <!-- Settings link (now triggering modal) -->
+        <li>
+            <a class="dropdown-item text-white" href="#" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="fas fa-cogs me-2"></i> Settings
+            </a>
+        </li>
+
         <!-- Logout link -->
         <li>
-            <a class="dropdown-item text-danger" href="../logout.php">
-                <i class="fas fa-sign-out-alt me-2"></i> Logout
-            </a>
+        <a class="dropdown-item text-danger" href="../logout.php" onclick="resetToggleState()">
+    <i class="fas fa-sign-out-alt me-2"></i> Logout
+</a>
+
         </li>
     </ul>
 </li>
@@ -213,7 +224,67 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </div>
     </nav>
     
-    
+<!-- Modal for settings (Update Settings) -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">Update Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateSettingsForm" method="POST">
+                    <div class="mb-3">
+                        <label for="new_username" class="form-label">New Username</label>
+                        <input type="text" class="form-control" id="new_username" name="new_username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                    <label for="current_password" class="form-label">Current Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        <span class="input-group-text" id="togglePassword">
+                            <i class="fas fa-eye-slash"></i>
+                        </span>
+                    </div>
+                </div>
+
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                    </div>
+                    <button type="button" class="btn btn-outline-customss" id="openConfirmationModalBtn">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirm Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to save these changes?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-customss" id="confirmSaveBtn">Confirm</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
     
 
     <!-- Bootstrap JS -->
@@ -525,6 +596,107 @@ $("#notification-link").click(function (event) {
 });
 
 
+//SWEET ALERT
+document.getElementById('openConfirmationModalBtn').addEventListener('click', function() {
+        // Grab the values of the password fields
+        var newPassword = document.getElementById('new_password').value;
+        var confirmPassword = document.getElementById('confirm_password').value;
+        
+        // Check if passwords are filled and match
+        if ((newPassword || confirmPassword) && newPassword !== confirmPassword) {
+            // Show alert for password mismatch
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Passwords do not match!',
+                confirmButtonText: 'OK'
+            });
+            return; // Prevent opening the confirmation modal
+        }
+
+        // Check if both fields are empty (if the user intends to leave the password unchanged)
+        if (newPassword === "" && confirmPassword === "") {
+            // Optionally, inform the user that password fields are required if changed
+            Swal.fire({
+                icon: 'warning',
+                title: 'Password fields are empty!',
+                text: 'Please fill in both New Password and Confirm Password if you intend to change your password.',
+                confirmButtonText: 'OK'
+            });
+            return; // Prevent opening the confirmation modal
+        }
+
+        // If validation passes, show the confirmation modal
+        $('#confirmationModal').modal('show');
+    });
+
+    // Handle the confirmation modal action when the user clicks "Confirm"
+    document.getElementById('confirmSaveBtn').addEventListener('click', function() {
+        // Close the confirmation modal
+        $('#confirmationModal').modal('hide');
+
+        // Grab the form data
+        var formData = new FormData(document.getElementById('updateSettingsForm'));
+
+        // Send the form data via AJAX to 'update_settings.php'
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'update_settings.php', true);
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var response = xhr.responseText.trim();
+
+                // Check the response for success or error
+                if (response === 'success') {
+                    // SweetAlert success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Your settings have been updated.',
+                        confirmButtonText: 'OK'
+                    }).then(function() {
+                        // Optionally, reload the page or close modal
+                        location.reload();
+                    });
+                } else {
+                    // SweetAlert error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: response, // Display the response from the backend (the specific error message)
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+        };
+
+        xhr.send(formData);
+    });
+
+
+
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        var passwordField = document.getElementById('current_password');
+        var icon = this.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text'; // Show password
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye'); // Change icon to eye
+        } else {
+            passwordField.type = 'password'; // Hide password
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash'); // Change icon to eye-slash
+        }
+    });
+
+
+    function resetToggleState() {
+    localStorage.removeItem('filters-toggled'); // Clear the stored toggle state
+}
+
+    
 </script>
 
 </body>

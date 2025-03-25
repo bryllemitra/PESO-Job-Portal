@@ -122,11 +122,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $company_name, $company_description, $company_website, $location
     );
 
-    if ($employer_stmt->execute()) {
-        echo "<script>alert('Profile updated successfully!'); window.location.href='profile.php';</script>";
-    } else {
-        echo "<script>alert('Error updating employer details: " . htmlspecialchars($employer_stmt->error) . "');</script>";
-    }
+if ($employer_stmt->execute()) {
+    echo "
+    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Profile Updated',
+            text: 'Your profile has been updated successfully!',
+            confirmButtonText: 'OK'
+        }).then(function() {
+            window.location.href = 'profile.php'; // Redirect after closing the alert
+        });
+    </script>
+    ";
+} else {
+    echo "
+    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error Updating Employer Details',
+            text: '" . htmlspecialchars($employer_stmt->error) . "',
+            confirmButtonText: 'OK'
+        });
+    </script>
+    ";
+}
+
 }
 
 $barangay_query = "SELECT name FROM barangay ORDER BY name ASC";

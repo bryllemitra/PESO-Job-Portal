@@ -19,12 +19,23 @@
     
 }
 
+/* Notification Item Styling */
+.notification-item {
+    transition: transform 0.3s ease;  /* Smooth transition when hovered */
+}
+
+/* Hover Effect */
+.notification-item:hover {
+    transform: translateX(10px); /* Translate notification by 10px horizontally */
+}
 
 
-.notification-item .btn:hover {
+.notification-item .card .btn:hover {
     border: none;
     background-color: transparent;
     color:black;
+    
+    
 }
 
 /* Hover effect for input fields and dropdowns */
