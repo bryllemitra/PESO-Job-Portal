@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $company_name = isset($_POST['company_name']) ? trim($_POST['company_name']) : ''; 
         $start_date = isset($_POST['start_date']) ? $_POST['start_date'] : '';
         $end_date = isset($_POST['end_date']) && !empty($_POST['end_date']) ? $_POST['end_date'] : null; 
-        $job_description = isset($_POST['job_description']) ? trim($_POST['job_description']) : ''; 
+        $job_description = isset($_POST['job_description']) && !empty($_POST['job_description']) ? trim($_POST['job_description']) : null; // Changed to null if empty
         $currently_working = isset($_POST['currently_working']) ? 1 : 0;
 
         // Additional fields for Employment Type, Job Location, and Work Type
@@ -28,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $job_location = isset($_POST['job_location']) ? $_POST['job_location'] : ''; 
         $country = isset($_POST['country']) && !empty($_POST['country']) ? $_POST['country'] : null; 
         $work_type = isset($_POST['work_type']) ? $_POST['work_type'] : 'onsite';
+
+        // Add address field
+        $address = isset($_POST['address']) ? trim($_POST['address']) : null;
 
         // Validate required fields
         if (empty($job_title) || empty($company_name) || empty($start_date) || empty($employment_type) || empty($job_location) || empty($work_type)) {
@@ -84,18 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($work_experience_id) {
             $query = "UPDATE work_experience 
                       SET job_title = ?, company_name = ?, job_description = ?, start_date = ?, end_date = ?, currently_working = ?, 
-                          employment_type = ?, job_location = ?, country = ?, work_type = ? 
+                          employment_type = ?, job_location = ?, country = ?, work_type = ?, address = ? 
                       WHERE id = ? AND user_id = ?";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param("sssssissssii", $job_title, $company_name, $job_description, $start_date, $end_date, $currently_working, 
-                              $employment_type, $job_location, $country, $work_type, $work_experience_id, $user_id);
+            $stmt->bind_param("sssssissssssi", $job_title, $company_name, $job_description, $start_date, $end_date, $currently_working, 
+                              $employment_type, $job_location, $country, $work_type, $address, $work_experience_id, $user_id);
         } else {
             $query = "INSERT INTO work_experience (user_id, job_title, company_name, job_description, start_date, end_date, currently_working, 
-                                                     employment_type, job_location, country, work_type)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                                                     employment_type, job_location, country, work_type, address)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param("isssssissss", $user_id, $job_title, $company_name, $job_description, $start_date, $end_date, $currently_working, 
-                              $employment_type, $job_location, $country, $work_type);
+            $stmt->bind_param("isssssisssss", $user_id, $job_title, $company_name, $job_description, $start_date, $end_date, $currently_working, 
+                              $employment_type, $job_location, $country, $work_type, $address);
         }
 
         // Execute the query

@@ -55,23 +55,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['role'])) {
     
     // Check if user is admin or employer
     if ($user_role === 'admin' || $user_role === 'employer') {
-        // Sanitize input fields to prevent XSS
-        $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
-        $description = htmlspecialchars(trim($_POST['description']), ENT_QUOTES, 'UTF-8');
-        $responsibilities = htmlspecialchars(trim($_POST['responsibilities']), ENT_QUOTES, 'UTF-8');
-        $requirements = htmlspecialchars(trim($_POST['requirements']), ENT_QUOTES, 'UTF-8');
-        $preferred_qualifications = htmlspecialchars(trim($_POST['preferred_qualifications']), ENT_QUOTES, 'UTF-8');
-        $location = htmlspecialchars(trim($_POST['location']), ENT_QUOTES, 'UTF-8');
+        // Trim and validate input fields
+        $title = trim($_POST['title']);
+        $description = trim($_POST['description']);
+        $responsibilities = trim($_POST['responsibilities']);
+        $requirements = trim($_POST['requirements']);
+        $preferred_qualifications = trim($_POST['preferred_qualifications']);
+        $location = trim($_POST['location']);
 
         // Retrieve specific location (ensure it doesn't get set as NULL if empty)
         $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) 
-                              ? htmlspecialchars(trim($_POST['specific_location']), ENT_QUOTES, 'UTF-8') 
+                              ? trim($_POST['specific_location']) 
                               : null;
 
         // Ensure array input for categories and positions
         $categories = isset($_POST['categories']) ? array_map('intval', $_POST['categories']) : [];
         $positions = isset($_POST['positions']) ? array_map('intval', $_POST['positions']) : [];
-
        // Handle Thumbnail and Photo Uploads
 $thumbnail_path = null;
 $photo_path = null;

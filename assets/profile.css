@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'Lexend';
+    src: url('/JOB/assets/fonts/lexend/Lexend-Light.ttf') format('truetype');
+    font-weight: 300; /* Light weight */
+    font-style: normal;
+}
+
+
 * {
     margin: 0;
     padding: 0;
@@ -7,6 +15,7 @@
 
 body{
     background-color: #f1f3f5;
+    
 }
 
 /* Hide the button when the Applications Tab is active */
@@ -19,6 +28,7 @@ body[data-tab="applications"] #edit-profile-button {
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease-in-out;
+    
 }
 .profile-card:hover {
     transform: translateY(-10px);
@@ -41,6 +51,7 @@ body[data-tab="applications"] #edit-profile-button {
     font-weight: bold;
     color:#0d6efd;
     margin-bottom: 1rem;
+    
 }
 
 .btn-custom {
@@ -89,7 +100,19 @@ body[data-tab="applications"] #edit-profile-button {
 
 /* Ensure Profile Tab stops at the edit button */
 .tab-pane#profile {
-    max-height: 75vh; /* Limit the height to 90% of the viewport */
+    max-height: 80vh; /* Limit the height to 90% of the viewport */
+    overflow-y: auto; /* Allow scrolling if content exceeds this height */
+}
+
+/* Ensure Profile Tab stops at the edit button */
+.tab-pane#applications {
+    max-height: 80vh; /* Limit the height to 90% of the viewport */
+    overflow-y: auto; /* Allow scrolling if content exceeds this height */
+}
+
+/* Ensure Profile Tab stops at the edit button */
+.tab-pane#documents {
+    max-height: 80vh; /* Limit the height to 90% of the viewport */
     overflow-y: auto; /* Allow scrolling if content exceeds this height */
 }
 
@@ -120,6 +143,7 @@ body[data-tab="applications"] .tab-pane#profile {
     overflow-y: auto; /* Allow vertical scrolling if content exceeds this height */
     padding-right: 15px; /* Ensure content doesn't touch the scrollbar */
     max-width: 113vh;
+    font-family: 'Lexend', sans-serif; 
 }
 
 /* Job Card Styling */
@@ -180,6 +204,7 @@ body[data-tab="applications"] .tab-pane#profile {
     text-transform: uppercase;
     font-weight: 500;
     letter-spacing: 0.5px;
+    font-family: 'Lexend', sans-serif; 
 }
 
 /* Download Resume Button */
@@ -288,6 +313,7 @@ body[data-tab="applications"] .tab-pane#profile {
 .custom-tabs .nav-link {
     color: #333; /* Default text color */
     border: none;
+    font-family: 'Lexend', sans-serif; 
 }
 
 /* Hover Effect for custom-tabs */
@@ -416,6 +442,7 @@ body[data-tab="applications"] .tab-pane#profile {
 /* Simple hover animation */
 .skill-item {
     transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Lexend', sans-serif; 
 }
 
 .skill-item:hover {
@@ -430,6 +457,7 @@ body[data-tab="applications"] .tab-pane#profile {
 /* Simple hover animation for languages */
 .language-item {
 transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+font-family: 'Lexend', sans-serif; 
 }
 
 .language-item:hover {
@@ -445,11 +473,14 @@ cursor: pointer;
 .work-experience-item,
 .achievement-item,
 .reference-item,
-.certificate-item
+.certificate-item,
+.job-preferences-item,
+#personal-info-section
 {
 transition: transform 0.3s ease, box-shadow 0.3s ease;
 border: 1px solid #ddd; /* Add a border for better visibility */
 background-color: #fff; /* Default background color */
+font-family: 'Lexend', sans-serif;  
 }
 
 .education-item:hover,
@@ -457,6 +488,7 @@ background-color: #fff; /* Default background color */
 .achievement-item:hover,
 .reference-item:hover,
 .job-preferences-item:hover,
+#personal-info-section:hover,
 .certificate-item:hover {
 transform: translateY(-5px); /* Slightly lift the item */
 box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a stronger shadow */

@@ -175,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
     $stmt->bind_param("si", $caption, $user_id);
 
     if ($stmt->execute()) {
-        echo "<div class='alert alert-success'>Caption updated successfully.</div>";
         // Using JavaScript to reload the page instead of header()
         echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
         exit(); // Make sure to stop further execution

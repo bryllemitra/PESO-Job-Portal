@@ -103,16 +103,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['role'])) {
 
     // Ensure that admin and employer can edit
     if ($user_role === 'admin' || $user_role === 'employer') {
-        // Sanitize inputs to prevent XSS
-        $title = htmlspecialchars(trim($_POST['title']), ENT_QUOTES, 'UTF-8');
-        $description = htmlspecialchars(trim($_POST['description']), ENT_QUOTES, 'UTF-8');
-        $responsibilities = htmlspecialchars(trim($_POST['responsibilities']), ENT_QUOTES, 'UTF-8');
-        $requirements = htmlspecialchars(trim($_POST['requirements']), ENT_QUOTES, 'UTF-8');
-        $preferred_qualifications = htmlspecialchars(trim($_POST['preferred_qualifications']), ENT_QUOTES, 'UTF-8');
+        // Trim and validate inputs (no premature encoding)
+        $title = trim($_POST['title']);
+        $description = trim($_POST['description']);
+        $responsibilities = trim($_POST['responsibilities']);
+        $requirements = trim($_POST['requirements']);
+        $preferred_qualifications = trim($_POST['preferred_qualifications']);
         $category_ids = isset($_POST['categories']) ? array_map('intval', $_POST['categories']) : []; // Ensure array input
         $position_ids = isset($_POST['positions']) ? array_map('intval', $_POST['positions']) : []; // Ensure array input
-        $location = htmlspecialchars(trim($_POST['location']), ENT_QUOTES, 'UTF-8');
-
+        $location = trim($_POST['location']);
+        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location']))
+        ? trim($_POST['specific_location'])
+        : null;
         // Convert selected categories and positions into comma-separated values (for internal processing)
         $category_list = implode(',', $category_ids);
         $position_list = implode(',', $position_ids);
@@ -216,10 +218,7 @@ if (!empty($_FILES['photo']['name'])) {
         // Prepare the statement
         $update_stmt = $conn->prepare($query);
 
-        // Retrieve `specific_location` from the form input
-        $specific_location = isset($_POST['specific_location']) && !empty(trim($_POST['specific_location'])) 
-                              ? htmlspecialchars(trim($_POST['specific_location']), ENT_QUOTES, 'UTF-8') 
-                              : null;
+
 
         // Bind parameters
         $update_stmt->bind_param(

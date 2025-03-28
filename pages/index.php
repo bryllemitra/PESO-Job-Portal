@@ -358,11 +358,27 @@ h3{
 
     </div>
 
-        <!-- Ads Section -->
+<!-- Ads Section -->
 <div class="container ads-section">
     <h2></h2>
     <?php if ($user_role === 'admin'): ?>
-        <a href="../admin/add_ad.php" class="post-ad"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-dashed-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8.56 3.69a9 9 0 0 0 -2.92 1.95" /><path d="M3.69 8.56a9 9 0 0 0 -.69 3.44" /><path d="M3.69 15.44a9 9 0 0 0 1.95 2.92" /><path d="M8.56 20.31a9 9 0 0 0 3.44 .69" /><path d="M15.44 20.31a9 9 0 0 0 2.92 -1.95" /><path d="M20.31 15.44a9 9 0 0 0 .69 -3.44" /><path d="M20.31 8.56a9 9 0 0 0 -1.95 -2.92" /><path d="M15.44 3.69a9 9 0 0 0 -3.44 -.69" /><path d="M9 12h6" /><path d="M12 9v6" /></svg></a>
+        <!-- Open Modal Button -->
+        <button type="button" class="post-ad" data-bs-toggle="modal" data-bs-target="#addAdModal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-dashed-plus">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M8.56 3.69a9 9 0 0 0 -2.92 1.95" />
+                <path d="M3.69 8.56a9 9 0 0 0 -.69 3.44" />
+                <path d="M3.69 15.44a9 9 0 0 0 1.95 2.92" />
+                <path d="M8.56 20.31a9 9 0 0 0 3.44 .69" />
+                <path d="M15.44 20.31a9 9 0 0 0 2.92 -1.95" />
+                <path d="M20.31 15.44a9 9 0 0 0 .69 -3.44" />
+                <path d="M20.31 8.56a9 9 0 0 0 -1.95 -2.92" />
+                <path d="M15.44 3.69a9 9 0 0 0 -3.44 -.69" />
+                <path d="M9 12h6" />
+                <path d="M12 9v6" />
+            </svg>
+            
+        </button>
     <?php endif; ?>
     
     <?php if (empty($ads)): ?>
@@ -574,11 +590,102 @@ h3{
   </div>
 </div>
 
+<!-- Modal for Adding Advertisement -->
+<div class="modal fade" id="addAdModal" tabindex="-1" aria-labelledby="addAdModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAdModalLabel">Add New Advertisement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAdForm" method="POST" enctype="multipart/form-data">
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" id="title" name="title" class="form-control" placeholder="Enter ad title" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description" rows="1" class="form-control" placeholder="Enter ad description" required></textarea>
+                    </div>
+
+                    <!-- Upload Image -->
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label">Upload Image</label>
+                        <input type="file" id="image_file" name="image_file" accept="image/jpeg, image/png, image/gif" class="form-control" required>
+                    </div>
+
+                    <!-- Clickable URL -->
+                    <div class="mb-3">
+                        <label for="link_url" class="form-label">Clickable URL</label>
+                        <input type="url" id="link_url" name="link_url" class="form-control" placeholder="Enter the URL to redirect to" required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-between">
+                        <button style="background-color:#007bff; box-shadow: none;" type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-upload me-2"></i>Post Advertisement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Success Modal (Hidden Initially) -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Success!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Advertisement added successfully!
+            </div>
+            <div class="modal-footer">
+                <button style="background-color:#007bff; box-shadow: none;" type="button" class="btn btn-primary" onclick="window.location.href='../pages/index.php'">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
 
     <script>
+
+//ADVERTISEMENT MODALS 
+
+ document.getElementById('addAdForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent page reload
+
+        const formData = new FormData(this);
+
+        fetch('../admin/add_ad.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data.includes('Advertisement added successfully')) {
+                new bootstrap.Modal(document.getElementById('successModal')).show(); // Show success modal
+                new bootstrap.Modal(document.getElementById('addAdModal')).hide(); // Hide the add ad modal
+            } else {
+                alert("Error adding advertisement: " + data); // Show error message
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
 // Function to escape HTML entities
 function escapeHtml(str) {
     return str.replace(/[&<>"'/]/g, function (char) {

@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $completion_year = isset($_POST['completion_year']) ? $_POST['completion_year'] : 0; // Default to 0 if not set
         $expected_completion_date = isset($_POST['expected_completion_date']) ? $_POST['expected_completion_date'] : '0000-00-00'; // Default to '0000-00-00' if not set
         $course_highlights = isset($_POST['course_highlights']) ? $_POST['course_highlights'] : ''; // Default to empty string if not set
+        $address = isset($_POST['address']) ? $_POST['address'] : ''; // Get address data
 
         // Validate required fields
         if (empty($education_level) || empty($institution)) {
@@ -32,12 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Check if it's an edit (education_id is provided)
         if ($education_id) {
-            // Update existing education record
+            // Update existing education record, including the address
             $query = "UPDATE education 
-                      SET education_level = ?, course = ?, institution = ?, status = ?, completion_year = ?, expected_completion_date = ?, course_highlights = ? 
+                      SET education_level = ?, course = ?, institution = ?, status = ?, completion_year = ?, expected_completion_date = ?, course_highlights = ?, address = ? 
                       WHERE id = ? AND user_id = ?";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param("sssssssii", $education_level, $course, $institution, $status, $completion_year, $expected_completion_date, $course_highlights, $education_id, $user_id);
+            // Adjust bind_param string for 10 variables
+            $stmt->bind_param("ssssssssii", $education_level, $course, $institution, $status, $completion_year, $expected_completion_date, $course_highlights, $address, $education_id, $user_id);
 
             // Execute the statement
             if ($stmt->execute()) {
@@ -46,11 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['error_message'] = "Failed to update education details!";
             }
         } else {
-            // Insert a new education record
-            $query = "INSERT INTO education (user_id, education_level, course, institution, status, completion_year, expected_completion_date, course_highlights)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            // Insert a new education record, including the address
+            $query = "INSERT INTO education (user_id, education_level, course, institution, status, completion_year, expected_completion_date, course_highlights, address)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param("isssssss", $user_id, $education_level, $course, $institution, $status, $completion_year, $expected_completion_date, $course_highlights);
+            // Adjust bind_param string for 9 variables
+            $stmt->bind_param("issssssss", $user_id, $education_level, $course, $institution, $status, $completion_year, $expected_completion_date, $course_highlights, $address);
 
             // Execute the statement
             if ($stmt->execute()) {

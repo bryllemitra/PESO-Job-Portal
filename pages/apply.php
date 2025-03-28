@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] === 'admin') {
 $user_id = $_SESSION['user_id'];
 
 // Check if the user has completed their profile information
-$profile_query = "SELECT first_name, last_name, gender, birth_date, age, phone_number, civil_status, zip_code, street_address, barangay, city 
+$profile_query = "SELECT first_name, last_name, gender, birth_date, age, phone_number, civil_status, zip_code, street_address, barangay, city, weight, height, religion, nationality
                   FROM users 
                   WHERE id = ?";
 $stmt = $conn->prepare($profile_query);
@@ -20,8 +20,8 @@ $stmt->execute();
 $profile_result = $stmt->get_result();
 $profile_data = $profile_result->fetch_assoc();
 
-// Check if any required profile fields are empty
-$required_fields = ['first_name', 'last_name', 'gender', 'birth_date', 'age', 'phone_number', 'civil_status', 'zip_code', 'street_address', 'barangay', 'city'];
+// Check if any required profile fields are empty (including new fields)
+$required_fields = ['first_name', 'last_name', 'gender', 'birth_date', 'age', 'phone_number', 'civil_status', 'zip_code', 'street_address', 'barangay', 'city', 'weight', 'height', 'religion', 'nationality'];
 $missing_fields = [];
 
 foreach ($required_fields as $field) {
@@ -45,6 +45,20 @@ foreach ($tables_to_check as $table) {
     }
 }
 
+// Check if the user has job preferences filled
+$job_preferences_query = "SELECT COUNT(*) as count FROM job_preferences WHERE user_id = ?";
+$stmt = $conn->prepare($job_preferences_query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$job_preferences_result = $stmt->get_result();
+$job_preferences_row = $job_preferences_result->fetch_assoc();
+
+if ($job_preferences_row['count'] == 0) {
+    $missing_fields[] = 'job_preferences';
+}
+
+
+
 // If any fields are missing, show SweetAlert and redirect to profile.php
 if (!empty($missing_fields)) {
     $missing_fields_str = implode(", ", $missing_fields);
@@ -59,6 +73,7 @@ if (!empty($missing_fields)) {
     ]);
     exit();
 }
+
 
 // Original logic for job application
 $job_id = $_POST['job_id'] ?? null;

@@ -1,40 +1,57 @@
- // ADD EDUCATION MODAL
- document.getElementById('education_level').addEventListener('change', function() {
-    var level = this.value;
 
-    // Show/Hide course-related fields based on education level
-    if (level === 'college' || level === 'graduate' || level === 'vocational') {
-        document.getElementById('course_group').style.display = 'block';
-        document.getElementById('course_highlights_group').style.display = 'block';
-    } else {
-        document.getElementById('course_group').style.display = 'none';
-        document.getElementById('course_highlights_group').style.display = 'none';
-    }
+
+
+
+// EDUCATION 
+document.addEventListener('DOMContentLoaded', function() {
+    // ADD EDUCATION MODAL - Education Level Change
+    document.getElementById('education_level').addEventListener('change', function() {
+        var level = this.value;
+
+        // Show/Hide course-related fields based on education level
+        if (level === 'college' || level === 'graduate' || level === 'vocational') {
+            document.getElementById('course_group').style.display = 'block';
+            document.getElementById('course_highlights_group').style.display = 'block';
+        } else {
+            document.getElementById('course_group').style.display = 'none';
+            document.getElementById('course_highlights_group').style.display = 'none';
+        }
+    });
+
+    // ADD EDUCATION MODAL - Status Change
+    document.getElementById('status').addEventListener('change', function() {
+        updateCompletionFields(this.value);
+    });
+
+    // EDIT EDUCATION MODAL - Status Change
+    document.getElementById('edit_status').addEventListener('change', function() {
+        updateCompletionFields(this.value, 'edit_');
+    });
 });
 
-// Function to update fields based on status selection
-document.getElementById('status').addEventListener('change', function() {
-    var status = this.value;
-
-    // Show/Hide fields based on status
+// Shared function to update completion fields
+function updateCompletionFields(status, prefix = '') {
+    const completionGroup = document.getElementById(`${prefix}completion_year_group`);
+    const expectedGroup = document.getElementById(`${prefix}expected_completion_group`);
+    
     if (status === 'Completed') {
-        document.getElementById('completion_year_group').style.display = 'block';
-        document.getElementById('expected_completion_group').style.display = 'none';
+        completionGroup.style.display = 'block';
+        expectedGroup.style.display = 'none';
     } else {
-        document.getElementById('completion_year_group').style.display = 'none';
-        document.getElementById('expected_completion_group').style.display = 'block';
+        completionGroup.style.display = 'none';
+        expectedGroup.style.display = 'block';
     }
-});
+}
 
-// EDIT EDUCATION MODAL
+// EDIT EDUCATION MODAL - Open Modal Function
 function openEditModal(education) {
-    console.log("Education data:", education); // Debugging: Check if data is passed correctly
+    console.log("Education data:", education);
 
     // Pre-fill the form with education data
     document.getElementById('edit_education_id').value = education.id;
     document.getElementById('edit_institution').value = education.institution;
     document.getElementById('edit_status').value = education.status;
-    document.getElementById('edit_education_level').value = education.education_level; // Set education level
+    document.getElementById('edit_education_level').value = education.education_level;
 
     // Show/hide fields based on education level
     if (education.education_level === 'college' || education.education_level === 'graduate' || education.education_level === 'vocational') {
@@ -45,14 +62,8 @@ function openEditModal(education) {
         document.getElementById('edit_course_highlights_group').style.display = 'none';
     }
 
-    // Show/hide fields based on status
-    if (education.status === 'Completed') {
-        document.getElementById('edit_completion_year_group').style.display = 'block';
-        document.getElementById('edit_expected_completion_group').style.display = 'none';
-    } else {
-        document.getElementById('edit_completion_year_group').style.display = 'none';
-        document.getElementById('edit_expected_completion_group').style.display = 'block';
-    }
+    // Initialize completion fields based on status
+    updateCompletionFields(education.status, 'edit_');
 
     // Pre-fill additional fields
     if (education.education_level === 'college' || education.education_level === 'graduate' || education.education_level === 'vocational') {
@@ -77,6 +88,7 @@ function openDeleteEduModal(educationId) {
     // Open the modal
     $('#deleteConfirmationModal').modal('show');
 }
+
 
 
 
@@ -122,13 +134,30 @@ function addSkill() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload(); // Refresh the page to show the new skill
+                // Use SweetAlert for success
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Skill Added!',
+                    text: 'Your skill has been successfully added.',
+                }).then(() => {
+                    location.reload(); // Refresh the page after SweetAlert is closed
+                });
             } else {
-                alert('Failed to add skill.');
+                // Use SweetAlert for error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to Add Skill',
+                    text: 'There was an error adding your skill.',
+                });
             }
         });
     } else {
-        alert('Please select a skill.');
+        // Use SweetAlert to notify user about no skill selected
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Skill Selected',
+            text: 'Please select a skill to add.',
+        });
     }
 }
 
@@ -142,9 +171,21 @@ function deleteSkill(skillId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload(); // Refresh the page to reflect the deletion
+            // Use SweetAlert for success
+            Swal.fire({
+                icon: 'success',
+                title: 'Skill Deleted',
+                text: 'Your skill has been successfully deleted.',
+            }).then(() => {
+                location.reload(); // Refresh the page to reflect the deletion
+            });
         } else {
-            alert('Failed to delete skill.');
+            // Use SweetAlert for error
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to Delete Skill',
+                text: 'There was an error deleting your skill.',
+            });
         }
     });
 }
@@ -168,6 +209,7 @@ document.getElementById('confirmDeleteSkillBtn').addEventListener('click', funct
     }
 });
 
+
 let selectedLanguageId = null; // Variable to hold the selected language ID
 
 // Function to handle adding a language
@@ -184,13 +226,30 @@ function addLanguage() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload(); // Refresh the page to show the new language
+                // Success - Use SweetAlert to notify user
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Language Added!',
+                    text: 'Your language has been successfully added.',
+                }).then(() => {
+                    location.reload(); // Refresh the page after SweetAlert is closed
+                });
             } else {
-                alert('Failed to add language.');
+                // Error - Use SweetAlert for failure
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to Add Language',
+                    text: 'There was an error adding your language.',
+                });
             }
         });
     } else {
-        alert('Please select a language.');
+        // Warning - Use SweetAlert for no language selected
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Language Selected',
+            text: 'Please select a language to add.',
+        });
     }
 }
 
@@ -198,7 +257,6 @@ function addLanguage() {
 document.getElementById('language').addEventListener('change', function () {
     selectedLanguageId = this.value; // Store the selected language ID
 });
-
 
 // Store the language ID to be deleted
 let languageToDelete = null;
@@ -229,52 +287,198 @@ function deleteLanguage(languageId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload(); // Refresh the page to reflect the deletion
+            // Success - Use SweetAlert to notify user
+            Swal.fire({
+                icon: 'success',
+                title: 'Language Deleted',
+                text: 'Your language has been successfully deleted.',
+            }).then(() => {
+                location.reload(); // Refresh the page after SweetAlert is closed
+            });
         } else {
-            alert('Failed to delete language.');
+            // Error - Use SweetAlert for failure
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to Delete Language',
+                text: 'There was an error deleting your language.',
+            });
         }
     });
 }
 
+
+// WORK EXPERIENCE COUNTRY SECTION
 document.addEventListener("DOMContentLoaded", function() {
+    // Add Modal Elements
     const jobLocationField = document.getElementById("job_location");
     const countryDiv = document.getElementById("country-div");
     const countryInput = document.getElementById("country");
+    const addForm = document.querySelector('#addWorkExperienceModal form'); // Get the add modal form element
 
-    // Function to toggle the country input visibility based on location selection
+    // Edit Modal Elements
+    const editJobLocationField = document.getElementById("edit_job_location");
+    const editCountryDiv = document.getElementById("edit_country_div");
+    const editCountryInput = document.getElementById("edit_country");
+    const editForm = document.querySelector('#editWorkExperienceModal form'); // Get the edit modal form element
+
+    // Function to toggle country field visibility for the Add Modal
     function toggleCountryField() {
         if (jobLocationField.value === "overseas") {
-            countryDiv.style.display = "block"; // Show the country input
+            countryDiv.style.display = "block";
+            countryInput.setAttribute("required", "true");
         } else {
-            countryDiv.style.display = "none"; // Hide the country input
+            countryDiv.style.display = "none";
+            countryInput.removeAttribute("required");
         }
     }
 
-    // Run the function when the page loads to set the correct initial state
-    toggleCountryField();
-
-    // Add an event listener to the job location field to trigger the function when it changes
-    jobLocationField.addEventListener("change", toggleCountryField);
-
-    // --- For the Edit Modal ---
-    const editJobLocationField = document.getElementById("edit_job_location");
-    const editCountryDiv = document.getElementById("edit_country_div");
-
-    // Function to toggle the country input visibility in the edit modal
+    // Function to toggle country field visibility for the Edit Modal
     function toggleEditCountryField() {
         if (editJobLocationField.value === "overseas") {
             editCountryDiv.style.display = "block";
+            editCountryInput.setAttribute("required", "true");
         } else {
             editCountryDiv.style.display = "none";
+            editCountryInput.removeAttribute("required");
         }
     }
 
-    // Run the function when the page loads to set the correct initial state for edit modal
+    // Run the toggle functions when the page loads to set the correct initial state
+    toggleCountryField();
     toggleEditCountryField();
 
-    // Add an event listener to the edit job location field
+    // Add event listeners for location change to toggle country field visibility
+    jobLocationField.addEventListener("change", toggleCountryField);
     editJobLocationField.addEventListener("change", toggleEditCountryField);
+
+    // Form validation before submission for the Add Modal
+    addForm.addEventListener("submit", function(event) {
+        if (jobLocationField.value === "overseas" && !countryInput.value.trim()) {
+            event.preventDefault(); // Prevent form submission
+
+            // Highlight country input field
+            countryInput.classList.add("is-invalid");
+
+            // Show SweetAlert error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please input the country when job location is overseas!',
+                confirmButtonText: 'OK'
+            });
+
+            return false; // Stop further form submission
+        }
+
+        // If country field is valid, remove the highlight
+        countryInput.classList.remove("is-invalid");
+    });
+
+    // Form validation before submission for the Edit Modal
+    editForm.addEventListener("submit", function(event) {
+        if (editJobLocationField.value === "overseas" && !editCountryInput.value.trim()) {
+            event.preventDefault(); // Prevent form submission
+
+            // Highlight country input field
+            editCountryInput.classList.add("is-invalid");
+
+            // Show SweetAlert error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please input the country when job location is overseas!',
+                confirmButtonText: 'OK'
+            });
+
+            return false; // Stop further form submission
+        }
+
+        // If country field is valid, remove the highlight
+        editCountryInput.classList.remove("is-invalid");
+    });
 });
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    const currentlyWorkingCheckbox = document.getElementById("currently_working");
+    const endDateField = document.getElementById("end_date"); // End date input field
+
+    // Function to toggle End Date field required status
+    function toggleEndDateRequired() {
+        if (currentlyWorkingCheckbox.checked) {
+            endDateField.removeAttribute("required"); // Make End Date optional if checked
+        } else {
+            endDateField.setAttribute("required", "true"); // Make End Date required if unchecked
+        }
+    }
+
+    // Initialize the End Date field based on the checkbox state
+    toggleEndDateRequired();
+
+    // Add event listener to the checkbox to toggle the End Date required status
+    currentlyWorkingCheckbox.addEventListener("change", toggleEndDateRequired);
+
+    // Form validation before submission
+    const addForm = document.querySelector('#addWorkExperienceModal form'); // Get the add modal form element
+    addForm.addEventListener("submit", function(event) {
+        if (!currentlyWorkingCheckbox.checked && !endDateField.value.trim()) {
+            event.preventDefault(); // Prevent form submission
+
+            // Highlight End Date field
+            endDateField.classList.add("is-invalid");
+
+            // Show SweetAlert error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'End date is required if you are not currently working here.',
+                confirmButtonText: 'OK'
+            });
+
+            return false; // Stop further form submission
+        }
+
+        // If End Date field is valid, remove the highlight
+        endDateField.classList.remove("is-invalid");
+    });
+
+    // For the Edit Modal (if necessary)
+    const editCurrentlyWorkingCheckbox = document.getElementById("edit_currently_working");
+    const editEndDateField = document.getElementById("edit_end_date");
+
+    function toggleEditEndDateRequired() {
+        if (editCurrentlyWorkingCheckbox.checked) {
+            editEndDateField.removeAttribute("required");
+        } else {
+            editEndDateField.setAttribute("required", "true");
+        }
+    }
+
+    toggleEditEndDateRequired();
+    editCurrentlyWorkingCheckbox.addEventListener("change", toggleEditEndDateRequired);
+
+    const editForm = document.querySelector('#editWorkExperienceModal form');
+    editForm.addEventListener("submit", function(event) {
+        if (!editCurrentlyWorkingCheckbox.checked && !editEndDateField.value.trim()) {
+            event.preventDefault();
+
+            editEndDateField.classList.add("is-invalid");
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'End date is required if you are not currently working here.',
+                confirmButtonText: 'OK'
+            });
+
+            return false;
+        }
+
+        editEndDateField.classList.remove("is-invalid");
+    });
+});
+
+
 
 
 //DELETE ACHIEVEMENT MODAL
@@ -423,6 +627,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+
 
 // TOGGLE TO HIDE WORK EXPERIENCE SECTION
 

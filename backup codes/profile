@@ -1,8 +1,7 @@
 <?php
 include '../includes/header.php'; // This already includes session_start()
 include '../includes/config.php'; // Include DB connection
-
-
+// include '../includes/resume_matching.php';   Include the resume matching functions
 
 // Restrict access: Show modal and redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
@@ -223,7 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
     $stmt->bind_param("si", $caption, $user_id);
 
     if ($stmt->execute()) {
-        echo "<div class='alert alert-success'>Caption updated successfully.</div>";
         // Using JavaScript to reload the page instead of header()
         echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
         exit(); // Make sure to stop further execution
@@ -231,6 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
         echo "<div class='alert alert-danger'>Failed to update caption.</div>";
     }
 }
+
 
 
 // Handle LinkedIn and Portfolio updates only (without work experience and skills)
@@ -261,7 +260,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 // Handle resume upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
     if ($_FILES["resume"]["size"] == 0) {
-        echo "<div class='alert alert-danger'>Please select a file to upload.</div>";
+        echo "<script>
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  text: 'Please select a file to upload.',
+                });
+              </script>";
     } else {
         $target_dir = "../uploads/resumes/"; // Ensure this directory exists and is writable
         $fileType = strtolower(pathinfo($_FILES["resume"]["name"], PATHINFO_EXTENSION));
@@ -271,9 +276,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
 
         // Check if the file type is allowed
         if (!in_array($fileType, $allowed_types)) {
-            echo "<div class='alert alert-danger'>Only PDF files are allowed.</div>";
+            echo "<script>
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'Only PDF files are allowed.',
+                    });
+                  </script>";
         } elseif ($_FILES["resume"]["size"] > 5 * 1024 * 1024) { // Limit file size to 5MB
-            echo "<div class='alert alert-danger'>File size must not exceed 5MB.</div>";
+            echo "<script>
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'File size must not exceed 5MB.',
+                    });
+                  </script>";
         } else {
             // Fetch the username from the database
             $query = "SELECT username FROM users WHERE id = ?";
@@ -302,17 +319,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['resume'])) {
                     $stmt->bind_param("si", $target_file, $user_id);
 
                     if ($stmt->execute()) {
-                        echo "<div class='alert alert-success'>Resume uploaded successfully.</div>";
-                        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+                        echo "<script>
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'Success!',
+                                  text: 'Resume uploaded successfully.',
+                                }).then(function() {
+                                    window.location.href = 'profile.php?id=$user_id';
+                                });
+                              </script>";
                         exit();
                     } else {
-                        echo "<div class='alert alert-danger'>Error updating resume file in the database.</div>";
+                        echo "<script>
+                                Swal.fire({
+                                  icon: 'error',
+                                  title: 'Oops...',
+                                  text: 'Error updating resume file in the database.',
+                                });
+                              </script>";
                     }
                 } else {
-                    echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
+                    echo "<script>
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Oops...',
+                              text: 'Sorry, there was an error uploading your file.',
+                            });
+                          </script>";
                 }
             } else {
-                echo "<div class='alert alert-danger'>User not found.</div>";
+                echo "<script>
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Oops...',
+                          text: 'User not found.',
+                        });
+                      </script>";
             }
         }
     }
@@ -337,20 +379,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_resume'])) {
         $stmt->bind_param("i", $user_id);
 
         if ($stmt->execute()) {
-            // Refresh the page immediately after the resume is deleted
-            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+            // Success message after removing the resume
+            echo "<script>
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Resume Removed!',
+                      text: 'Your resume has been successfully removed.',
+                    }).then(function() {
+                        window.location.href = 'profile.php?id=$user_id';
+                    });
+                  </script>";
             exit();
         } else {
-            // Error in database update, refresh the page anyway
-            echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+            // Error in database update, display an error message
+            echo "<script>
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'There was an error updating the database.',
+                    }).then(function() {
+                        window.location.href = 'profile.php?id=$user_id';
+                    });
+                  </script>";
             exit();
         }
     } else {
-        // If no resume file exists, just refresh the page without an alert
-        echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
+        // If no resume file exists, show a SweetAlert2 message
+        echo "<script>
+                Swal.fire({
+                  icon: 'info',
+                  title: 'No Resume Found',
+                  text: 'You do not have a resume to remove.',
+                }).then(function() {
+                    window.location.href = 'profile.php?id=$user_id';
+                });
+              </script>";
         exit();
     }
 }
+
 
 
 
@@ -465,6 +532,117 @@ while ($row = $result_languages->fetch_assoc()) {
 // Close the statement
 $stmt->close();
 
+// Fetch user achievements
+$achievement_query = "
+    SELECT * FROM achievements
+    WHERE user_id = ? 
+    ORDER BY award_date DESC
+";
+$stmt = $conn->prepare($achievement_query);
+$stmt->bind_param("i", $user_id); // Bind the user_id from the variable instead of session
+$stmt->execute();
+$achievement_result = $stmt->get_result();
+
+// Fetch achievements into an array
+$achievements = [];
+if ($achievement_result->num_rows > 0) {
+    while ($row = $achievement_result->fetch_assoc()) {
+        $achievements[] = $row;
+    }
+} else {
+    // No achievements found, you can log it or set an empty array
+    error_log("No achievements found for user ID: " . $user_id);
+    $achievements = [];
+}
+
+// Close the statement
+$stmt->close();
+
+
+// Fetch user certificates
+$certificate_query = "
+    SELECT * FROM certificates
+    WHERE user_id = ? 
+    ORDER BY issue_date DESC
+";
+$stmt = $conn->prepare($certificate_query);
+$stmt->bind_param("i", $user_id); // Bind the user_id from the variable instead of session
+$stmt->execute();
+$certificate_result = $stmt->get_result();
+
+// Fetch certificates into an array
+$certificates = [];
+if ($certificate_result->num_rows > 0) {
+    while ($row = $certificate_result->fetch_assoc()) {
+        $certificates[] = $row;
+    }
+} else {
+    // No certificates found, log it or set an empty array
+    error_log("No certificates found for user ID: " . $user_id);
+    $certificates = [];
+}
+
+// Close the statement
+$stmt->close();
+
+
+// Fetch user references
+$reference_query = "
+    SELECT * FROM `references`
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+";
+$stmt = $conn->prepare($reference_query);
+$stmt->bind_param("i", $user_id); // Bind the user_id from the session
+$stmt->execute();
+$reference_result = $stmt->get_result();
+
+// Fetch references into an array
+$references = [];
+if ($reference_result->num_rows > 0) {
+    while ($row = $reference_result->fetch_assoc()) {
+        $references[] = $row;
+    }
+} else {
+    $references = [];
+}
+
+// Close the statement
+$stmt->close();
+
+// Fetch job preferences from the database, including preferred positions
+$job_preferences_query = "
+    SELECT jp.*, GROUP_CONCAT(p.position_name) AS preferred_positions
+    FROM job_preferences jp
+    LEFT JOIN job_preferences_positions jp_pos ON jp.id = jp_pos.job_preference_id
+    LEFT JOIN job_positions p ON jp_pos.position_id = p.id
+    WHERE jp.user_id = ?
+    GROUP BY jp.id
+    LIMIT 1
+";
+$stmt = $conn->prepare($job_preferences_query);
+$stmt->bind_param("i", $user_id); // Bind the user_id from the session
+$stmt->execute();
+$job_preferences_result = $stmt->get_result();
+
+// Fetch the job preferences data
+$job_preferences = [];
+if ($job_preferences_result->num_rows > 0) {
+    $job_preferences = $job_preferences_result->fetch_assoc();
+} else {
+    // If no job preferences are found, set defaults or an empty array
+    $job_preferences = [];
+}
+
+// Close the statement
+$stmt->close();
+
+// Handle preferred_positions
+$preferred_positions_display = !empty($job_preferences['preferred_positions']) ? $job_preferences['preferred_positions'] : 'Not specified';
+
+
+
+
 
 ?>
 
@@ -490,91 +668,6 @@ $stmt->close();
 <link rel="stylesheet" href="/JOB/assets/profile.css">
 
 <style>
-/* Simple hover animation */
-.skill-item {
-        transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .skill-item:hover {
-        background: linear-gradient(145deg, #ffffff, #e9f0f7);
-        transform: scale(1.05);
-        background-color: #e9ecef;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-    }
-
-
-    /* Simple hover animation for languages */
-.language-item {
-    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.language-item:hover {
-    background: linear-gradient(145deg, #ffffff, #e9f0f7);
-    transform: scale(1.05);
-    background-color: #e9ecef;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-}
-
-/* Hover Animation for Education and Work Experience Cards */
-.education-item .card,
-.work-experience-item .card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid #ddd; /* Add a border for better visibility */
-}
-
-.education-item .card:hover,
-.work-experience-item .card:hover {
-    transform: translateY(-5px); /* Slightly lift the card */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a stronger shadow */
-}
-
-/* Header Hover Effect */
-.education-item .card-header,
-.work-experience-item .card-header {
-    transition: background-color 0.3s ease;
-}
-
-.education-item .card:hover .card-header,
-.work-experience-item .card:hover .card-header {
-    background-color: #e0e0e0; /* Slightly darker background on hover */
-}
-
-/* Button Hover Effect */
-.education-item .btn-outline-primary:hover,
-.work-experience-item .btn-outline-primary:hover {
-    background-color: #007bff; /* Change background color on hover */
-    color: #fff; /* Change text color to white */
-}
-
-.education-item .btn-outline-danger:hover,
-.work-experience-item .btn-outline-danger:hover {
-    background-color: #dc3545; /* Change background color on hover */
-    color: #fff; /* Change text color to white */
-}
-
-/* Button Styling */
-.btn-outline-custom {
-    color:#333;
-    text-decoration: none; /* Removes underline */
-    background: transparent; /* Keeps it transparent */
-    border:1.5px solid #333; /* Adds a black border */
-    transition: all 0.3s ease-in-out;
-}
-
-.btn-outline-custom:hover {
-    background: transparent;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Soft shadow effect */
-    border-color: #4c6ef5;
-    color: #4c6ef5;
-}
-
-.striped-border {
-    border: 4px dashed #ddd;  /* Creates a dashed border */
-    background-color: #f9f9f9; /* Optional: Light background color for no content state */
-    padding: 20px; /* Padding to ensure the content doesn’t touch the border */
-}
 
 
 </style>
@@ -590,11 +683,12 @@ $stmt->close();
         <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Applications</button>
-    </li>
-    <li class="nav-item" role="presentation">
         <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Documents</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="false">Applications</button>
+    </li>
+
 </ul>
 
 
@@ -649,7 +743,10 @@ $stmt->close();
                                 </p>
                                 <!-- Edit Bio Button -->
                                 <?php if ($isOwnProfile): ?>
-                                    <button id="edit-bio-button" class="btn btn-outline-custom btn-sm mb-3"><i class="fas fa-edit"></i>Edit Bio</button>
+                                    <button id="edit-bio-button" class="btn btn-outline-custom btn-sm mb-3"><i class="fas fa-edit"></i>Edit Bio</button><br>
+
+                                    <a href="download_profile.php" class="btn btn-download-resume"><i class="fas fa-download"></i>Save Profile as Resume </a>
+
                                 <?php endif; ?>
                                 <!-- Caption Update Form (Hidden Initially) -->
                                 <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" id="bio-form" style="display:none;" class="mb-3">
@@ -661,25 +758,44 @@ $stmt->close();
                         </div>
                         
 <!-- Personal Information -->
-<div class="profile-card p-4 mb-4 fade-in" style=" border-radius: 15px;">
-    <h3 class="section-title text-dark mb-4" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Personal Information</h3>
-    <div id="personal-info-section">
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Personal Information</h3>
+        <button id="toggle-personal-info-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+    </div>
+    <div id="personal-info-section" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
         <div class="row">
+            <!-- Left Column -->
             <div class="col-md-6">
-                <p><strong><i style="color:gray;" class="fas fa-envelope"></i> Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-                <p><strong><i style="color:gray;" class="fas fa-venus-mars"></i> Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
-                <p><strong><i style="color:gray;" class="fas fa-birthday-cake"></i> Birth Date:</strong> <?php echo htmlspecialchars($user['birth_date']); ?></p>
-                <p><strong><i style="color:gray;" class="fas fa-hourglass-half"></i> Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-envelope me-2" style="color: #17A2B8;"></i>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-venus-mars me-2" style="color: #FFC107;"></i>Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
+                <p class="mb-3">
+                    <strong><i class="fas fa-birthday-cake me-2" style="color: #28A745;"></i>Birth Date:</strong> 
+                    <?php 
+                    $birthDate = new DateTime($user['birth_date']);
+                    echo htmlspecialchars($birthDate->format('F j, Y')); 
+                    ?>
+                </p>
+                <p class="mb-3"><strong><i class="fas fa-hourglass-half me-2" style="color: #DC3545;"></i>Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-ruler me-2" style="color: #6F42C1;"></i>Height:</strong> <?php echo round((float) htmlspecialchars($user['height'])); ?> cm</p>
+                <p class="mb-3"><strong><i class="fas fa-weight me-2" style="color: #FD7E14;"></i>Weight:</strong> <?php echo round((float) htmlspecialchars($user['weight'])); ?> kg</p>
+
+
             </div>
+
+            <!-- Right Column -->
             <div class="col-md-6">
-                <p><strong><i style="color:gray;" class="fas fa-ring"></i> Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
-                <p><strong><i style="color:gray;" class="fas fa-phone"></i> Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
-                <p><strong><i style="color:gray;" class="fas fa-map-marker-alt"> </i> Address:</strong>
+                <p class="mb-3"><strong><i class="fas fa-ring me-2" style="color: #6F42C1;"></i>Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-phone me-2" style="color: #FD7E14;"></i>Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-map-marker-alt me-2" style="color: #6610F2;"></i>Address:</strong>
                     <?php
                     // Query to fetch the barangay name based on the barangay ID
                     $barangay_query = "SELECT name FROM barangay WHERE id = ?";
                     if ($stmt = $conn->prepare($barangay_query)) {
-                        $stmt->bind_param("i", $user['barangay']); // Bind the barangay ID from the user's data
+                        $stmt->bind_param("i", $user['barangay']);
                         $stmt->execute();
                         $stmt->bind_result($barangay_name);
                         $stmt->fetch();
@@ -690,275 +806,17 @@ $stmt->close();
                     }
                     ?>
                 </p>
-                <p><strong><i style="color:gray;" class="fas fa-map-pin"></i> Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-map-pin me-2" style="color: #6C757D;"></i>Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-cross me-2" style="color: #007BFF;"></i>Religion:</strong> <?php echo htmlspecialchars($user['religion']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-flag me-2" style="color: #17A2B8;"></i>Nationality:</strong> <?php echo htmlspecialchars($user['nationality']); ?></p>
             </div>
         </div>
+
         <!-- Edit Button -->
         <?php if ($_SESSION['user_id'] == $user['id']): ?>
-        <div class="mt-4">
-            <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
-                <i class="fas fa-edit"></i> Edit Info
-            </button>
-        </div>
-        <?php endif; ?>
-    </div>
-</div>
-
-
-<!-- Educational Background -->
-<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
-    <h3 class="section-title text-dark mb-4 " style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Educational Background</h3>
-    <div id="education-section" class="<?php echo empty($education) ? 'striped-border' : ''; ?>">
-        <?php if (!empty($education)): ?>
-            <?php foreach ($education as $edu): ?>
-                <div class="education-item mb-4">
-                    <!-- Education Container -->
-                    <div class="card shadow-sm rounded" style="border: none; background-color: #fff;">
-                        <!-- Header with Education Level -->
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #efefef; border-radius: 10px 10px 0 0; padding: 15px;">
-                            <span class="text-muted" style="font-size: 1.1rem; font-weight: 600;"><?php echo ucfirst(htmlspecialchars($edu['education_level'])); ?></span>
-                            <?php if ($_SESSION['user_id'] == $edu['user_id']): ?>
-                                <!-- Edit and Delete Buttons -->
-                                <div class="d-flex">
-                                    <a href="#" class="btn btn-sm btn-download-resume mr-2" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($edu)); ?>)">
-                                        <i class="fas fa-edit"></i> <!-- Edit Icon -->
-                                    </a>
-                                    <a href="#" style="border:none !important;" class="btn btn-sm btn-remove-resume" onclick="openDeleteModal(<?php echo $edu['id']; ?>)">
-                                        <i class="fas fa-times"></i> <!-- Delete Icon -->
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Card Body with Education Details -->
-                        <div class="card-body" style="padding: 20px;">
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-school"></i> Institution:</strong> 
-                                    <?php echo htmlspecialchars($edu['institution']); ?>
-                                </p>
-                            </div>
-
-                            <!-- College Course Details (only for college education) -->
-                                <?php if ($edu['education_level'] == 'college'): ?>
-                                <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-book"></i> Course:</strong> 
-                                        <?php echo htmlspecialchars($edu['course']); ?>
-                                    </p>
-                                </div>
-                                <?php endif; ?>
-
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-calendar-check"></i> Status:</strong> 
-                                    <?php echo htmlspecialchars($edu['status']); ?>
-                                </p>
-                            </div>
-
-                            <!-- Completion or Expected Completion Year -->
-                            <?php if ($edu['status'] == 'Completed'): ?>
-                                <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Completion Year:</strong> 
-                                        <?php echo htmlspecialchars($edu['completion_year']); ?>
-                                    </p>
-                                </div>
-                            <?php else: ?>
-                                <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Expected Completion:</strong> 
-                                        <?php echo htmlspecialchars($edu['expected_completion_date']); ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
-                            <?php if ($edu['education_level'] == 'college'): ?>
-                            <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-trophy"></i> Course Highlights:</strong> 
-                                        <?php echo htmlspecialchars($edu['course_highlights']); ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
-
-
-                        </div>
-                    </div>
-                    <!-- End of Education Container -->
-                </div>
-            <?php endforeach; ?>
-
-            <!-- Add Another Education Button (Visible only for own profile) -->
-            <?php if ($_SESSION['user_id'] == $user_id): ?>
-                <div class="mt-4">
-                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addEducationModal" >
-                        <i class="fas fa-plus"></i> Add Education
-                    </button>
-                </div>
-            <?php endif; ?>
-        <?php else: ?>
-            <!-- No Education Added Yet -->
-            <p>No education added yet.</p>
-            <?php if ($_SESSION['user_id'] == $user_id): ?>
-                <div class="mt-4">
-                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addEducationModal" >
-                    <i class="fas fa-plus"></i> Add Education
-                </button>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
-</div>
-
-
-
-
-
-
-<!-- Work Experience -->
-<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
-    <h3 class="section-title text-dark mb-4" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Work Experience</h3>
-    <div id="work-experience-section" class="<?php echo empty($work_experience) ? 'striped-border' : ''; ?>">
-        <?php if (!empty($work_experience)): ?>
-            <?php foreach ($work_experience as $work): ?>
-                <div class="work-experience-item mb-4">
-                    <!-- Work Experience Container -->
-                    <div class="card shadow-sm rounded" style="border: none; background-color: #fff;">
-                        <!-- Header with Job Title -->
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #efefef; border-radius: 10px 10px 0 0; padding: 15px;">
-                            <span class="text-muted" style="font-size: 1.1rem; font-weight: 600;"><?php echo ucfirst(htmlspecialchars($work['job_title'])); ?></span>
-                            <?php if ($_SESSION['user_id'] == $work['user_id']): ?>
-                                <!-- Edit and Delete Buttons -->
-                                <div class="d-flex">
-                                    <a href="#" class="btn btn-sm btn-download-resume mr-2" onclick="openEditWorkModal(<?php echo htmlspecialchars(json_encode($work)); ?>)">
-                                        <i class="fas fa-edit"></i> <!-- Edit Icon -->
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-remove-resume" onclick="openDeleteWorkExperienceModal(<?php echo $work['id']; ?>)">
-                                        <i class="fas fa-times"></i> <!-- Delete Icon -->
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Card Body with Job Details -->
-                        <div class="card-body" style="padding: 20px;">
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-building"></i> Company:</strong> 
-                                    <?php echo htmlspecialchars($work['company_name']); ?>
-                                </p>
-                            </div>
-
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-briefcase"></i> Description:</strong> 
-                                    <?php echo htmlspecialchars($work['job_description']); ?>
-                                </p>
-                            </div>
-
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-cogs"></i> Employment Type:</strong> 
-                                    <?php echo ucfirst(htmlspecialchars($work['employment_type'])); ?>
-                                </p>
-                            </div>
-
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-map-marker-alt"></i> Work Location:</strong> 
-                                    <?php echo ucfirst(htmlspecialchars($work['job_location'])); ?>
-                                </p>
-                            </div>
-
-                                <!-- Country (Displayed only for overseas job locations) -->
-                                <?php if ($work['job_location'] == 'overseas'): ?>
-                                <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-globe"></i> Country:</strong> 
-                                        <?php echo ucfirst(htmlspecialchars($work['country'] ?? 'N/A')); ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Work Type -->
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-suitcase-rolling"></i> Work Type:</strong> 
-                                    <?php echo ucfirst(htmlspecialchars($work['work_type'])); ?>
-                                </p>
-                            </div>
-
-
-
-                            <!-- Start Date -->
-                            <div class="mb-3">
-                                <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> Started:</strong> 
-                                    <?php echo htmlspecialchars($work['start_date']); ?>
-                                </p>
-                            </div>
-
-                            <!-- End Date (Displayed only if provided) -->
-                            <?php if (!empty($work['end_date'])): ?>
-                                <div class="mb-3">
-                                    <p><strong><i style="color:gray;" class="fas fa-calendar-alt"></i> End date:</strong> 
-                                        <?php echo htmlspecialchars($work['end_date']); ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
-
-
-                        </div>
-                    </div>
-                    <!-- End of Work Experience Container -->
-                </div>
-            <?php endforeach; ?>
-
-            <!-- Add Another Work Experience Button (Visible only for own profile) -->
-            <?php if ($_SESSION['user_id'] == $user_id): ?>
-                <div class="mt-4">
-                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addWorkExperienceModal">
-                        <i class="fas fa-plus"></i> Add Work 
-                    </button>
-                </div>
-            <?php endif; ?>
-        <?php else: ?>
-            <!-- No Work Experience Added Yet -->
-            <p>No work experience added yet.</p>
-            <?php if ($_SESSION['user_id'] == $user_id): ?>
-                <div class="mt-4">
-                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addWorkExperienceModal">
-                        <i class="fas fa-plus"></i> Add Work 
-                    </button>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
-</div>
-
-
-
-
-
-<!-- Skills Section -->
-<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
-    <h3 class="section-title text-dark mb-4" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Skills</h3>
-    <div id="skills-section" class="<?php echo empty($skills) ? 'striped-border' : ''; ?>">
-        <?php if (!empty($skills)): ?>
-            <div class="d-flex flex-wrap gap-2">
-                <?php foreach ($skills as $skill): ?>
-                    <div class="skill-item d-flex align-items-center p-2 rounded" 
-                         style="background-color: #f8f9fa; border: 1px solid #ddd;" 
-                         title="<?php echo htmlspecialchars($skill['category_name']); ?>"> <!-- Tooltip for category name -->
-                        <span>
-                            <?php echo htmlspecialchars($skill['skill_name']); ?> 
-                            <small class="text-muted">(<?php echo htmlspecialchars($skill['proficiency']); ?>)</small>
-                        </span>
-                        <?php if ($_SESSION['user_id'] == $skill['user_id']): ?>
-                            <button class="btn btn-sm btn-link text-danger ms-2" 
-                                    onclick="openDeleteSkillModal(<?php echo $skill['id']; ?>, '<?php echo htmlspecialchars($skill['skill_name']); ?>', '<?php echo htmlspecialchars($skill['proficiency']); ?>')">
-                                <i class="fas fa-times"></i> <!-- "x" button -->
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p>No skills added yet.</p>
-        <?php endif; ?>
-
-        <!-- Add Skill Button (Visible only for own profile) -->
-        <?php if ($_SESSION['user_id'] == $user_id): ?>
             <div class="mt-4">
-                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addSkillModal" >
-                    <i class="fas fa-plus"></i> Add Skill
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
+                    <i class="fas fa-edit me-2"></i> Edit Info
                 </button>
             </div>
         <?php endif; ?>
@@ -967,8 +825,16 @@ $stmt->close();
 
 <!-- Languages Section -->
 <div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
-    <h3 class="section-title text-dark mb-4" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Languages</h3>
-    <div id="languages-section" class="<?php echo empty($languages) ? 'striped-border' : ''; ?>">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Languages
+        </h3>
+        <button id="toggle-languages-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    <div style="border-radius: 10px;" id="languages-section" class="<?php echo empty($languages) ? 'striped-border' : ''; ?>">
         <?php if (!empty($languages)): ?>
             <div class="d-flex flex-wrap gap-2">
                 <?php foreach ($languages as $language): ?>
@@ -989,7 +855,8 @@ $stmt->close();
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <p>No languages added yet.</p>
+            <p style="color: #666; font-style: italic;"
+            >No languages added yet.</p>
         <?php endif; ?>
 
         <!-- Add Language Button (Visible only for own profile) -->
@@ -1003,13 +870,570 @@ $stmt->close();
     </div>
 </div>
 
+<!-- Skills Section -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Skills
+        </h3>
+        <button id="toggle-skills-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    <div style="border-radius: 10px;" id="skills-section" class="<?php echo empty($skills) ? 'striped-border' : ''; ?>">
+        <?php if (!empty($skills)): ?>
+            <div class="d-flex flex-wrap gap-2">
+                <?php foreach ($skills as $skill): ?>
+                    <div class="skill-item d-flex align-items-center p-2 rounded" 
+                         style="background-color: #f8f9fa; border: 1px solid #ddd;" 
+                         title="<?php echo htmlspecialchars($skill['category_name']); ?>"> <!-- Tooltip for category name -->
+                        <span>
+                            <?php echo htmlspecialchars($skill['skill_name']); ?> 
+                            <small class="text-muted">(<?php echo htmlspecialchars($skill['proficiency']); ?>)</small>
+                        </span>
+                        <?php if ($_SESSION['user_id'] == $skill['user_id']): ?>
+                            <button class="btn btn-sm btn-link text-danger ms-2" 
+                                    onclick="openDeleteSkillModal(<?php echo $skill['id']; ?>, '<?php echo htmlspecialchars($skill['skill_name']); ?>', '<?php echo htmlspecialchars($skill['proficiency']); ?>')">
+                                <i class="fas fa-times"></i> <!-- "x" button -->
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p style="color: #666; font-style: italic;"
+            >No skills added yet.</p>
+        <?php endif; ?>
+
+        <!-- Add Skill Button (Visible only for own profile) -->
+        <?php if ($_SESSION['user_id'] == $user_id): ?>
+            <div class="mt-4">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addSkillModal" >
+                    <i class="fas fa-plus"></i> Add Skill
+                </button>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+
+
+<!-- Educational Background -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Educational Background</h3>
+        <button id="toggle-education-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    
+    <div id="education-section" class="<?php echo empty($education) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+    <?php if (!empty($education)): ?>
+        <?php foreach ($education as $edu): ?>
+            <div class="education-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <!-- Header with Education Level -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #333; position: relative; display: inline-block;">
+                        <?php echo ucfirst(htmlspecialchars($edu['education_level'])); ?>
+                        <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #ff7e5f); border-radius: 2px;"></span>
+                    </span>
+                    <?php if ($_SESSION['user_id'] == $edu['user_id']): ?>
+                        <!-- Edit and Delete Buttons -->
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-sm btn-download me-2" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($edu)); ?>)">
+                                <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                            </a>
+                            <a href="#" style="border:none !important;" class="btn btn-sm btn-remove" onclick="openDeleteEduModal(<?php echo $edu['id']; ?>)">
+                                <i class="fas fa-times"></i> <!-- Delete Icon -->
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Education Details -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-school me-2" style="color: #17A2B8;"></i>Institution:</strong> 
+                        <?php echo htmlspecialchars($edu['institution']); ?>
+                    </p>
+                </div>
+
+            <!-- Address Field -->
+                <?php if (!empty($edu['address'])): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-map-marker-alt me-2" style="color: #DC3545;"></i>Address:</strong> 
+                            <?php echo htmlspecialchars($edu['address']); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Course Details (for college, vocational, and graduate education levels) -->
+                <?php if (in_array($edu['education_level'], ['college', 'graduate', 'vocational'])): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-book me-2" style="color: #FFC107;"></i>Course:</strong> 
+                            <?php echo htmlspecialchars($edu['course']); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+
+
+                <!-- Completion or Expected Completion Year -->
+                <?php if ($edu['status'] == 'Completed'): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-calendar-alt me-2" style="color: #6610F2;"></i>Completion Year:</strong> 
+                            <?php echo htmlspecialchars($edu['completion_year']); ?>
+                        </p>
+                    </div>
+                <?php else: ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-calendar-alt me-2" style="color: #DC3545;"></i>Expected Completion:</strong> 
+                            <?php echo date("F j, Y", strtotime($edu['expected_completion_date'])); ?>
+                        </p>
+                    </div>
+
+                <?php endif; ?>
+
+                <!-- Course Highlights (for college, vocational, and graduate education levels) -->
+                <?php if (in_array($edu['education_level'], ['college', 'graduate', 'vocational']) && !empty($edu['course_highlights'])): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-trophy me-2" style="color: #FD7E14;"></i>Course Highlights:</strong> 
+                            <?php echo htmlspecialchars($edu['course_highlights']); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+
+
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Another Education Button (Visible only for own profile) -->
+        <?php if ($_SESSION['user_id'] == $user_id): ?>
+            <div class="mt-4 ">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                    <i class="fas fa-plus me-2"></i> Add Education
+                </button>
+            </div>
+        <?php endif; ?>
+    <?php else: ?>
+        <!-- No Education Added Yet -->
+        <div class="py-4" >
+            <p class="mb-0" style="color: #666; font-style: italic;"
+            >No education added yet.</p>
+            <?php if ($_SESSION['user_id'] == $user_id): ?>
+                <div class="mt-3">
+                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                        <i class="fas fa-plus me-2"></i> Add Education
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+</div>
+
+
+
+
+
+
+
+
+<!-- Work Experience Section with Toggle Button -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Work Experience</h3>
+        <button id="toggle-work-experience" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    <div id="work-experience-section" class="<?php echo empty($work_experience) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+    <?php if (!empty($work_experience)): ?>
+        <?php foreach ($work_experience as $work): ?>
+            <div class="work-experience-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <!-- Header with Job Title -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #333; position: relative; display: inline-block;">
+    <?php echo ucfirst(htmlspecialchars($work['job_title'])); ?>
+    <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #ff7e5f); border-radius: 2px;"></span>
+</span>
+                    <?php if ($_SESSION['user_id'] == $work['user_id']): ?>
+                        <!-- Edit and Delete Buttons -->
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-sm btn-download me-2" onclick="openEditWorkModal(<?php echo htmlspecialchars(json_encode($work)); ?>)">
+                                <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                            </a>
+                            <a href="#" class="btn btn-sm btn-remove" onclick="openDeleteWorkExperienceModal(<?php echo $work['id']; ?>)">
+                                <i class="fas fa-times"></i> <!-- Delete Icon -->
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Work Details -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-building me-2" style="color: #17A2B8;"></i>Company:</strong> 
+                        <?php echo htmlspecialchars($work['company_name']); ?>
+                    </p>
+                </div>
+
+                <?php if (!empty($work['job_description'])): ?>
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-briefcase me-2" style="color: #FFC107;"></i>Description:</strong> 
+                        <?php echo htmlspecialchars($work['job_description']); ?>
+                    </p>
+                </div>
+                <?php endif; ?>
+
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-cogs me-2" style="color: #28A745;"></i>Employment Type:</strong> 
+                        <?php echo ucfirst(htmlspecialchars($work['employment_type'])); ?>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-map-marker-alt me-2" style="color: #DC3545;"></i>Work Location:</strong> 
+                        <?php echo ucfirst(htmlspecialchars($work['job_location'])); ?>
+                    </p>
+                </div>
+
+                <!-- Country (Displayed only for overseas job locations) -->
+                <?php if ($work['job_location'] == 'overseas'): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-globe me-2" style="color: #6F42C1;"></i>Country:</strong> 
+                            <?php echo ucfirst(htmlspecialchars($work['country'] ?? 'N/A')); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($work['address'])): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-home me-2" style="color: #FF5733;"></i>Address:</strong> 
+                            <?php echo ucfirst(htmlspecialchars($work['address'])); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-suitcase-rolling me-2" style="color: #FD7E14;"></i>Work Type:</strong> 
+                        <?php echo ucfirst(htmlspecialchars($work['work_type'])); ?>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-calendar-alt me-2" style="color: #6610F2;"></i>Started:</strong> 
+                        <?php echo date("F j, Y", strtotime($work['start_date'])); ?>
+                    </p>
+                </div>
+
+                <!-- End Date (Displayed only if provided) -->
+                <?php if (!empty($work['end_date'])): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-calendar-alt me-2" style="color: #6610F2;"></i>End Date:</strong> 
+                            <?php echo date("F j, Y", strtotime($work['end_date'])); ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Currently Working Here Checkbox (Displayed only when checked) -->
+                <?php if ($work['currently_working'] == 1): ?>
+                    <div class="mb-3">
+                        <p><strong><i class="fas fa-check me-2" style="color: #28a745;"></i>Currently Working Here</strong></p>
+                    </div>
+                <?php endif; ?>
+
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Another Work Experience Button (Visible only for own profile) -->
+        <?php if ($_SESSION['user_id'] == $user_id): ?>
+            <div class="mt-4 ">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addWorkExperienceModal">
+                    <i class="fas fa-plus me-2"></i> Add Work
+                </button>
+            </div>
+        <?php endif; ?>
+    <?php else: ?>
+        <!-- No Work Experience Added Yet -->
+        <div class=" py-4" ">
+            <p class="mb-0" style="color: #666; font-style: italic;"
+            >No work experience added yet.</p>
+            <?php if ($_SESSION['user_id'] == $user_id): ?>
+                <div class="mt-3">
+                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addWorkExperienceModal">
+                        <i class="fas fa-plus me-2"></i> Add Work
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+</div>
+
+<!-- Job Preferences Section -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Job Preferences
+        </h3>
+        <button id="toggle-job-preferences-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+    <div id="job-preferences-section" class="<?php echo empty($job_preferences) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+        <?php if (!empty($job_preferences)): ?>
+            <div class="job-preferences-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <!-- Preferred Positions Title -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #333; position: relative; display: inline-block;">
+                        Preferred Occupation :
+                        <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #ff7e5f); border-radius: 2px;"></span>
+                    </span>
+                    <?php if ($_SESSION['user_id'] == $job_preferences['user_id']): ?>
+                        <!-- Edit and Delete Buttons -->
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-sm btn-download me-2" onclick="openEditJobPreferencesModal(<?php echo htmlspecialchars(json_encode($job_preferences)); ?>)">
+                                <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                            </a>
+                            <a href="#" style="border:none !important;" class="btn btn-sm btn-remove" onclick="openDeleteJobPreferencesModal(<?php echo $job_preferences['id']; ?>)">
+                                <i class="fas fa-times"></i> <!-- Delete Icon -->
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Preferred Positions -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-arrow-right me-2" style="color: #6F42C1;"></i></strong>
+                        <?php 
+                        // Fetch and display the associated positions for this job preference
+                        if (!empty($preferred_positions_display)) {
+                            // Add a space after each comma for the preferred positions
+                            $preferred_positions_display = str_replace(',', ',  ', $preferred_positions_display);
+                            echo htmlspecialchars($preferred_positions_display);
+                        } else {
+                            echo 'Not specified';
+                        }
+                        ?>
+                    </p>
+                </div>
+
+                <!-- Work Type -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-cogs me-2" style="color: #28A745;"></i>Work Type:</strong> 
+                        <?php echo isset($job_preferences['work_type']) ? ucfirst(htmlspecialchars($job_preferences['work_type'])) : 'Not specified'; ?>
+                    </p>
+                </div>
+
+                <!-- Job Location -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-map-marker-alt me-2" style="color: #DC3545;"></i>Preferred Work Location:</strong> 
+                        <?php echo isset($job_preferences['job_location']) ? ucfirst(htmlspecialchars($job_preferences['job_location'])) : 'Not specified'; ?>
+                    </p>
+                </div>
+
+                <!-- Employment Type -->
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-briefcase me-2" style="color: #FFC107;"></i>Employment Type:</strong> 
+                        <?php echo isset($job_preferences['employment_type']) ? ucfirst(htmlspecialchars($job_preferences['employment_type'])) : 'Not specified'; ?>
+                    </p>
+                </div>
+
+            </div>
+        <?php else: ?>
+            <!-- No Job Preferences Added Yet -->
+            <div class="py-4">
+                <p class="mb-0" style="color: #666; font-style: italic;">No job preferences added yet.</p>
+                <?php if ($_SESSION['user_id'] == $user_id): ?>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addJobPreferencesModal">
+                            <i class="fas fa-plus me-2"></i> Add Preferences
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+
+    </div>
+</div>
+
+
+
+<!-- Achievements & Awards Section -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Achievements & Awards
+        </h3>
+        <button id="toggle-achievements-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+
+    <div id="achievements-section" class="<?php echo empty($achievements) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+    <?php if (!empty($achievements)): ?>
+        <?php foreach ($achievements as $achievement): ?>
+            <div class="achievement-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <!-- Header with Achievement Title -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #333; position: relative; display: inline-block;">
+    <?php echo ucfirst(htmlspecialchars($achievement['award_name'])); ?>
+    <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #ff7e5f); border-radius: 2px;"></span>
+</span>
+                    <?php if ($_SESSION['user_id'] == $achievement['user_id']): ?>
+                        <!-- Edit and Delete Buttons -->
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-sm btn-download me-2" 
+                               onclick="openEditAchievementModal(<?php echo $achievement['id']; ?>, '<?php echo addslashes($achievement['award_name']); ?>', '<?php echo addslashes($achievement['organization']); ?>', '<?php echo $achievement['award_date']; ?>', '<?php echo addslashes($achievement['proof_file']); ?>')">
+                                <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                            </a>
+
+                            <a href="#" style="border:none !important;" class="btn btn-sm btn-remove" onclick="openDeleteAchievementModal(<?php echo $achievement['id']; ?>)">
+                                <i class="fas fa-times"></i> <!-- Delete Icon -->
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Achievement Details -->
+                <div class="mb-3">
+                    <p>
+                        <?php echo htmlspecialchars($achievement['organization']); ?>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p>
+                        <?php echo date('M d, Y', strtotime($achievement['award_date'])); ?>
+                    </p>
+                </div>
+
+                <!-- Display the proof file if it exists -->
+                <?php if (!empty($achievement['proof_file'])): ?>
+                    <div class="mb-3">
+                        <a href="<?php echo htmlspecialchars($achievement['proof_file']); ?>" target="_blank" class="btn btn-sm btn-download">
+                            <i class="fas fa-file-alt me-2"></i> Attached File
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Another Achievement Button (Visible only for own profile) -->
+        <?php if ($_SESSION['user_id'] == $user_id): ?>
+            <div class="mt-4 ">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addAchievementModal">
+                    <i class="fas fa-plus me-2"></i> Add Achievement 
+                </button>
+            </div>
+        <?php endif; ?>
+    <?php else: ?>
+        <!-- No Achievements Added Yet -->
+        <div class=" py-4" >
+            <p class="mb-0" style="color: #666; font-style: italic;">No achievements added yet.</p>
+            <?php if ($_SESSION['user_id'] == $user_id): ?>
+                <div class="mt-3">
+                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addAchievementModal">
+                        <i class="fas fa-plus me-2"></i> Add Achievement
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+</div>
+
+<!-- References Section -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Character References
+        </h3>
+        <button id="toggle-references-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+
+    <div id="references-section" class="<?php echo empty($references) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+        <?php if (!empty($references)): ?>
+            <?php foreach ($references as $reference): ?>
+                <div class="reference-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #333; position: relative; display: inline-block;">
+    <?php echo ucfirst(htmlspecialchars($reference['name'])); ?>
+    <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #6f42c1); border-radius: 2px;"></span>
+</span>
+                        <?php if ($_SESSION['user_id'] == $reference['user_id']): ?>
+                            <!-- Edit and Delete Buttons -->
+                            <div class="d-flex">
+                                <a href="#" class="btn btn-sm btn-download me-2" 
+                                   onclick="editReference(<?php echo $reference['id']; ?>, '<?php echo addslashes($reference['name']); ?>', '<?php echo addslashes($reference['position']); ?>', '<?php echo addslashes($reference['workplace']); ?>', '<?php echo addslashes($reference['contact_number']); ?>')">
+                                    <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                                </a>
+
+                                <a href="#" class="btn btn-sm btn-remove" onclick="openDeleteReferenceModal(<?php echo $reference['id']; ?>)">
+                                    <i class="fas fa-times"></i> <!-- Delete Icon -->
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="reference-details">
+                        <p class="mb-2"> <?php echo htmlspecialchars($reference['position']); ?></p>
+                        <p class="mb-2"> <?php echo htmlspecialchars($reference['workplace']); ?></p>
+                        <p> <?php echo htmlspecialchars($reference['contact_number']); ?></p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+            <!-- Add Another Reference Button (Visible only for own profile) -->
+            <?php if ($_SESSION['user_id'] == $user_id): ?>
+                <div class="mt-4">
+                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addReferenceModal" >
+                        <i class="fas fa-plus me-2"></i> Add Reference
+                    </button>
+                </div>
+            <?php endif; ?>
+        <?php else: ?>
+            <!-- No References Added Yet -->
+            <div class="py-4">
+                <p class="mb-0" style="color: #666; font-style: italic;"
+                >No references added yet.</p>
+                <?php if ($_SESSION['user_id'] == $user_id): ?>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addReferenceModal" >
+                            <i class="fas fa-plus me-2"></i> Add Reference
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
 
 <!-- LinkedIn Profile -->
 <div class="profile-card p-4 mb-4 fade-in position-relative">
-    <h3 class="section-title text-dark">LinkedIn Profile</h3>
-    <p class="no-data <?php echo empty($user['linkedin_profile']) ? 'striped-border' : ''; ?>">
+    <h3 class="section-title resume-section text-primary ">LinkedIn Profile</h3>
+    <p style="border-radius: 10px;" class="no-data <?php echo empty($user['linkedin_profile']) ? 'striped-border' : ''; ?>">
         <?php if (!empty($user['linkedin_profile'])): ?>
-            <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-create-resume btn-sm rounded-pill hover-link">
+            <a href="<?php echo htmlspecialchars($user['linkedin_profile']); ?>" target="_blank" class="btn btn-create btn-sm rounded-pill hover-link">
                 <i class="fab fa-linkedin"></i> View LinkedIn
             </a>
         <?php else: ?>
@@ -1018,7 +1442,7 @@ $stmt->close();
     </p>
     <!-- Edit Button for the User -->
     <?php if ($_SESSION['user_id'] == $user['id']): ?>
-        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editLinkedInModal">
+        <button class="btn btn-download btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editLinkedInModal">
             <i class="fas fa-edit"></i>
         </button>
     <?php endif; ?>
@@ -1026,10 +1450,10 @@ $stmt->close();
 
 <!-- Portfolio URL -->
 <div class="profile-card p-4 mb-4 fade-in position-relative">
-    <h3 class="section-title text-dark">Portfolio URL</h3>
-    <p class="no-data <?php echo empty($user['portfolio_url']) ? 'striped-border' : ''; ?>">
+    <h3 class="section-title resume-section text-primary ">Portfolio URL</h3>
+    <p style="border-radius: 10px;" class="no-data <?php echo empty($user['portfolio_url']) ? 'striped-border' : ''; ?>">
         <?php if (!empty($user['portfolio_url'])): ?>
-            <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-download-resume btn-sm rounded-pill hover-link">
+            <a href="<?php echo htmlspecialchars($user['portfolio_url']); ?>" target="_blank" class="btn btn-download btn-sm rounded-pill hover-link">
                 <i class="fas fa-globe"></i> Visit Portfolio
             </a>
         <?php else: ?>
@@ -1038,7 +1462,7 @@ $stmt->close();
     </p>
     <!-- Edit Button for the User -->
     <?php if ($_SESSION['user_id'] == $user['id']): ?>
-        <button class="btn btn-download-resume btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editPortfolioModal">
+        <button class="btn btn-download btn-sm position-absolute top-0 end-0 m-2" data-bs-toggle="modal" data-bs-target="#editPortfolioModal">
             <i class="fas fa-edit"></i>
         </button>
     <?php endif; ?>
@@ -1290,33 +1714,128 @@ $stmt->close();
 <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
         <div class="profile-cardop-4 mb-4">
         <h4 class="text-center mb-4 mt-4">My Documents</h4>
+
+<!-- Certificates Section -->
+<div class="profile-card p-4 mb-4 fade-in" style="border-radius: 15px;">
+    <!-- Section Header with Toggle Icon on the Right -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">
+            Trainings, Licences & Certifications
+        </h3>
+        <button id="toggle-certificates-section" class="btn btn-link text-secondary p-0" style="font-size: 1.5rem; background: none; border: none;">
+            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+        </button>
+    </div>
+
+    <div id="certificates-section" class="<?php echo empty($certificates) ? 'striped-border' : ''; ?>" style="padding: 20px; border-radius: 10px;">
+    <?php if (!empty($certificates)): ?>
+        <?php foreach ($certificates as $certificate): ?>
+            <div class="certificate-item mb-4" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <!-- Header with Certificate Name -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted" style="font-size: 1.1rem; font-weight: 600; color: #444; position: relative; display: inline-block;">
+                        <?php echo ucfirst(htmlspecialchars($certificate['certificate_name'])); ?>
+                        <span style="position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, #007bff, #6f42c1); border-radius: 2px;"></span>
+                    </span>
+
+                    <?php if ($_SESSION['user_id'] == $certificate['user_id']): ?>
+                        <!-- Edit and Delete Buttons -->
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-sm btn-download me-2" 
+                               onclick="openEditCertificateModal(<?php echo $certificate['id']; ?>, '<?php echo addslashes($certificate['certificate_name']); ?>', '<?php echo addslashes($certificate['issuing_organization']); ?>', '<?php echo $certificate['issue_date']; ?>', '<?php echo addslashes($certificate['certificate_file']); ?>')">
+                                <i class="fas fa-edit"></i> <!-- Edit Icon -->
+                            </a>
+
+                            <a href="#" class="btn btn-sm btn-remove" onclick="openDeleteCertificateModal(<?php echo $certificate['id']; ?>)">
+                                <i class="fas fa-times"></i> <!-- Delete Icon -->
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Certificate Details -->
+                <div class="mb-3">
+                    <p>
+                        <?php echo htmlspecialchars($certificate['issuing_organization']); ?>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p>
+                        <?php echo date('M d, Y', strtotime($certificate['issue_date'])); ?>
+                    </p>
+                </div>
+
+                <!-- View Certificate Button -->
+                <?php if (!empty($certificate['certificate_file'])): ?>
+                    <div class="mb-3">
+                        <a href="<?php echo htmlspecialchars($certificate['certificate_file']); ?>" target="_blank" class="btn btn-sm btn-download-resume">
+                            <i class="fas fa-eye me-2"></i> View Certificate
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Certificate Button -->
+        <?php if ($_SESSION['user_id'] == $user_id): ?>
+            <div class="mt-4">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCertificateModal" >
+                    <i class="fas fa-plus me-2"></i> Add Certification
+                </button>
+            </div>
+        <?php endif; ?>
+    <?php else: ?>
+        <!-- No Certificates Added Yet -->
+        <div class=" py-4" >
+            <p class="mb-0" style="color: #666;">No certificates added yet.</p>
+            <?php if ($_SESSION['user_id'] == $user_id): ?>
+                <div class="mt-3">
+                    <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCertificateModal" >
+                        <i class="fas fa-plus me-2"></i> Add Certification
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+</div>
+
+
 <!-- Resume Section -->
 <div class="profile-card p-4 mb-4 fade-in">
     <h3 class="section-title resume-section">Resume</h3>
-    <p class="no-data">
-        <?php if (!empty($user['resume_file'])): ?>
-            <!-- Download Resume Button -->
-            <a href="<?php echo htmlspecialchars($user['resume_file']); ?>" 
-                class="btn btn-download-resume me-2" 
-                download>
-                    <i class="fas fa-download"></i> Download Resume
-            </a>
+    <p style="color: #666; font-style: italic; border-radius: 10px;" class="<?php echo empty($user['resume_file']) ? 'striped-border' : ''; ?>">
+    <?php if (!empty($user['resume_file'])): ?>
+        <!-- Download Resume Button -->
+        <a href="<?php echo htmlspecialchars($user['resume_file']); ?>" 
+            class="btn btn-download-resume me-2" 
+            download>
+                <i class="fas fa-download"></i> Download Resume
+        </a>
 
-            <!-- View Resume Button -->
-            <button onclick="viewResume('<?php echo htmlspecialchars($user['resume_file']); ?>')" class="btn btn-view-resume me-2">
-                <i class="fas fa-eye"></i> View Resume
+        <!-- View Resume Button -->
+        <button onclick="viewResume('<?php echo htmlspecialchars($user['resume_file']); ?>')" class="btn btn-view-resume me-2">
+            <i class="fas fa-eye"></i> View Resume
+        </button>
+
+        <!-- Remove Resume Button -->
+        <?php if ($isOwnProfile): ?>
+            <button id="remove-resume-button" class="btn btn-remove-resume" data-user-id="<?php echo $user_id; ?>">
+                <i class="fas fa-trash"></i> Remove Resume
             </button>
-
-            <!-- Remove Resume Button -->
-            <?php if ($isOwnProfile): ?>
-                <button id="remove-resume-button" class="btn btn-remove-resume" data-user-id="<?php echo $user_id; ?>">
-                    <i class="fas fa-trash"></i> Remove Resume
-                </button>
-            <?php endif; ?>
-        <?php else: ?>
-            No resume uploaded yet.
         <?php endif; ?>
-    </p>
+    <?php else: ?>
+        <?php if ($isOwnProfile): ?>
+            Build your professional resume effortlessly! Simply complete the required profile sections - including personal information, 
+            languages, skills, work experience, educational background, achievements, preferences, references and certifications.
+            Once filled, click <strong>'Save Profile as Resume'</strong> to generate your polished CV. 
+            The system will automatically format your information into a clean, professional layout ready for download as a PDF file.
+        <?php else: ?>
+            No resume added yet.
+        <?php endif; ?>
+    <?php endif; ?>
+</p>
     
     <?php if ($isOwnProfile): ?>
         <form action="profile.php?id=<?php echo $user_id; ?>" method="POST" enctype="multipart/form-data" class="mt-3">
@@ -1330,22 +1849,19 @@ $stmt->close();
         <i class="fas fa-upload"></i> Upload/Replace Resume
     </button>
 
-    <!-- Create Resume Button -->
-    <a href="resume.php" class="btn btn-create-resume">
-        <i class="fas fa-file-alt"></i> Create Resume
-    </a>
-    <a href="/JOB/forms/forms.php" class="btn btn-create-resume">
-        <i class="fas fa-file-alt"></i> Create Application form
-    </a>
+
 </form>
 
     <?php endif; ?>
 </div>
-        </div>
-    </div>
 </div>
+</div>
+</div>
+<!-- THESE CLOSING DIV BUTTONS SEEMS REDUNDANT, BUT IT HAS FUNCTIONS)  -->
 
-<!-- Edit Profile Button 
+
+
+<!-- TEMPORARY DISABLE, TO BE USE ON FUTURE UPDATE
 <?php if ($isOwnProfile): ?>
     <div id="edit-profile-button" style="margin-bottom: 30px;" class="text-center fade-in">
         <a href="browse.php" class="btn btn-custom rounded-pill px-4">
@@ -1513,7 +2029,7 @@ $stmt->close();
 
 <!-- Modal for Editing Personal Information -->
 <div class="modal fade" id="editPersonalInfoModal" tabindex="-1" aria-labelledby="editPersonalInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Added modal-lg class to increase the width -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editPersonalInfoModalLabel">Edit Personal Information</h5>
@@ -1521,85 +2037,128 @@ $stmt->close();
             </div>
             <div class="modal-body">
                 <form action="update_personal_info.php" method="POST">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <!-- Set the email field to readonly so it's not editable -->
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly required>
+                    <div class="row">
+                        <!-- First row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                                <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                                <option value="Non-Binary" <?php echo ($user['gender'] == 'Non-Binary') ? 'selected' : ''; ?>>Non-Binary</option>
+                                <option value="LGBTQ+" <?php echo ($user['gender'] == 'LGBTQ+') ? 'selected' : ''; ?>>LGBTQ+</option>
+                                <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="gender" class="form-label">Gender</label>
-                        <select class="form-select" id="gender" name="gender" required>
-                            <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-                            <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-                            <option value="Non-Binary" <?php echo ($user['gender'] == 'Non-Binary') ? 'selected' : ''; ?>>Non-Binary</option>
-                            <option value="LGBTQ+" <?php echo ($user['gender'] == 'LGBTQ+') ? 'selected' : ''; ?>>LGBTQ+</option>
-                            <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-    <label for="birth_date" class="form-label">Birth Date</label>
-    <input type="date" class="form-control" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
-    <!-- Add a span to display the calculated age -->
-    <small id="ageDisplay" class="form-text text-muted"></small>
-</div>
 
-                    <div class="mb-3">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
+                    <div class="row">
+                        <!-- Second row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="birth_date" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+                            <!-- Add a span to display the calculated age -->
+                            <small id="ageDisplay" class="form-text text-muted"></small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="religion" class="form-label">Religion</label>
+                            <input type="text" class="form-control" id="religion" name="religion" value="<?php echo htmlspecialchars($user['religion']); ?>">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="civil_status" class="form-label">Civil Status</label>
-                        <select class="form-select" id="civil_status" name="civil_status" required>
-                            <option value="Single" <?php echo ($user['civil_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
-                            <option value="Married" <?php echo ($user['civil_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
-                            <option value="Divorced" <?php echo ($user['civil_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
-                            <option value="Widowed" <?php echo ($user['civil_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="street_address" class="form-label">Street Address</label>
-                        <input type="text" class="form-control" id="street_address" name="street_address" value="<?php echo htmlspecialchars($user['street_address']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="barangay" class="form-label">Barangay</label>
-                        <select name="barangay" id="barangay" class="form-select" required>
-                            <option value="">Select Barangay</option>
-                            <?php
-                            // Fetch barangays from the database
-                            $query = "SELECT * FROM barangay";
-                            $result = $conn->query($query);
 
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    // Checking if the current barangay is the selected one (e.g., pre-populate if editing)
-                                    $selected = ($row['id'] == $user['barangay']) ? 'selected' : '';
-                                    echo "<option value='" . $row['id'] . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                    <div class="row">
+                        <!-- Third row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="weight" class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" id="weight" name="weight" value="<?php echo htmlspecialchars($user['weight']); ?>" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="height" class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" id="height" name="height" value="<?php echo htmlspecialchars($user['height']); ?>" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fourth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nationality" class="form-label">Nationality</label>
+                            <input type="text" class="form-control" id="nationality" name="nationality" value="<?php echo htmlspecialchars($user['nationality']); ?>">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fifth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="civil_status" class="form-label">Civil Status</label>
+                            <select class="form-select" id="civil_status" name="civil_status" required>
+                                <option value="Single" <?php echo ($user['civil_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
+                                <option value="Married" <?php echo ($user['civil_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
+                                <option value="Divorced" <?php echo ($user['civil_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
+                                <option value="Widowed" <?php echo ($user['civil_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="street_address" class="form-label">Street Address</label>
+                            <input type="text" class="form-control" id="street_address" name="street_address" value="<?php echo htmlspecialchars($user['street_address']); ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Sixth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="barangay" class="form-label">Barangay</label>
+                            <select name="barangay" id="barangay" class="form-select" required>
+                                <option value="">Select Barangay</option>
+                                <?php
+                                // Fetch barangays from the database
+                                $query = "SELECT * FROM barangay";
+                                $result = $conn->query($query);
+
+                                if ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        // Checking if the current barangay is the selected one (e.g., pre-populate if editing)
+                                        $selected = ($row['id'] == $user['barangay']) ? 'selected' : '';
+                                        echo "<option value='" . $row['id'] . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                                    }
+                                } else {
+                                    echo "<option value=''>No Barangays Available</option>";
                                 }
-                            } else {
-                                echo "<option value=''>No Barangays Available</option>";
-                            }
-                            ?>
-                        </select>
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($user['city']); ?>" required>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="city" class="form-label">City</label>
-                        <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($user['city']); ?>" required>
+                    <div class="row">
+                        <!-- Seventh row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="zip_code" class="form-label">Zip Code</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" value="<?php echo htmlspecialchars($user['zip_code']); ?>" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="zip_code" class="form-label">Zip Code</label>
-                        <input type="text" class="form-control" id="zip_code" name="zip_code" value="<?php echo htmlspecialchars($user['zip_code']); ?>" required>
-                    </div>
+
                     <!-- Modal Footer -->
                     <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+
 
 <!-- Add Education Modal -->
 <div class="modal fade" id="addEducationModal" tabindex="-1" aria-labelledby="addEducationModalLabel" aria-hidden="true">
@@ -1610,14 +2169,18 @@ $stmt->close();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <p class="text-muted mb-3 small">Please note that you don't need to fill out every education level. If you're adding just your college education, you can skip the primary and secondary education fields. Only fill out the relevant fields based on your selected education level.</p>
+
                 <form method="POST" action="process_education.php">
-                    <!-- Dropdown to choose Education Level (Primary, Secondary, College) -->
+                    <!-- Dropdown to choose Education Level (Primary, Secondary, College, Graduate, Vocational) -->
                     <div class="mb-3">
                         <label for="education_level" class="form-label fw-semibold">Education Level</label>
                         <select class="form-control" id="education_level" name="education_level">
                             <option value="primary">Primary</option>
                             <option value="secondary">Secondary</option>
                             <option value="college">College</option>
+                            <option value="graduate">Graduate School (Masters, PhD, etc.)</option>
+                            <option value="vocational">Vocational/Technical Education</option>
                         </select>
                     </div>
 
@@ -1627,10 +2190,28 @@ $stmt->close();
                         <input type="text" class="form-control" id="course" name="course" placeholder="Course">
                     </div>
 
+                    <!-- Vocational Course (only for Vocational Education) -->
+                    <div class="mb-3" id="vocational_group" style="display:none;">
+                        <label for="vocational_course" class="form-label fw-semibold">Vocational Course</label>
+                        <input type="text" class="form-control" id="vocational_course" name="vocational_course" placeholder="Vocational Course Name">
+                    </div>
+
+                    <!-- Graduate School Thesis (only for Graduate School) -->
+                    <div class="mb-3" id="graduate_group" style="display:none;">
+                        <label for="thesis_title" class="form-label fw-semibold">Thesis/Dissertation Title (If Applicable)</label>
+                        <input type="text" class="form-control" id="thesis_title" name="thesis_title" placeholder="Thesis/Dissertation Title">
+                    </div>
+
                     <!-- Institution -->
                     <div class="mb-3">
                         <label for="institution" class="form-label fw-semibold">Institution</label>
                         <input type="text" class="form-control" id="institution" name="institution" placeholder="Name of School">
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label fw-semibold">Address</label>
+                        <input type="text" class="form-control" id="address" name="address" placeholder="Institution Address">
                     </div>
 
                     <!-- Status (Completed or Not Completed) -->
@@ -1655,7 +2236,7 @@ $stmt->close();
 
                     <!-- Course Highlights (only for College) -->
                     <div class="mb-3" id="course_highlights_group" style="display:none;">
-                        <label for="course_highlights" class="form-label fw-semibold">Course Highlights</label>
+                        <label for="course_highlights" class="form-label fw-semibold">Course Highlights (Optional)</label>
                         <textarea class="form-control" id="course_highlights" name="course_highlights" rows="3" placeholder="Add activities, projects, awards or achievements during your study."></textarea>
                     </div>
 
@@ -1663,13 +2244,15 @@ $stmt->close();
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save Education</button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                        
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+
+
 
 
 <!-- Edit Education Modal -->
@@ -1681,6 +2264,11 @@ $stmt->close();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+            <p class="text-muted mb-3 small">The education level is fixed and cannot be updated. Please edit the other details below. 
+            If you want to change the education level, you will need to delete the existing entry and add a new one.</p>
+
+
+
                 <form method="POST" action="process_education.php">
                     <!-- Hidden field to store education ID -->
                     <input type="hidden" id="edit_education_id" name="education_id">
@@ -1697,10 +2285,28 @@ $stmt->close();
                         <input type="text" class="form-control" id="edit_course" name="course" placeholder="Course">
                     </div>
 
+                    <!-- Vocational Course (only for Vocational Education) -->
+                    <div class="mb-3" id="edit_vocational_group" style="display:none;">
+                        <label for="edit_vocational_course" class="form-label fw-semibold">Vocational Course</label>
+                        <input type="text" class="form-control" id="edit_vocational_course" name="vocational_course" placeholder="Vocational Course Name">
+                    </div>
+
+                    <!-- Graduate School Thesis (only for Graduate School) -->
+                    <div class="mb-3" id="edit_graduate_group" style="display:none;">
+                        <label for="edit_thesis_title" class="form-label fw-semibold">Thesis/Dissertation Title (If Applicable)</label>
+                        <input type="text" class="form-control" id="edit_thesis_title" name="thesis_title" placeholder="Thesis/Dissertation Title">
+                    </div>
+
                     <!-- Institution -->
                     <div class="mb-3">
                         <label for="edit_institution" class="form-label fw-semibold">Institution</label>
                         <input type="text" class="form-control" id="edit_institution" name="institution" placeholder="Name of School">
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label fw-semibold">Address</label>
+                        <input type="text" class="form-control" id="edit_address" name="address" placeholder="Institution Address">
                     </div>
 
                     <!-- Status (Completed or Not Completed) -->
@@ -1725,7 +2331,7 @@ $stmt->close();
 
                     <!-- Course Highlights (only for College) -->
                     <div class="mb-3" id="edit_course_highlights_group" style="display:none;">
-                        <label for="edit_course_highlights" class="form-label fw-semibold">Course Highlights</label>
+                        <label for="edit_course_highlights" class="form-label fw-semibold">Course Highlights (Optional)</label>
                         <textarea class="form-control" id="edit_course_highlights" name="course_highlights" rows="3" placeholder="Add activities, projects, awards or achievements during your study."></textarea>
                     </div>
 
@@ -1733,13 +2339,13 @@ $stmt->close();
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                        
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 
 
 <!-- Delete Confirmation Modal -->
@@ -1764,7 +2370,7 @@ $stmt->close();
 
 <!-- Add Work Experience Modal -->
 <div class="modal fade" id="addWorkExperienceModal" tabindex="-1" aria-labelledby="addWorkExperienceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Added modal-lg class to increase the width -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addWorkExperienceModalLabel">Add Work Experience</h5>
@@ -1772,87 +2378,107 @@ $stmt->close();
             </div>
             <div class="modal-body">
                 <form method="POST" action="process_work_experience.php">
-                    <!-- Job Title -->
-                    <div class="mb-3">
-                        <label for="job_title" class="form-label fw-semibold">Job Title</label>
-                        <input type="text" class="form-control" id="job_title" name="job_title" placeholder="Job Title" required>
+                    <div class="row">
+                        <!-- Job Title -->
+                        <div class="col-md-6 mb-3">
+                            <label for="job_title" class="form-label fw-semibold">Job Title</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" placeholder="Job Title" required>
+                        </div>
+
+                        <!-- Company Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="company_name" class="form-label fw-semibold">Company Name</label>
+                            <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Company Name" required>
+                        </div>
                     </div>
 
-                    <!-- Company Name -->
-                    <div class="mb-3">
-                        <label for="company_name" class="form-label fw-semibold">Company Name</label>
-                        <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Company Name" required>
+                    <div class="row">
+                        <!-- Job Description -->
+                        <div class="col-md-12 mb-3">
+                            <label for="job_description" class="form-label fw-semibold">Job Description (Optional)</label>
+                            <textarea class="form-control" id="job_description" name="job_description" rows="3" placeholder="Job Description"></textarea>
+                        </div>
                     </div>
 
+                    <div class="row">
+                        <!-- Employment Type -->
+                        <div class="col-md-6 mb-3">
+                            <label for="employment_type" class="form-label fw-semibold">Employment Type</label>
+                            <select class="form-control" id="employment_type" name="employment_type" required>
+                                <option value="fulltime">Full-Time</option>
+                                <option value="parttime">Part-Time</option>
+                                <option value="self-employed">Self-Employed</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="contract">Contract</option>
+                                <option value="internship">Internship</option>
+                                <option value="apprenticeship">Apprenticeship</option>
+                                <option value="seasonal">Seasonal</option>
+                                <option value="home-based">Home-Based</option>
+                                <option value="domestic">Domestic</option>
+                                <option value="temporary">Temporary</option>
+                                <option value="volunteer">Volunteer</option>
+                            </select>
+                        </div>
 
-
-                    <!-- Job Description -->
-                    <div class="mb-3">
-                        <label for="job_description" class="form-label fw-semibold">Job Description</label>
-                        <textarea class="form-control" id="job_description" name="job_description" rows="3" placeholder="Job Description" required></textarea>
+                     <!-- Work Type -->
+                         <div class="col-md-6 mb-3">
+                            <label for="work_type" class="form-label fw-semibold">Work Type</label>
+                            <select class="form-control" id="work_type" name="work_type">
+                                <option value="remote">Remote</option>
+                                <option value="onsite">On-Site</option>
+                                <option value="hybrid">Hybrid</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Employment Type -->
-                    <div class="mb-3">
-                        <label for="employment_type" class="form-label fw-semibold">Employment Type</label>
-                        <select class="form-control" id="employment_type" name="employment_type" required>
-                            <option value="fulltime">Full-Time</option>
-                            <option value="parttime">Part-Time</option>
-                            <option value="self-employed">Self-Employed</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="contract">Contract</option>
-                            <option value="internship">Internship</option>
-                            <option value="apprenticeship">Apprenticeship</option>
-                            <option value="seasonal">Seasonal</option>
-                            <option value="home-based">Home-Based</option>
-                            <option value="domestic">Domestic</option>
-                            <option value="temporary">Temporary</option>
-                            <option value="volunteer">Volunteer</option>
-                        </select>
-                    </div>
-
-                    <!-- Local or Overseas -->
-                    <div class="mb-3">
-                        <label for="job_location" class="form-label fw-semibold">Work Location</label>
-                        <select class="form-control" id="job_location" name="job_location" required>
+                    <div class="row">
+                        <!-- Work Location -->
+                        <div class="col-md-6 mb-3">
+                            <label for="job_location" class="form-label fw-semibold">Work Location</label>
+                            <select class="form-control" id="job_location" name="job_location" required>
                             <option value="local">Local</option>
                             <option value="overseas">Overseas</option>
-                        </select>
+                            </select>
+                        </div>
+
+                        <!-- Address Field -->
+                        <div class="col-md-6 mb-3" id="address-div">
+                            <label for="address" class="form-label fw-semibold">Address (Optional)</label>
+                            <input type="text" class="form-control" id="address" name="address" placeholder="Address">
+                        </div>
                     </div>
 
-                    <!-- Country (only show if overseas) -->
-                    <div class="mb-3" id="country-div" style="display:none;">
-                        <label for="country" class="form-label fw-semibold">Country</label>
-                        <input type="text" class="form-control" id="country" name="country" placeholder="Country">
+                    <div class="row">
+                        <!-- Country Field -->
+                         <div class="col-md-6 mb-3" id="country-div" style="display:none;">
+                            <label for="country" class="form-label fw-semibold">Country</label>
+                            <input type="text" class="form-control" id="country" name="country" placeholder="Please enter which country">
+                        </div>
                     </div>
 
-                    <!-- Work Type -->
-                    <div class="mb-3">
-                        <label for="work_type" class="form-label fw-semibold">Work Type</label>
-                        <select class="form-control" id="work_type" name="work_type">
-                            <option value="remote">Remote</option>
-                            <option value="onsite">On-Site</option>
-                            <option value="hybrid">Hybrid</option>
-                        </select>
+                    <div class="row">
+                        <!-- Currently Working Checkbox -->
+                        <div class="col-md-6 mb-3">
+                            <input type="checkbox" id="currently_working" name="currently_working">
+                            <label for="currently_working" class="form-label">Currently Working Here</label><br>
+                            <small class="text-muted">(End date is optional if you are currently working here)</small>
+                        </div>
                     </div>
 
-                                        <!-- Start Date -->
-                                        <div class="mb-3">
-                        <label for="start_date" class="form-label fw-semibold">Started</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    <div class="row">
+                        <!-- Start Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label fw-semibold">Started</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                        <!-- End Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label fw-semibold">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
                     </div>
 
-                    <!-- End Date -->
-                    <div class="mb-3">
-                        <label for="end_date" class="form-label fw-semibold">End date (Optional)</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date">
-                    </div>
 
-                    <!-- Currently Working Checkbox -->
-                    <div class="mb-3">
-                        <input type="checkbox" id="currently_working" name="currently_working">
-                        <label for="currently_working" class="form-label">Currently Working Here</label>
-                    </div>
 
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save Work Experience</button>
@@ -1865,9 +2491,10 @@ $stmt->close();
 </div>
 
 
+
 <!-- Edit Work Experience Modal -->
 <div class="modal fade" id="editWorkExperienceModal" tabindex="-1" aria-labelledby="editWorkExperienceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Added modal-lg class to increase the width -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editWorkExperienceModalLabel">Edit Work Experience</h5>
@@ -1877,90 +2504,108 @@ $stmt->close();
                 <form method="POST" action="process_work_experience.php">
                     <input type="hidden" id="edit_work_experience_id" name="work_experience_id">
 
-                    <!-- Job Title -->
-                    <div class="mb-3">
-                        <label for="edit_job_title" class="form-label fw-semibold">Job Title</label>
-                        <input type="text" class="form-control" id="edit_job_title" name="job_title" required>
+                    <div class="row">
+                        <!-- Job Title -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_job_title" class="form-label fw-semibold">Job Title</label>
+                            <input type="text" class="form-control" id="edit_job_title" name="job_title" required>
+                        </div>
+
+                        <!-- Company Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_company_name" class="form-label fw-semibold">Company Name</label>
+                            <input type="text" class="form-control" id="edit_company_name" name="company_name" required>
+                        </div>
                     </div>
 
-                    <!-- Company Name -->
-                    <div class="mb-3">
-                        <label for="edit_company_name" class="form-label fw-semibold">Company Name</label>
-                        <input type="text" class="form-control" id="edit_company_name" name="company_name" required>
+                    <div class="row">
+                        <!-- Job Description -->
+                        <div class="col-md-12 mb-3">
+                            <label for="edit_job_description" class="form-label fw-semibold">Job Description(Optional)</label>
+                            <textarea class="form-control" id="edit_job_description" name="job_description" rows="3" ></textarea>
+                        </div>
                     </div>
 
-                                        <!-- Job Description -->
-                                        <div class="mb-3">
-                        <label for="edit_job_description" class="form-label fw-semibold">Job Description</label>
-                        <textarea class="form-control" id="edit_job_description" name="job_description" rows="3" required></textarea>
+                    <div class="row">
+                        <!-- Employment Type -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_employment_type" class="form-label fw-semibold">Employment Type</label>
+                            <select class="form-control" id="edit_employment_type" name="employment_type" required>
+                                <option value="fulltime">Full-Time</option>
+                                <option value="parttime">Part-Time</option>
+                                <option value="self-employed">Self-Employed</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="contract">Contract</option>
+                                <option value="internship">Internship</option>
+                                <option value="apprenticeship">Apprenticeship</option>
+                                <option value="seasonal">Seasonal</option>
+                                <option value="home-based">Home-Based</option>
+                                <option value="domestic">Domestic</option>
+                                <option value="temporary">Temporary</option>
+                                <option value="volunteer">Volunteer</option>
+                            </select>
+                        </div>
+
+                        <!-- Work Type -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_work_type" class="form-label fw-semibold">Work Type</label>
+                            <select class="form-control" id="edit_work_type" name="work_type">
+                                <option value="remote">Remote</option>
+                                <option value="onsite">On-Site</option>
+                                <option value="hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Work Location -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_job_location" class="form-label fw-semibold">Work Location</label>
+                            <select class="form-control" id="edit_job_location" name="job_location" required>
+                                <option value="local">Local</option>
+                                <option value="overseas">Overseas</option>
+                            </select>
+                        </div>
+
+                        <!-- Address Field -->
+                        <div class="col-md-6 mb-3" id="address-div">
+                            <label for="edit_address" class="form-label fw-semibold">Address (Optional)</label>
+                            <input type="text" class="form-control" id="edit_address" name="address" placeholder="Address">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Country Field -->
+                        <div class="col-md-6 mb-3" id="edit_country_div" style="display:none;">
+                            <label for="edit_country" class="form-label fw-semibold">Country</label>
+                            <input type="text" class="form-control" id="edit_country" name="country" placeholder="Please Enter which Country">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Currently Working Checkbox -->
+                        <div class="col-md-6 mb-3">
+                            <input type="checkbox" id="edit_currently_working" name="currently_working">
+                            <label for="edit_currently_working" class="form-label">Currently Working Here</label><br>
+                            <small class="text-muted">(End date is optional if you are currently working here)</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Start Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_start_date" class="form-label fw-semibold">Started</label>
+                            <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_end_date" class="form-label fw-semibold">End Date</label>
+                            <input type="date" class="form-control" id="edit_end_date" name="end_date">
+                        </div>
                     </div>
 
 
-                    <!-- Employment Type -->
-                    <div class="mb-3">
-                    <label for="edit_employment_type" class="form-label fw-semibold">Employment Type</label>
-                        <select class="form-control" id="edit_employment_type" name="employment_type" required>
-                            <option value="fulltime">Full-Time</option>
-                            <option value="parttime">Part-Time</option>
-                            <option value="self-employed">Self-Employed</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="contract">Contract</option>
-                            <option value="internship">Internship</option>
-                            <option value="apprenticeship">Apprenticeship</option>
-                            <option value="seasonal">Seasonal</option>
-                            <option value="home-based">Home-Based</option>
-                            <option value="domestic">Domestic</option>
-                            <option value="temporary">Temporary</option>
-                            <option value="volunteer">Volunteer</option>
-                        </select>
-                    </div>
-
-
-
-                    <!-- Job Location -->
-                    <div class="mb-3">
-                        <label for="edit_job_location" class="form-label fw-semibold">Work Location</label>
-                        <select class="form-control" id="edit_job_location" name="job_location" required>
-                            <option value="local">Local</option>
-                            <option value="overseas">Overseas</option>
-                        </select>
-                    </div>
-
-                    <!-- Country (only show if overseas) -->
-                    <div class="mb-3" id="edit_country_div" style="display:none;">
-                        <label for="edit_country" class="form-label fw-semibold">Country</label>
-                        <input type="text" class="form-control" id="edit_country" name="country" placeholder="Country">
-                    </div>
-
-                                                            <!-- Work Type -->
-                                                            <div class="mb-3">
-                        <label for="edit_work_type" class="form-label fw-semibold">Work Type</label>
-                        <select class="form-control" id="edit_work_type" name="work_type">
-                            <option value="remote">Remote</option>
-                            <option value="onsite">On-Site</option>
-                            <option value="hybrid">Hybrid</option>
-                        </select>
-                    </div>
-
-                    <!-- Start Date -->
-                    <div class="mb-3">
-                        <label for="edit_start_date" class="form-label fw-semibold">Started</label>
-                        <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
-                    </div>
-
-                    <!-- End Date -->
-                    <div class="mb-3">
-                        <label for="edit_end_date" class="form-label fw-semibold">End date (Optional)</label>
-                        <input type="date" class="form-control" id="edit_end_date" name="end_date">
-                    </div>
-
-
-
-                    <!-- Currently Working Checkbox -->
-                    <div class="mb-3">
-                        <input type="checkbox" id="edit_currently_working" name="currently_working">
-                        <label for="edit_currently_working" class="form-label">Currently Working Here</label>
-                    </div>
 
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -1971,6 +2616,7 @@ $stmt->close();
         </div>
     </div>
 </div>
+
 
 
 
@@ -2003,10 +2649,17 @@ $stmt->close();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Instruction Caption before Search Bar -->
+                <div class="mb-3">
+                <small class="text-muted">Please note that if the skill is already saved, it will no longer appear in the search results to avoid duplication. 
+                    To change the proficiency level of a skill, you will need to delete it and then re-add it.</small>
+
+                </div>
+                
                 <!-- Search Bar -->
                 <div class="mb-3">
                     <label for="skillSearch" class="form-label">Search for a skill:</label>
-                    <input type="text" class="form-control" id="skillSearch" placeholder="Type a skill..." oninput="filterSkills()">
+                    <input type="text" class="form-control" id="skillSearch" placeholder="Type a keyword (e.g. Arts, Marketing ..)" oninput="filterSkills()">
                     <div id="skillResults" class="mt-2"></div> <!-- Dropdown for search results -->
                 </div>
 
@@ -2024,11 +2677,11 @@ $stmt->close();
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="addSkill()">Add Skill</button>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Delete Skill Modal -->
 <div class="modal fade" id="deleteSkillModal" tabindex="-1" aria-labelledby="deleteSkillModalLabel" aria-hidden="true">
@@ -2060,6 +2713,12 @@ $stmt->close();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Information message about saved languages -->
+                <small class="d-block mb-2 text-muted">
+                    
+                    Please note that you'll need to delete the language and re-add it if you want to change the fluency level.
+                </small>
+                
                 <!-- Language Dropdown -->
                 <div class="mb-3">
                     <label for="language" class="form-label">Select Language:</label>
@@ -2069,10 +2728,28 @@ $stmt->close();
                         // Fetch all languages from languages_list
                         $query = "SELECT * FROM languages_list ORDER BY language_name";
                         $result = $conn->query($query);
+                        
+                        // Fetch user's already selected languages
+                        $user_id = $_SESSION['user_id'] ?? 0;
+                        $user_languages_query = $conn->prepare("SELECT language_name FROM languages WHERE user_id = ?");
+                        $user_languages_query->bind_param("i", $user_id);
+                        $user_languages_query->execute();
+                        $user_languages_result = $user_languages_query->get_result();
+                        
+                        $user_languages = [];
+                        while ($row = $user_languages_result->fetch_assoc()) {
+                            $user_languages[] = $row['language_name'];
+                        }
+                        
+                        // Display options, excluding already selected languages
                         while ($row = $result->fetch_assoc()):
+                            if (!in_array($row['language_name'], $user_languages)):
                         ?>
                             <option value="<?php echo $row['id']; ?>"><?php echo $row['language_name']; ?></option>
-                        <?php endwhile; ?>
+                        <?php 
+                            endif;
+                        endwhile; 
+                        ?>
                     </select>
                 </div>
 
@@ -2086,11 +2763,15 @@ $stmt->close();
                         <option value="Native">Native</option>
                     </select>
                 </div>
+
+                <!-- Information message about deleting to change fluency -->
+                <small class="d-block">
+                    
+                </small>
             </div>
             <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="addLanguage()">Add Language</button>
+                <button type="button" class="btn btn-primary" onclick="addLanguage()">Add Language</button>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                
             </div>
         </div>
     </div>
@@ -2165,9 +2846,582 @@ $stmt->close();
     </div>
 <?php endif; ?>
 
+<!-- Add Achievement Modal (with file upload option) -->
+<?php if ($_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="addAchievementModal" tabindex="-1" aria-labelledby="addAchievementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAchievementModalLabel">Add Achievement or Award</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="process_achievement.php" enctype="multipart/form-data">
+                    <!-- Award Name -->
+                    <div class="mb-3">
+                        <label for="award_name" class="form-label fw-semibold">Award Name</label>
+                        <input type="text" class="form-control" id="award_name" name="award_name" placeholder="Name of the Award" required>
+                    </div>
+
+                    <!-- Awarding Organization -->
+                    <div class="mb-3">
+                        <label for="organization" class="form-label fw-semibold">Awarding Organization</label>
+                        <input type="text" class="form-control" id="organization" name="organization" placeholder="Name of the Organization" required>
+                    </div>
+
+                    <!-- Award Date -->
+                    <div class="mb-3">
+                        <label for="award_date" class="form-label fw-semibold">Award Date</label>
+                        <input type="date" class="form-control" id="award_date" name="award_date" required>
+                    </div>
+
+                    <!-- Proof File (Optional) -->
+                    <div class="mb-3">
+                    <small for="proof_file" class="form-label  text-muted">
+                        This is optional, but if you wish, you can also attach a file, such as a certificate of recognition.
+                        Stay safe. Don’t include sensitive personal information such as identity documents, health, or financial data.</small>
+
+                        <input type="file" class="form-control" id="proof_file" name="proof_file" accept=".jpg,.jpeg,.png,.gif,.pdf,">
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Achievement</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT Achievement Modal (with file upload option) -->
+<div class="modal fade" id="editAchievementModal" tabindex="-1" aria-labelledby="editAchievementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAchievementModalLabel">Edit Achievement or Award</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="update_achievement.php" enctype="multipart/form-data">
+                    <!-- Achievement ID (Hidden) -->
+                    <input type="hidden" name="achievement_id" id="edit_achievement_id">
+
+                    <!-- Award Name -->
+                    <div class="mb-3">
+                        <label for="edit_award_name" class="form-label fw-semibold">Award Name</label>
+                        <input type="text" class="form-control" id="edit_award_name" name="award_name" placeholder="Name of the Award" required>
+                    </div>
+
+                    <!-- Awarding Organization -->
+                    <div class="mb-3">
+                        <label for="edit_organization" class="form-label fw-semibold">Awarding Organization</label>
+                        <input type="text" class="form-control" id="edit_organization" name="organization" placeholder="Name of the Organization" required>
+                    </div>
+
+                    <!-- Award Date -->
+                    <div class="mb-3">
+                        <label for="edit_award_date" class="form-label fw-semibold">Award Date</label>
+                        <input type="date" class="form-control" id="edit_award_date" name="award_date" required>
+                    </div>
+
+                    <!-- Proof File (Optional) -->
+                    <div class="mb-3">
+                    <small for="proof_file" class="form-label  text-muted">
+                    This is optional, but if you wish, you can also attach a file, such as a certificate of recognition.
+                    Stay safe. Don’t include sensitive personal information such as identity documents, health, or financial data.</small>
+                        <input type="file" class="form-control" id="edit_proof_file" name="proof_file" accept=".jpg,.jpeg,.png,.gif,.pdf,">
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update Achievement</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Delete Achievement Modal -->
+<div class="modal fade" id="deleteAchievementModal" tabindex="-1" aria-labelledby="deleteAchievementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAchievementModalLabel">Delete Achievement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this achievement?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteAchievementForm" method="POST" action="process_delete_achievement.php">
+                    <input type="hidden" name="achievement_id" id="delete_achievement_id">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Certificate Modal -->
+<?php if ($_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="addCertificateModal" tabindex="-1" aria-labelledby="addCertificateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCertificateModalLabel">Add Certificate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="process_certificate.php" enctype="multipart/form-data">
+                        <!-- Certificate Name -->
+                        <div class="mb-3">
+                            <label for="certificate_name" class="form-label fw-semibold">Certificate Name</label>
+                            <input type="text" class="form-control" id="certificate_name" name="certificate_name" placeholder="Name of the Certificate" required>
+                        </div>
+
+                        <!-- Issuing Organization -->
+                        <div class="mb-3">
+                            <label for="issuing_organization" class="form-label fw-semibold">Issuing Organization</label>
+                            <input type="text" class="form-control" id="issuing_organization" name="issuing_organization" placeholder="Organization Name" required>
+                        </div>
+
+                        <!-- Issue Date -->
+                        <div class="mb-3">
+                            <label for="issue_date" class="form-label fw-semibold">Issue Date</label>
+                            <input type="date" class="form-control" id="issue_date" name="issue_date" required>
+                        </div>
+
+                        <!-- Certificate File (Optional) -->
+                        <div class="mb-3">
+                        <small for="proof_file" class="form-label  text-muted">
+                        This is optional, but if you wish, you can also attach a file, such as a certificate of completion.
+                        Stay safe. Don’t include sensitive personal information such as identity documents, health, or financial data.</small>
+                            <input type="file" class="form-control" id="certificate_file" name="certificate_file" accept=".jpg,.jpeg,.png,.gif,.pdf,.docx">
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Certificate</button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Edit Certificate Modal -->
+<div class="modal fade" id="editCertificateModal" tabindex="-1" aria-labelledby="editCertificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCertificateModalLabel">Edit Certificate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="update_certificate.php" enctype="multipart/form-data">
+                    <input type="hidden" name="certificate_id" id="certificate_id">
+
+                    <!-- Certificate Name -->
+                    <div class="mb-3">
+                        <label for="certificate_name_edit" class="form-label fw-semibold">Certificate Name</label>
+                        <input type="text" class="form-control" id="certificate_name_edit" name="certificate_name" placeholder="Name of the Certificate" required>
+                    </div>
+
+                    <!-- Issuing Organization -->
+                    <div class="mb-3">
+                        <label for="issuing_organization_edit" class="form-label fw-semibold">Issuing Organization</label>
+                        <input type="text" class="form-control" id="issuing_organization_edit" name="issuing_organization" placeholder="Organization Name" required>
+                    </div>
+
+                    <!-- Issue Date -->
+                    <div class="mb-3">
+                        <label for="issue_date_edit" class="form-label fw-semibold">Issue Date</label>
+                        <input type="date" class="form-control" id="issue_date_edit" name="issue_date" required>
+                    </div>
+
+                    <!-- Certificate File (Optional) -->
+                    <div class="mb-3">
+                    <small for="proof_file" class="form-label  text-muted">
+                    This is optional, but if you wish, you can also attach a file, such as a certificate of completion. 
+                    Stay safe. Don’t include sensitive personal information such as identity documents, health, or financial data.</small>
+                        <input type="file" class="form-control" id="certificate_file_edit" name="certificate_file" accept=".jpg,.jpeg,.png,.gif,.pdf,.docx">
+                    </div>
+
+                    <!-- Link to View Existing Certificate (if exists) -->
+                    <div id="file-link-container" class="mb-3"></div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update Certificate</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<?php endif; ?>
+
+<!-- Delete Certificate Modal -->
+<div class="modal fade" id="deleteCertificateModal" tabindex="-1" aria-labelledby="deleteCertificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCertificateModalLabel">Delete Certificate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this certificate?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteCertificateForm" method="POST" action="process_delete_certificate.php">
+                    <input type="hidden" name="certificate_id" id="delete_certificate_id">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<?php endif; ?>
+
+
+<!-- Add Reference Modal -->
+<?php if ($_SESSION['user_id'] == $user['id']): ?>
+    <div class="modal fade" id="addReferenceModal" tabindex="-1" aria-labelledby="addReferenceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addReferenceModalLabel">Add Reference</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="process_references.php">
+                    <div class="mb-3">
+                        <label for="reference_name" class="form-label fw-semibold">Reference Name</label>
+                        <input type="text" class="form-control" id="reference_name" name="reference_name" required placeholder="e.g. John Doe">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="position" class="form-label fw-semibold">Position</label>
+                        <input type="text" class="form-control" id="position" name="position" required placeholder="e.g. Senior Developer">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="workplace" class="form-label fw-semibold">Workplace</label>
+                        <input type="text" class="form-control" id="workplace" name="workplace" required placeholder="e.g. ABC Corp">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact_number" class="form-label fw-semibold">Contact Number</label>
+                        <input type="text" class="form-control" id="contact_number" name="contact_number" required placeholder="e.g. 091234567890">
+                    </div>
+
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Reference</button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Reference Modal -->
+<div class="modal fade" id="editReferenceModal" tabindex="-1" aria-labelledby="editReferenceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editReferenceModalLabel">Edit Reference</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="update_reference.php">
+                    <input type="hidden" name="reference_id" id="reference_id">
+
+                    <!-- Reference Name -->
+                    <div class="mb-3">
+                        <label for="reference_name_edit" class="form-label fw-semibold">Reference Name</label>
+                        <input type="text" class="form-control" id="reference_name_edit" name="reference_name" required>
+                    </div>
+
+                    <!-- Position -->
+                    <div class="mb-3">
+                        <label for="position_edit" class="form-label fw-semibold">Position</label>
+                        <input type="text" class="form-control" id="position_edit" name="position" required>
+                    </div>
+
+                    <!-- Workplace -->
+                    <div class="mb-3">
+                        <label for="workplace_edit" class="form-label fw-semibold">Workplace</label>
+                        <input type="text" class="form-control" id="workplace_edit" name="workplace" required>
+                    </div>
+
+                    <!-- Contact Number -->
+                    <div class="mb-3">
+                        <label for="contact_number_edit" class="form-label fw-semibold">Contact Number</label>
+                        <input type="text" class="form-control" id="contact_number_edit" name="contact_number" required>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update Reference</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Delete Reference Modal -->
+<div class="modal fade" id="deleteReferenceModal" tabindex="-1" aria-labelledby="deleteReferenceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteReferenceModalLabel">Delete Reference</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this reference?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteReferenceForm" method="POST" action="process_delete_reference.php">
+                    <input type="hidden" name="reference_id" id="delete_reference_id">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Job Preferences Modal -->
+<div class="modal fade" id="addJobPreferencesModal" tabindex="-1" aria-labelledby="addJobPreferencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addJobPreferencesModalLabel">Add Job Preferences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="process_job_preferences.php">
+                    <!-- Work Type -->
+                    <div class="mb-3">
+                        <label for="work_type" class="form-label fw-semibold">Work Type</label>
+                        <select class="form-control" id="work_type" name="work_type" required>
+                            <option value="onsite">On-Site</option>
+                            <option value="remote">Remote</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+
+                    <!-- Job Location -->
+                    <div class="mb-3">
+                        <label for="job_location" class="form-label fw-semibold">Job Location</label>
+                        <select class="form-control" id="job_location" name="job_location" required>
+                            <option value="local">Local</option>
+                            <option value="overseas">Overseas</option>
+                        </select>
+                    </div>
+
+                    <!-- Employment Type -->
+                    <div class="mb-3">
+                        <label for="employment_type" class="form-label fw-semibold">Employment Type</label>
+                        <select class="form-control" id="employment_type" name="employment_type" required>
+                            <option value="fulltime">Full-Time</option>
+                            <option value="parttime">Part-Time</option>
+                            <option value="self-employed">Self-Employed</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="contract">Contract</option>
+                            <option value="internship">Internship</option>
+                            <option value="apprenticeship">Apprenticeship</option>
+                            <option value="seasonal">Seasonal</option>
+                            <option value="home-based">Home-Based</option>
+                            <option value="domestic">Domestic</option>
+                            <option value="temporary">Temporary</option>
+                            <option value="volunteer">Volunteer</option>
+                        </select>
+                    </div>
+
+                    <!-- Preferred Positions -->
+                    <div class="mb-3">
+                        <label for="preferred_positions" class="form-label fw-semibold">Preferred Positions</label>
+                        <select class="form-control" id="preferred_positions" name="preferred_positions[]" multiple>
+                            <?php
+                                // Fetching available job positions from the database
+                                $positions_query = "SELECT id, position_name FROM job_positions ORDER BY position_name ASC";
+                                $positions_result = $conn->query($positions_query);
+                                while ($position = $positions_result->fetch_assoc()) {
+                                    echo '<option value="' . $position['id'] . '">' . htmlspecialchars($position['position_name']) . '</option>';
+                                }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Job Preferences Modal -->
+<div class="modal fade" id="editJobPreferencesModal" tabindex="-1" aria-labelledby="editJobPreferencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editJobPreferencesModalLabel">Edit Job Preferences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="update_job_preferences.php">
+                    <input type="hidden" id="edit_job_preference_id" name="job_preference_id">
+
+                    <!-- Work Type -->
+                    <div class="mb-3">
+                        <label for="edit_work_type" class="form-label fw-semibold">Work Type</label>
+                        <select class="form-control" id="edit_work_type" name="work_type" required>
+                            <option value="onsite">On-Site</option>
+                            <option value="remote">Remote</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+
+                    <!-- Job Location -->
+                    <div class="mb-3">
+                        <label for="edit_job_location" class="form-label fw-semibold">Job Location</label>
+                        <select class="form-control" id="edit_job_location" name="job_location" required>
+                            <option value="local">Local</option>
+                            <option value="overseas">Overseas</option>
+                        </select>
+                    </div>
+
+                    <!-- Employment Type -->
+                    <div class="mb-3">
+                        <label for="edit_employment_type" class="form-label fw-semibold">Employment Type</label>
+                        <select class="form-control" id="edit_employment_type" name="employment_type" required>
+                            <option value="fulltime">Full-Time</option>
+                            <option value="parttime">Part-Time</option>
+                            <option value="self-employed">Self-Employed</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="contract">Contract</option>
+                            <option value="internship">Internship</option>
+                            <option value="apprenticeship">Apprenticeship</option>
+                            <option value="seasonal">Seasonal</option>
+                            <option value="home-based">Home-Based</option>
+                            <option value="domestic">Domestic</option>
+                            <option value="temporary">Temporary</option>
+                            <option value="volunteer">Volunteer</option>
+                        </select>
+                    </div>
+
+                    <!-- Preferred Positions -->
+                    <div class="mb-3">
+                        <label for="edit_preferred_positions" class="form-label fw-semibold">Preferred Positions</label>
+                        <select class="form-control" id="edit_preferred_positions" name="preferred_positions[]" multiple>
+                            <?php
+                                // Fetching available job positions from the database
+                                $positions_query = "SELECT id, position_name FROM job_positions ORDER BY position_name ASC";
+                                $positions_result = $conn->query($positions_query);
+
+                                // Fetching user's current preferred positions (if any)
+                                $user_preferred_positions_query = "
+                                    SELECT jp_pos.position_id 
+                                    FROM job_preferences jp
+                                    JOIN job_preferences_positions jp_pos ON jp.id = jp_pos.job_preference_id
+                                    WHERE jp.user_id = ? AND jp.id = ?
+                                ";
+                                $user_preferred_positions_stmt = $conn->prepare($user_preferred_positions_query);
+                                $user_preferred_positions_stmt->bind_param("ii", $user_id, $job_preference_id);  // Assuming $user_id and $job_preference_id are available
+                                $user_preferred_positions_stmt->execute();
+                                $user_preferred_positions_result = $user_preferred_positions_stmt->get_result();
+                                $user_preferred_positions = [];
+                                while ($row = $user_preferred_positions_result->fetch_assoc()) {
+                                    $user_preferred_positions[] = $row['position_id'];
+                                }
+
+                                // Display available positions and pre-select user's preferred ones
+                                while ($position = $positions_result->fetch_assoc()) {
+                                    $selected = in_array($position['id'], $user_preferred_positions) ? 'selected' : '';
+                                    echo '<option value="' . $position['id'] . '" ' . $selected . '>' . htmlspecialchars($position['position_name']) . '</option>';
+                                }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Delete Job Preferences Modal -->
+<div class="modal fade" id="deleteJobPreferencesModal" tabindex="-1" aria-labelledby="deleteJobPreferencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteJobPreferencesModalLabel">Delete Job Preferences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your job preferences? This action cannot be undone.</p>
+                <form method="POST" action="process_delete_job_preferences.php">
+                    <input type="hidden" id="delete_job_preference_id" name="job_preference_id">
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Delete</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php endif; ?>
 
 
 <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+<script src="/JOB/assets/script/profile_user.js"></script>
+
 <script>
 
 function removeCoverPhoto() {
@@ -2370,88 +3624,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-    // Function to update fields based on education level selection
-    document.getElementById('education_level').addEventListener('change', function() {
-        var level = this.value;
-
-        // Show/Hide course-related fields based on education level
-        if (level === 'college') {
-            document.getElementById('course_group').style.display = 'block';
-            document.getElementById('course_highlights_group').style.display = 'block';
-        } else {
-            document.getElementById('course_group').style.display = 'none';
-            document.getElementById('course_highlights_group').style.display = 'none';
-        }
-    });
-
-    // Function to update fields based on status selection
-    document.getElementById('status').addEventListener('change', function() {
-        var status = this.value;
-
-        // Show/Hide fields based on status
-        if (status === 'Completed') {
-            document.getElementById('completion_year_group').style.display = 'block';
-            document.getElementById('expected_completion_group').style.display = 'none';
-        } else {
-            document.getElementById('completion_year_group').style.display = 'none';
-            document.getElementById('expected_completion_group').style.display = 'block';
-        }
-    });
-
-    function openEditModal(education) {
-    console.log("Education data:", education); // Debugging: Check if data is passed correctly
-
-    // Pre-fill the form with education data
-    document.getElementById('edit_education_id').value = education.id;
-    document.getElementById('edit_institution').value = education.institution;
-    document.getElementById('edit_status').value = education.status;
-    document.getElementById('edit_education_level').value = education.education_level; // Set education level
-
-    // Show/hide fields based on education level
-    if (education.education_level === 'college') {
-        document.getElementById('edit_course_group').style.display = 'block';
-        document.getElementById('edit_course_highlights_group').style.display = 'block';
-    } else {
-        document.getElementById('edit_course_group').style.display = 'none';
-        document.getElementById('edit_course_highlights_group').style.display = 'none';
-    }
-
-    // Show/hide fields based on status
-    if (education.status === 'Completed') {
-        document.getElementById('edit_completion_year_group').style.display = 'block';
-        document.getElementById('edit_expected_completion_group').style.display = 'none';
-    } else {
-        document.getElementById('edit_completion_year_group').style.display = 'none';
-        document.getElementById('edit_expected_completion_group').style.display = 'block';
-    }
-
-    // Pre-fill additional fields
-    if (education.education_level === 'college') {
-        document.getElementById('edit_course').value = education.course || '';
-        document.getElementById('edit_course_highlights').value = education.course_highlights || '';
-    }
-    if (education.status === 'Completed') {
-        document.getElementById('edit_completion_year').value = education.completion_year || '';
-    } else {
-        document.getElementById('edit_expected_completion_date').value = education.expected_completion_date || '';
-    }
-
-    // Open the modal
-    new bootstrap.Modal(document.getElementById('editEducationModal')).show();
-}
-
-    // Function to open the Delete Confirmation Modal
-    function openDeleteModal(educationId) {
-        // Set the delete link with the education ID
-        document.getElementById('confirmDeleteButton').href = `delete_education.php?id=${educationId}`;
-
-        // Open the modal
-        $('#deleteConfirmationModal').modal('show');
-    }
 
 
 
-// Check if a success message is set in the session
+
+// SWEET ALERT MESSAGE
 <?php if (isset($_SESSION['success_message'])): ?>
     Swal.fire({
             icon: 'success',
@@ -2545,206 +3722,6 @@ if (message) {
         window.history.replaceState({}, document.title, newUrl);
     });
 }
-
-
-
-// SKILL SECTION
-document.getElementById('skillSearch').addEventListener('input', function() {
-    const query = this.value;
-    if (query.length >= 2) { // Start searching after 2 characters
-        fetch(`search_skills.php?query=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                const resultsDiv = document.getElementById('skillResults');
-                resultsDiv.innerHTML = ''; // Clear previous results
-                data.forEach(skill => {
-                    const skillItem = document.createElement('div');
-                    skillItem.className = 'dropdown-item p-2';
-                    skillItem.textContent = `${skill.skill_name} (${skill.category_name})`; // Display skill with category
-                    skillItem.onclick = () => selectSkill(skill.id, `${skill.skill_name} (${skill.category_name})`);
-                    resultsDiv.appendChild(skillItem);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching skills:', error);
-            });
-    }
-});
-
-// Select a skill from the dropdown
-function selectSkill(skillId, skillName) {
-    document.getElementById('skillSearch').value = skillName;
-    document.getElementById('skillResults').innerHTML = ''; // Clear dropdown
-    selectedSkillId = skillId; // Store selected skill ID globally
-}
-
-// Add the selected skill to the user's profile
-function addSkill() {
-    const proficiency = document.getElementById('proficiencyLevel').value;
-    if (selectedSkillId) {
-        fetch('add_skill.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ skill_id: selectedSkillId, proficiency: proficiency })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload(); // Refresh the page to show the new skill
-            } else {
-                alert('Failed to add skill.');
-            }
-        });
-    } else {
-        alert('Please select a skill.');
-    }
-}
-
-// Delete a skill after confirmation
-function deleteSkill(skillId) {
-    fetch('delete_skill.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skill_id: skillId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload(); // Refresh the page to reflect the deletion
-        } else {
-            alert('Failed to delete skill.');
-        }
-    });
-}
-
-// Store the skill ID to be deleted
-let skillToDelete = null;
-
-// Function to open the delete skill modal and store the skill ID
-function openDeleteSkillModal(skillId) {
-    skillToDelete = skillId; // Store the skill ID for later use
-    // Open the modal
-    $('#deleteSkillModal').modal('show');
-}
-
-// Function to delete the skill after confirming in the modal
-document.getElementById('confirmDeleteSkillBtn').addEventListener('click', function() {
-    if (skillToDelete !== null) {
-        deleteSkill(skillToDelete);
-        // Close the modal after confirming
-        $('#deleteSkillModal').modal('hide');
-    }
-});
-
-let selectedLanguageId = null; // Variable to hold the selected language ID
-
-// Function to handle adding a language
-function addLanguage() {
-    const fluency = document.getElementById('fluency').value;
-    
-    // Check if a language is selected
-    if (selectedLanguageId) {
-        fetch('add_language.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ language_id: selectedLanguageId, fluency: fluency })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload(); // Refresh the page to show the new language
-            } else {
-                alert('Failed to add language.');
-            }
-        });
-    } else {
-        alert('Please select a language.');
-    }
-}
-
-// Function to handle the language selection
-document.getElementById('language').addEventListener('change', function () {
-    selectedLanguageId = this.value; // Store the selected language ID
-});
-
-
-// Store the language ID to be deleted
-let languageToDelete = null;
-
-// Function to open the delete language modal and store the language ID
-function openDeleteLanguageModal(languageId) {
-    languageToDelete = languageId; // Store the language ID for later use
-    // Open the modal
-    $('#deleteLanguageModal').modal('show');
-}
-
-// Function to delete the language after confirming in the modal
-document.getElementById('confirmDeleteLanguageBtn').addEventListener('click', function() {
-    if (languageToDelete !== null) {
-        deleteLanguage(languageToDelete);
-        // Close the modal after confirming
-        $('#deleteLanguageModal').modal('hide');
-    }
-});
-
-// Delete a language after confirmation
-function deleteLanguage(languageId) {
-    fetch('delete_language.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language_id: languageId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload(); // Refresh the page to reflect the deletion
-        } else {
-            alert('Failed to delete language.');
-        }
-    });
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    const jobLocationField = document.getElementById("job_location");
-    const countryDiv = document.getElementById("country-div");
-    const countryInput = document.getElementById("country");
-
-    // Function to toggle the country input visibility based on location selection
-    function toggleCountryField() {
-        if (jobLocationField.value === "overseas") {
-            countryDiv.style.display = "block"; // Show the country input
-        } else {
-            countryDiv.style.display = "none"; // Hide the country input
-        }
-    }
-
-    // Run the function when the page loads to set the correct initial state
-    toggleCountryField();
-
-    // Add an event listener to the job location field to trigger the function when it changes
-    jobLocationField.addEventListener("change", toggleCountryField);
-
-    // --- For the Edit Modal ---
-    const editJobLocationField = document.getElementById("edit_job_location");
-    const editCountryDiv = document.getElementById("edit_country_div");
-
-    // Function to toggle the country input visibility in the edit modal
-    function toggleEditCountryField() {
-        if (editJobLocationField.value === "overseas") {
-            editCountryDiv.style.display = "block";
-        } else {
-            editCountryDiv.style.display = "none";
-        }
-    }
-
-    // Run the function when the page loads to set the correct initial state for edit modal
-    toggleEditCountryField();
-
-    // Add an event listener to the edit job location field
-    editJobLocationField.addEventListener("change", toggleEditCountryField);
-});
-
-
 
 
 

@@ -191,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_profile_pic'])
 
 
 
+
 // Handle caption (bio) update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
     $caption = trim($_POST['caption']);
@@ -199,7 +200,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['caption'])) {
     $stmt->bind_param("si", $caption, $user_id);
 
     if ($stmt->execute()) {
-        echo "<div class='alert alert-success'>Caption updated successfully.</div>";
         // Using JavaScript to reload the page instead of header()
         echo "<script>window.location.href = 'profile.php?id=$user_id';</script>";
         exit(); // Make sure to stop further execution
@@ -528,52 +528,64 @@ if (isset($_SESSION['message'])) {
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="section-title resume-section text-primary" style="font-family: 'Roboto', sans-serif; font-weight: bold; color: #333;">Personal Information</h3>
         <button id="toggle-personal-info-section" class="btn btn-link text-secondary p-0" style="font-size: 1.2rem; background: none; border: none;">
-            <i class="fas fa-chevron-up"></i> <!-- Initially showing the up arrow because the section is visible -->
+            <i class="fas fa-chevron-up"></i>
         </button>
     </div>
     <div id="personal-info-section" style="background-color: #fff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); padding: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-    <div class="row">
-        <!-- Left Column -->
-        <div class="col-md-6">
-            <p class="mb-3"><strong><i class="fas fa-envelope me-2" style="color: #17A2B8;"></i>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-            <p class="mb-3"><strong><i class="fas fa-venus-mars me-2" style="color: #FFC107;"></i>Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
-            <p class="mb-3"><strong><i class="fas fa-birthday-cake me-2" style="color: #28A745;"></i>Birth Date:</strong> <?php echo htmlspecialchars($user['birth_date']); ?></p>
-            <p class="mb-3"><strong><i class="fas fa-hourglass-half me-2" style="color: #DC3545;"></i>Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <p class="mb-3"><strong><i class="fas fa-envelope me-2" style="color: #17A2B8;"></i>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-venus-mars me-2" style="color: #FFC107;"></i>Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
+                <p class="mb-3">
+                    <strong><i class="fas fa-birthday-cake me-2" style="color: #28A745;"></i>Birth Date:</strong> 
+                    <?php 
+                    $birthDate = new DateTime($user['birth_date']);
+                    echo htmlspecialchars($birthDate->format('F j, Y')); 
+                    ?>
+                </p>
+                <p class="mb-3"><strong><i class="fas fa-hourglass-half me-2" style="color: #DC3545;"></i>Age:</strong> <?php echo htmlspecialchars($user['age']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-ruler me-2" style="color: #6F42C1;"></i>Height:</strong> <?php echo round((float) htmlspecialchars($user['height'])); ?> cm</p>
+                <p class="mb-3"><strong><i class="fas fa-weight me-2" style="color: #FD7E14;"></i>Weight:</strong> <?php echo round((float) htmlspecialchars($user['weight'])); ?> kg</p>
+
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <p class="mb-3"><strong><i class="fas fa-ring me-2" style="color: #6F42C1;"></i>Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-phone me-2" style="color: #FD7E14;"></i>Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-map-marker-alt me-2" style="color: #6610F2;"></i>Address:</strong>
+                    <?php
+                    // Query to fetch the barangay name based on the barangay ID
+                    $barangay_query = "SELECT name FROM barangay WHERE id = ?";
+                    if ($stmt = $conn->prepare($barangay_query)) {
+                        $stmt->bind_param("i", $user['barangay']);
+                        $stmt->execute();
+                        $stmt->bind_result($barangay_name);
+                        $stmt->fetch();
+                        $stmt->close();
+
+                        // Display the address with the barangay name
+                        echo htmlspecialchars($user['street_address']) . ', ' . htmlspecialchars($barangay_name) . ', ' . htmlspecialchars($user['city']);
+                    }
+                    ?>
+                </p>
+                <p class="mb-3"><strong><i class="fas fa-map-pin me-2" style="color: #6C757D;"></i>Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-cross me-2" style="color: #007BFF;"></i>Religion:</strong> <?php echo htmlspecialchars($user['religion']); ?></p>
+                <p class="mb-3"><strong><i class="fas fa-flag me-2" style="color: #17A2B8;"></i>Nationality:</strong> <?php echo htmlspecialchars($user['nationality']); ?></p>
+            </div>
         </div>
 
-        <!-- Right Column -->
-        <div class="col-md-6">
-            <p class="mb-3"><strong><i class="fas fa-ring me-2" style="color: #6F42C1;"></i>Civil Status:</strong> <?php echo htmlspecialchars($user['civil_status']); ?></p>
-            <p class="mb-3"><strong><i class="fas fa-phone me-2" style="color: #FD7E14;"></i>Phone Number:</strong> <?php echo htmlspecialchars($user['phone_number']); ?></p>
-            <p class="mb-3"><strong><i class="fas fa-map-marker-alt me-2" style="color: #6610F2;"></i>Address:</strong>
-                <?php
-                // Query to fetch the barangay name based on the barangay ID
-                $barangay_query = "SELECT name FROM barangay WHERE id = ?";
-                if ($stmt = $conn->prepare($barangay_query)) {
-                    $stmt->bind_param("i", $user['barangay']); // Bind the barangay ID from the user's data
-                    $stmt->execute();
-                    $stmt->bind_result($barangay_name);
-                    $stmt->fetch();
-                    $stmt->close();
-
-                    // Display the address with the barangay name
-                    echo htmlspecialchars($user['street_address']) . ', ' . htmlspecialchars($barangay_name) . ', ' . htmlspecialchars($user['city']);
-                }
-                ?>
-            </p>
-            <p class="mb-3"><strong><i class="fas fa-map-pin me-2" style="color: #6C757D;"></i>Zip Code:</strong> <?php echo htmlspecialchars($user['zip_code']); ?></p>
-        </div>
+        <!-- Edit Button -->
+        <?php if ($_SESSION['user_id'] == $user['id']): ?>
+            <div class="mt-4">
+                <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal">
+                    <i class="fas fa-edit me-2"></i> Edit Info
+                </button>
+            </div>
+        <?php endif; ?>
     </div>
-
-    <!-- Edit Button -->
-    <?php if ($_SESSION['user_id'] == $user['id']): ?>
-        <div class="mt-4">
-            <button class="btn btn-outline-custom btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonalInfoModal" >
-                <i class="fas fa-edit me-2"></i> Edit Info
-            </button>
-        </div>
-    <?php endif; ?>
-</div>
 </div>
 
 
@@ -1173,7 +1185,7 @@ if (isset($_SESSION['message'])) {
 
 <!-- Modal for Editing Personal Information -->
 <div class="modal fade" id="editPersonalInfoModal" tabindex="-1" aria-labelledby="editPersonalInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Added modal-lg class to increase the width -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editPersonalInfoModalLabel">Edit Personal Information</h5>
@@ -1181,73 +1193,121 @@ if (isset($_SESSION['message'])) {
             </div>
             <div class="modal-body">
                 <form action="update_personal_info.php" method="POST">
-                    <div class="mb-3">
+                    <div class="row">
+                        <!-- First row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                                <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                                <option value="Non-Binary" <?php echo ($user['gender'] == 'Non-Binary') ? 'selected' : ''; ?>>Non-Binary</option>
+                                <option value="LGBTQ+" <?php echo ($user['gender'] == 'LGBTQ+') ? 'selected' : ''; ?>>LGBTQ+</option>
+                                <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <label for="email" class="form-label">Email</label>
-                        <!-- Set the email field to readonly so it's not editable -->
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly required>
+                    <div class="row">
+                        <!-- Second row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="birth_date" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+                            <!-- Add a span to display the calculated age -->
+                            <small id="ageDisplay" class="form-text text-muted"></small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="religion" class="form-label">Religion</label>
+                            <input type="text" class="form-control" id="religion" name="religion" value="<?php echo htmlspecialchars($user['religion']); ?>">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="gender" class="form-label">Gender</label>
-                        <select class="form-select" id="gender" name="gender" required>
-                            <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-                            <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-                            <option value="Non-Binary" <?php echo ($user['gender'] == 'Non-Binary') ? 'selected' : ''; ?>>Non-Binary</option>
-                            <option value="LGBTQ+" <?php echo ($user['gender'] == 'LGBTQ+') ? 'selected' : ''; ?>>LGBTQ+</option>
-                            <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="birth_date" class="form-label">Birth Date</label>
-                        <input type="date" class="form-control" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="civil_status" class="form-label">Civil Status</label>
-                        <select class="form-select" id="civil_status" name="civil_status" required>
-                            <option value="Single" <?php echo ($user['civil_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
-                            <option value="Married" <?php echo ($user['civil_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
-                            <option value="Divorced" <?php echo ($user['civil_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
-                            <option value="Widowed" <?php echo ($user['civil_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="street_address" class="form-label">Street Address</label>
-                        <input type="text" class="form-control" id="street_address" name="street_address" value="<?php echo htmlspecialchars($user['street_address']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="barangay" class="form-label">Barangay</label>
-                        <select name="barangay" id="barangay" class="form-select" required>
-                            <option value="">Select Barangay</option>
-                            <?php
-                            // Fetch barangays from the database
-                            $query = "SELECT * FROM barangay";
-                            $result = $conn->query($query);
 
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    // Checking if the current barangay is the selected one (e.g., pre-populate if editing)
-                                    $selected = ($row['id'] == $user['barangay']) ? 'selected' : '';
-                                    echo "<option value='" . $row['id'] . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                    <div class="row">
+                        <!-- Third row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="weight" class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" id="weight" name="weight" value="<?php echo htmlspecialchars($user['weight']); ?>" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="height" class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" id="height" name="height" value="<?php echo htmlspecialchars($user['height']); ?>" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fourth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nationality" class="form-label">Nationality</label>
+                            <input type="text" class="form-control" id="nationality" name="nationality" value="<?php echo htmlspecialchars($user['nationality']); ?>">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fifth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="civil_status" class="form-label">Civil Status</label>
+                            <select class="form-select" id="civil_status" name="civil_status" required>
+                                <option value="Single" <?php echo ($user['civil_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
+                                <option value="Married" <?php echo ($user['civil_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
+                                <option value="Divorced" <?php echo ($user['civil_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
+                                <option value="Widowed" <?php echo ($user['civil_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="street_address" class="form-label">Street Address</label>
+                            <input type="text" class="form-control" id="street_address" name="street_address" value="<?php echo htmlspecialchars($user['street_address']); ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Sixth row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="barangay" class="form-label">Barangay</label>
+                            <select name="barangay" id="barangay" class="form-select" required>
+                                <option value="">Select Barangay</option>
+                                <?php
+                                // Fetch barangays from the database
+                                $query = "SELECT * FROM barangay";
+                                $result = $conn->query($query);
+
+                                if ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        // Checking if the current barangay is the selected one (e.g., pre-populate if editing)
+                                        $selected = ($row['id'] == $user['barangay']) ? 'selected' : '';
+                                        echo "<option value='" . $row['id'] . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                                    }
+                                } else {
+                                    echo "<option value=''>No Barangays Available</option>";
                                 }
-                            } else {
-                                echo "<option value=''>No Barangays Available</option>";
-                            }
-                            ?>
-                        </select>
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($user['city']); ?>" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="city" class="form-label">City</label>
-                        <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($user['city']); ?>" required>
+
+                    <div class="row">
+                        <!-- Seventh row -->
+                        <div class="col-md-6 mb-3">
+                            <label for="zip_code" class="form-label">Zip Code</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" value="<?php echo htmlspecialchars($user['zip_code']); ?>" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="zip_code" class="form-label">Zip Code</label>
-                        <input type="text" class="form-control" id="zip_code" name="zip_code" value="<?php echo htmlspecialchars($user['zip_code']); ?>" required>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </form>
             </div>
         </div>

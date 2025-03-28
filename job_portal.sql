@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 23, 2025 at 04:51 PM
+-- Generation Time: Mar 26, 2025 at 12:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,7 +62,7 @@ CREATE TABLE `achievements` (
 --
 
 INSERT INTO `achievements` (`id`, `user_id`, `award_name`, `organization`, `award_date`, `proof_file`) VALUES
-(5, 67, 'ICPep Region IX Quiz bowl Champion', ' Institute of Computer Engineers of the Philippines', '2025-03-20', '../uploads/achievements/vengwapo_1742439839.jpg');
+(5, 67, 'ICPep Region IX Quiz bowl Champion', ' Institute of Computer Engineers of the Philippines', '2017-09-30', '../uploads/achievements/vengwapo_1742439839.jpg');
 
 -- --------------------------------------------------------
 
@@ -86,7 +86,7 @@ CREATE TABLE `ads` (
 INSERT INTO `ads` (`id`, `title`, `description`, `image_file`, `link_url`, `created_at`) VALUES
 (33, ' Lorem Ipsum', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 'ad_67da82a2190d49.95136902.JPG', 'https://www.facebook.com/venchansalido/', '2025-03-19 08:38:58'),
 (34, '🎉 コスプレイベントのお知らせ！ 🎉', '皆さん、準備はできていますか？待ちに待った コスプレイベント がついに開催されます！\r\n\r\n📅 日時: 2025年4月20日（日）\r\n🕘 時間: 午前10時 〜 午後6時\r\n📍 場所: 東京ビッグサイト (イベントホールA)\r\n🎟️ 入場料: 前売り券 2,000円 / 当日券 2,500円\r\n\r\nお気に入りのキャラクターになりきって、楽しいひとときを過ごしましょう！撮影ブースやコンテスト、スペシャルゲストのトークショーもお楽しみに！\r\n\r\nさらに、限定グッズやフードエリアも充実！お友達と一緒に、最高の思い出を作りませんか？\r\n\r\n📸 コスプレコンテスト参加者募集中！\r\nエントリーは公式ウェブサイトから！あなたの素敵なコスプレ姿をみんなに披露しましょう！\r\n\r\n✨ みんなで盛り上がる特別な一日を一緒に楽しみましょう！\r\n詳細は公式サイトをご覧ください。', 'ad_67da84953fef19.33772224.jpg', 'https://www.google.com/search?q=otaku&sca_esv=bb7e2807df5d4671&udm=2&biw=1912&bih=1000&ei=b4TaZ5OuLP_j2roPstDO8Qg&ved=0ahUKEwjTocf64JWMAxX_sVYBHTKoM44Q4dUDCBQ&uact=5&oq=otaku&gs_lp=EgNpbWciBW90YWt1MggQABiABBixAzIIEAAYgAQYsQMyBRAAGIAEMggQABiABBixAzIFEAAYgA', '2025-03-19 08:47:17'),
-(35, '📢 𝙋𝙐𝘽𝙇𝙄𝘾 𝘼𝙉𝙉𝙊𝙐𝙉𝘾𝙀𝙈𝙀𝙉𝙏 📢', 'Dear valued stakeholders, job seekers, employers, and partners,\r\nAs our 𝙤𝙛𝙛𝙞𝙘𝙞𝙖𝙡 𝙋𝙀𝙎𝙊 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝙁𝙖𝙘𝙚𝙗𝙤𝙤𝙠 𝙥𝙖𝙜𝙚 𝙞𝙨 𝙘𝙪𝙧𝙧𝙚𝙣𝙩𝙡𝙮 𝙨𝙪𝙨𝙥𝙚𝙣𝙙𝙚𝙙, we will be using this temporary account to continue providing you with timely updates, job opportunities, and important announcements.\r\nWe kindly ask for your support—𝙥𝙡𝙚𝙖𝙨𝙚 𝙛𝙤𝙡𝙡𝙤𝙬 𝙩𝙝𝙞𝙨 𝙖𝙘𝙘𝙤𝙪𝙣𝙩 𝙖𝙣𝙙 𝙨𝙝𝙖𝙧𝙚 𝙩𝙝𝙞𝙨 𝙥𝙤𝙨𝙩 so we can reach more people. Your patience and understanding are greatly appreciated as we work on resolving this issue.\r\n𝙋𝙪𝙗𝙡𝙞𝙘 𝙀𝙢𝙥𝙡𝙤𝙮𝙢𝙚𝙣𝙩 𝙎𝙚𝙧𝙫𝙞𝙘𝙚 𝙊𝙛𝙛𝙞𝙘𝙚 (𝙋𝙀𝙎𝙊) – 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝘾𝙞𝙩𝙮', 'ad_67da9336560744.27471085.jpg', 'https://www.facebook.com/profile.php?id=61573999820314', '2025-03-19 09:49:42');
+(51, 'Вас ждёт тёплый приём!', 'Добро пожаловать! Мы рады видеть вас здесь. Надеемся, что ваше пребывание будет комфортным и приятным. В случае вопросов или необходимости помощи, не стесняйтесь обращаться — мы всегда готовы помочь. Пусть ваше время здесь будет насыщенным и незабываемым!', 'ad_67e0c71cc9f490.89457999.jpg', 'https://www.google.com/search?sca_esv=4ad496d1768baf99&q=russia&udm=2&fbs=ABzOT_CWdhQLP1FcmU5B0fn3xuWpmDtIGL1r84kuKz6yAcD_ivAVmKZxU_UoutG-TG5lqbs6lRwhrq5ZB_F86GMJ9ziSPgEMdzF9oWHux8J_Ycp-Gz9-Yc-VsnX_m-soKQMKJK4WpoKYGV12-Z3Dw16Vc3chUkD3gowLb_y2WHJ2cvpXOiJf8', '2025-03-24 02:44:44');
 
 -- --------------------------------------------------------
 
@@ -388,7 +388,7 @@ CREATE TABLE `certificates` (
 --
 
 INSERT INTO `certificates` (`id`, `user_id`, `certificate_name`, `issuing_organization`, `issue_date`, `certificate_file`) VALUES
-(4, 67, 'ICPep Region IX Quiz bowl Champion', 'Institute of Computer Engineers of the Philippines', '2025-03-20', '../uploads/certificates/vengwapo_1742444606.jpg');
+(8, 67, 'Certification of Eligibility (Professional)', 'Civil Service Commission ', '2024-05-09', '../uploads/certificates/vengwapo_1742970228.jpg');
 
 -- --------------------------------------------------------
 
@@ -430,18 +430,18 @@ CREATE TABLE `education` (
   `status` enum('Completed','Not Completed') NOT NULL,
   `completion_year` int(11) DEFAULT NULL,
   `expected_completion_date` date DEFAULT NULL,
-  `course_highlights` text DEFAULT NULL
+  `course_highlights` text DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `education`
 --
 
-INSERT INTO `education` (`id`, `user_id`, `education_level`, `course`, `institution`, `status`, `completion_year`, `expected_completion_date`, `course_highlights`) VALUES
-(15, 67, 'primary', '', 'Zamboanga West Central School', 'Completed', 2007, '0000-00-00', ''),
-(17, 67, 'secondary', '', 'Zamboanga City High School (Main)', 'Completed', 2011, '0000-00-00', ''),
-(23, 67, 'college', 'BS in Information Technology', 'Western Mindanao State University', 'Not Completed', 0, '2026-05-12', 'Summa cumlaude'),
-(27, 67, 'vocational', 'Massage Therapy', 'TESDA (Technical Education and Skills Development Authority)', 'Completed', 2011, '0000-00-00', '');
+INSERT INTO `education` (`id`, `user_id`, `education_level`, `course`, `institution`, `status`, `completion_year`, `expected_completion_date`, `course_highlights`, `address`) VALUES
+(15, 67, 'primary', '', 'Zamboanga West Central School', 'Completed', 2007, '0000-00-00', '', 'Varela Street, Zamboanga City 7000'),
+(17, 67, 'secondary', '', 'Zamboanga City High School (Main)', 'Completed', 2011, '0000-00-00', '', 'Don Alfaro Street, Barangay Tetuan, Zamboanga City 7000'),
+(23, 67, 'college', 'BS in Information Technology', 'Western Mindanao State University', 'Not Completed', 0, '2026-05-12', '', 'Normal Rd, Zamboanga, 7000 Zamboanga del Sur');
 
 -- --------------------------------------------------------
 
@@ -562,7 +562,7 @@ INSERT INTO `jobs` (`id`, `title`, `description`, `thumbnail`, `photo`, `created
 (24, 'Tourist Guide for Hire', 'We are looking for an enthusiastic, knowledgeable, and personable Tourist Guide to join our team. The ideal candidate will be passionate about sharing the history, culture, and beauty of our region with travelers. You will lead groups on guided tours, providing engaging and informative commentary while ensuring a safe and enjoyable experience for all guests. Your goal is to offer an immersive and memorable experience for tourists by showcasing key attractions and providing insightful information about local landmarks and traditions.', 'uploads/admin_job_thumbnail/admin_67db8cc26ca53.jpg', 'uploads/admin_job_photo/admin_67db8cc26cddf.jpg', '2025-02-19 05:57:33', 9, 'Bolong', NULL, 'Lead guided tours for individuals or groups, providing information about the history, culture, and significance of local landmarks and attractions.\r\nShare interesting and engaging facts about the region’s heritage, traditions, and natural features.\r\nEnsure the safety and well-being of all participants during the tour, including managing group dynamics and addressing any concerns.\r\nTailor tours based on the interests and needs of the group, ensuring an enjoyable experience for people of all ages and backgrounds.\r\nMaintain a friendly and approachable demeanor while answering questions and engaging with tourists.\r\nAssist with tour bookings, providing detailed information to potential customers about available tours and schedules.\r\nCoordinate logistics for the tour, including transportation, timing, and ensuring all necessary resources are available.\r\nAdhere to all safety protocols and ensure that all guests are following guidelines throughout the tour.\r\nContinuously stay informed about local events, news, and changes to landmarks or attractions to provide up-to-date information.\r\nManage any issues or concerns that arise during the tour, providing solutions or escalating as', 'Proven experience as a Tourist Guide, or in a similar customer-facing role (hospitality, travel, or tourism).\r\nStrong knowledge of local attractions, landmarks, history, culture, and natural resources.\r\nExcellent communication skills, with the ability to engage and entertain a diverse group of people.\r\nStrong interpersonal skills and the ability to build rapport with tourists and colleagues.\r\nFluent in English (additional language skills are a plus).\r\nAbility to work in various weather conditions and during irregular hours, including weekends and holidays.\r\nA friendly, approachable, and positive attitude, with a passion for sharing knowledge.\r\nStrong organizational skills to manage group logistics and keep tours running smoothly.\r\nAbility to handle minor issues or challenges calmly and professionally during the tour.\r\nFirst aid certification (preferred but not required).', 'Certification in tourism or a related field (e.g., Certified Tourist Guide, Tourism Management).\r\nKnowledge of multiple languages to accommodate tourists from different regions.\r\nFamiliarity with a variety of tour-related technology (audio systems, mobile apps, etc.).\r\nPrevious experience in a customer service role, particularly in the travel or hospitality industry.\r\nPassion for local culture, history, or nature conservation.\r\nAbility to create customized, themed tours for specific types of tourists (e.g., history buffs, families, adventure seekers).', 'approved', 0, NULL),
 (25, 'School Bus Driver For Hire', 'We are seeking a reliable and dedicated School Bus Driver to ensure the safe and timely transportation of students to and from school. As a School Bus Driver, you will be responsible for operating the school bus, maintaining a positive environment for students, and following all safety regulations. If you have a passion for working with children and a commitment to ensuring their safety, we encourage you to apply', 'uploads/admin_job_thumbnail/driver.jpg', 'uploads/admin_job_photo/bbbbbb.jpg', '2025-02-19 06:09:42', 30, 'Cabaluay', NULL, 'Safely drive the school bus according to established routes and schedules.\r\nEnsure the safety of all students during loading, unloading, and the duration of the ride.\r\nAdhere to all traffic laws, school policies, and safety procedures.\r\nAssist students in boarding and exiting the bus as needed.\r\nMaintain regular communication with the school and parents regarding any schedule changes or concerns.\r\nPerform routine inspections of the bus to ensure it is in good working order.\r\nReport any maintenance or mechanical issues promptly.\r\nEnsure the bus is clean and presentable at all times.\r\nFollow protocols for emergencies, including evacuation drills and first aid as required.', 'Valid Commercial Driver’s License (CDL) with School Bus Endorsement.\r\nClean driving record with no major traffic violations.\r\nAbility to pass a background check and drug screening.\r\nAbility to work with children and maintain control of the bus environment.\r\nGood communication and interpersonal skills.\r\nPhysical ability to assist students in case of emergency or to maintain the safety of the bus.\r\nAvailability to work early mornings and afternoons, depending on school schedules.', 'Previous experience as a school bus driver or in a similar transportation role.\r\nFirst Aid and CPR certification.\r\nKnowledge of local roads and traffic patterns.\r\nFamiliarity with school district transportation rules and guidelines.\r\nBilingual skills (if applicable).', 'approved', 0, NULL),
 (59, 'GYM INSTRUCTOR FOR HIRE', 'We are seeking a passionate and certified Gym Instructor to join our fitness team. The ideal candidate will have a strong understanding of fitness principles, excellent communication skills, and a commitment to motivating others to achieve their fitness goals. As a Gym Instructor, you will be responsible for leading individual and group workout sessions, providing guidance on proper form and technique, and ensuring a safe and welcoming environment for all gym members.', 'uploads/admin_job_thumbnail/GYM.jpg', 'uploads/admin_job_photo/YEAH BUDDY!.jpg', '2025-02-24 10:21:38', 29, 'Guiwan', 'Beside AMA College, inside the fruitstand,', 'Conduct individual and group fitness classes, including strength training, cardio, and flexibility workouts.\r\nAssess clients&#039; fitness levels and create personalized training plans.\r\nMonitor clients&#039; progress, adjusting training programs as needed.\r\nEnsure the safety and proper use of gym equipment.\r\nProvide advice and support to gym members on proper workout techniques and nutrition.\r\nMaintain a clean and organized gym environment.\r\nStay up to date with industry trends and continuously improve your fitness knowledge.', 'Certification in personal training or group fitness (e.g., NASM, ACE, or equivalent).\r\nHigh school diploma or equivalent; a degree in kinesiology, exercise science, or a related field is preferred.\r\nProven experience as a gym instructor or personal trainer.\r\nExcellent communication and interpersonal skills.\r\nAbility to motivate and inspire clients to reach their fitness goals.\r\nBasic knowledge of nutrition and wellness principles.\r\nAbility to work flexible hours, including evenings and weekends.', 'Experience in teaching specialized fitness classes (e.g., yoga, Pilates, HIIT).\r\nCPR and First Aid certification.\r\nAdditional certifications in advanced training techniques or fitness programs.\r\nExperience working with diverse populations, including elderly or rehabilitation clients.', 'approved', 0, NULL),
-(63, 'BUDGET WISE HIRING!', '𝙋𝙧𝙚𝙨𝙚𝙣𝙩𝙞𝙣𝙜 𝙩𝙝𝙚 𝙀𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 &amp;amp;amp;amp;amp; 𝙅𝙤𝙗 𝙊𝙥𝙥𝙤𝙧𝙩𝙪𝙣𝙞𝙩𝙞𝙚𝙨 𝙖𝙩 𝙩𝙝𝙚 88𝙩𝙝 𝘿𝙞𝙖 𝙙𝙚 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝙅𝙤𝙗 𝙁𝙖𝙞𝙧! \r\n\r\nPESO Zamboanga is excited to introduce the 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙚𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 participating in this year’s Dia de Zamboanga Job Fair on February 26, 2025, at KCC Mall de Zamboanga – East Wing! Get ready to explore 4,421 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 7,972 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙤𝙛 𝙟𝙤𝙗 𝙫𝙖𝙘𝙖𝙣𝙘𝙞𝙚𝙨 in various industries.', 'uploads/admin_job_thumbnail/admin_67db8bf4c1406.jpg', 'uploads/admin_job_photo/admin_67db8bf4c1842.jpg', '2025-02-25 05:05:16', 0, 'Calarian', NULL, 'Cashier:\r\n\r\n-Handle cash transactions with customers using cash registers.\r\n\r\n-Scan goods and ensure pricing is accurate.\r\n\r\n-Issue receipts, refunds, or change.\r\n\r\n-Count money in cash drawers at the beginning and end of shifts to ensure that amounts are correct.\r\n\r\nCustomer Service Representative:\r\n\r\n-Greet customers and provide assistance.\r\n\r\n-Handle customer complaints, provide appropriate solutions, and follow up to ensure resolution.\r\n\r\n-Maintain a positive and professional demeanor to enhance customer experience.\r\n\r\n-Assist with product inquiries and information.\r\n\r\nInventory Counter:\r\n\r\n-Monitor and maintain inventory levels.\r\n\r\n-Conduct regular inventory audits and stock checks.\r\n\r\n-Enter inventory data into the system.\r\n\r\n-Assist in restocking shelves and organizing the warehouse.\r\n\r\nMerchandiser:\r\n\r\n-Ensure merchandise is visually appealing and correctly displayed.\r\n\r\n-Arrange products and create attractive displays.\r\n\r\n-Monitor stock levels and coordinate with the inventory team.\r\n\r\nImplement promotional campaigns and signage.\r\n\r\nSales Associate:\r\n\r\n-Assist customers with product selection and inquiries.\r\n\r\nProcess sales transactions and handle customer payments.\r\n\r\nMaintain a clean and organized sales floor.\r\n\r\nAchieve sales targets and contribute to overall store profitability.', 'General Requirements:\r\n\r\n-High school diploma or equivalent.\r\n\r\n-Strong communication and interpersonal skills.\r\n\r\n-Customer-focused with a positive attitude.\r\n\r\n-Basic math skills for handling transactions.\r\n\r\n-Ability to work flexible hours, including weekends and holidays.\r\n\r\nSpecific Requirements:\r\n\r\nCashier: Previous cashier experience is a plus.\r\n\r\nCustomer Service Representative: Experience in customer service or retail preferred.\r\n\r\nInventory Counter: Attention to detail and accuracy in counting.\r\n\r\nMerchandiser: Creativity and a good eye for design.\r\n\r\nSales Associate: Sales experience is an advantage.', 'Previous experience in the retail industry.\r\n\r\nProficiency in using retail software and POS systems.\r\n\r\nAbility to work effectively in a team environment.\r\n\r\nStrong problem-solving skills.\r\n\r\nMultilingual skills are a plus.', 'approved', 0, NULL),
+(63, 'BUDGET WISE HIRING!', '𝙋𝙧𝙚𝙨𝙚𝙣𝙩𝙞𝙣𝙜 𝙩𝙝𝙚 𝙀𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 &  𝙅𝙤𝙗 𝙊𝙥𝙥𝙤𝙧𝙩𝙪𝙣𝙞𝙩𝙞𝙚𝙨 𝙖𝙩 𝙩𝙝𝙚 88𝙩𝙝 𝘿𝙞𝙖 𝙙𝙚 𝙕𝙖𝙢𝙗𝙤𝙖𝙣𝙜𝙖 𝙅𝙤𝙗 𝙁𝙖𝙞𝙧! \r\n\r\nPESO Zamboanga is excited to introduce the 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙚𝙢𝙥𝙡𝙤𝙮𝙚𝙧𝙨 participating in this year’s Dia de Zamboanga Job Fair on February 26, 2025, at KCC Mall de Zamboanga – East Wing! Get ready to explore 4,421 𝙡𝙤𝙘𝙖𝙡 𝙖𝙣𝙙 7,972 𝙤𝙫𝙚𝙧𝙨𝙚𝙖𝙨 𝙤𝙛 𝙟𝙤𝙗 𝙫𝙖𝙘𝙖𝙣𝙘𝙞𝙚𝙨 in various industries.', 'uploads/admin_job_thumbnail/admin_67db8bf4c1406.jpg', 'uploads/admin_job_photo/admin_67db8bf4c1842.jpg', '2025-02-25 05:05:16', 0, 'Calarian', NULL, 'Cashier:\r\n\r\n-Handle cash transactions with customers using cash registers.\r\n\r\n-Scan goods and ensure pricing is accurate.\r\n\r\n-Issue receipts, refunds, or change.\r\n\r\n-Count money in cash drawers at the beginning and end of shifts to ensure that amounts are correct.\r\n\r\nCustomer Service Representative:\r\n\r\n-Greet customers and provide assistance.\r\n\r\n-Handle customer complaints, provide appropriate solutions, and follow up to ensure resolution.\r\n\r\n-Maintain a positive and professional demeanor to enhance customer experience.\r\n\r\n-Assist with product inquiries and information.\r\n\r\nInventory Counter:\r\n\r\n-Monitor and maintain inventory levels.\r\n\r\n-Conduct regular inventory audits and stock checks.\r\n\r\n-Enter inventory data into the system.\r\n\r\n-Assist in restocking shelves and organizing the warehouse.\r\n\r\nMerchandiser:\r\n\r\n-Ensure merchandise is visually appealing and correctly displayed.\r\n\r\n-Arrange products and create attractive displays.\r\n\r\n-Monitor stock levels and coordinate with the inventory team.\r\n\r\nImplement promotional campaigns and signage.\r\n\r\nSales Associate:\r\n\r\n-Assist customers with product selection and inquiries.\r\n\r\nProcess sales transactions and handle customer payments.\r\n\r\nMaintain a clean and organized sales floor.\r\n\r\nAchieve sales targets and contribute to overall store profitability.', 'General Requirements:\r\n\r\n-High school diploma or equivalent.\r\n\r\n-Strong communication and interpersonal skills.\r\n\r\n-Customer-focused with a positive attitude.\r\n\r\n-Basic math skills for handling transactions.\r\n\r\n-Ability to work flexible hours, including weekends and holidays.\r\n\r\nSpecific Requirements:\r\n\r\nCashier: Previous cashier experience is a plus.\r\n\r\nCustomer Service Representative: Experience in customer service or retail preferred.\r\n\r\nInventory Counter: Attention to detail and accuracy in counting.\r\n\r\nMerchandiser: Creativity and a good eye for design.\r\n\r\nSales Associate: Sales experience is an advantage.', '  Previous experience in the retail industry.\r\n\r\nProficiency in using retail software and POS systems.\r\n\r\nAbility to work effectively in a team environment.\r\n\r\nStrong problem-solving skills.\r\n\r\nMultilingual skills are a plus.', 'approved', 0, NULL),
 (87, 'KCC Mall de ZAMBOANGA', 'We are seeking a highly organized and proactive Administrative Assistant and Office Support professional to join our team. The ideal candidate will provide comprehensive administrative support to ensure the smooth operation of daily office activities. This role requires someone who can manage multiple responsibilities with efficiency, communicate effectively with internal and external stakeholders, and contribute to maintaining an organized and welcoming work environment.', 'uploads/employer_job_thumbnail/venard_67d6e4f6b2f97.png', 'uploads/employer_job_photo/venard_67d6e4f6b3228.jpeg', '2025-03-02 15:05:30', 0, 'Canelar', 'Camins', 'Administrative Support:\r\nManage calendars, schedule appointments, and coordinate meetings for executives and staff.\r\nHandle incoming and outgoing correspondence, including emails, phone calls, and mail.\r\nPrepare and edit documents, reports, presentations, and spreadsheets as required.\r\nMaintain filing systems (both digital and physical) to ensure easy access to information.\r\nOffice Management:\r\nOversee general office operations, including ordering supplies, managing inventory, and ensuring equipment is functioning properly.\r\nGreet visitors professionally and direct them appropriately.\r\nCoordinate travel arrangements, including booking flights, accommodations, and transportation.\r\nCommunication:\r\nAct as the first point of contact for clients, vendors, and employees.\r\nDraft and distribute memos, letters, and other communications on behalf of management.\r\nRespond promptly to inquiries and resolve issues as they arise.\r\nProject Coordination:\r\nAssist with special projects by conducting research, gathering data, and preparing su', 'High school diploma or equivalent; associate degree in business administration or related field is a plus.\r\nMinimum of 1-2 years of experience in administrative roles or office support positions.\r\nProficiency in Microsoft Office Suite (Word, Excel, PowerPoint, Outlook).\r\nExcellent verbal and written communication skills.\r\nStrong organizational and time-management abilities.\r\nAbility to multitask and prioritize tasks in a fast-paced environment.\r\nAttention to detail and problem-solving skills.\r\nProfessional demeanor and ability to maintain confidentiality.', 'Bachelor’s degree in Business Administration, Communications, or a related field.\r\nPrior experience using CRM software or project management tools (e.g., Asana, Trello, Salesforce).\r\nFamiliarity with bookkeeping or accounting principles is a plus.\r\nExperience working in a corporate or professional services environment.\r\nSoft Skills:\r\nExceptional interpersonal skills and the ability to build strong relationships.\r\nAdaptability and willingness to take initiative.\r\nPositive attitude and a team-player mindset.\r\nTechnical Skills:\r\nAdvanced proficiency in Excel (pivot tables, formulas, etc.).\r\nKnowledge of video conferencing platforms like Zoom or Microsoft Teams.\r\nBasic understanding of IT troubleshooting for common office technology issues.', 'approved', 21, NULL);
 
 -- --------------------------------------------------------
@@ -588,9 +588,8 @@ INSERT INTO `job_categories` (`id`, `job_id`, `category_id`) VALUES
 (145, 23, 11),
 (146, 21, 5),
 (166, 87, 2),
-(175, 63, 3),
-(176, 63, 6),
-(177, 24, 9);
+(177, 24, 9),
+(182, 63, 3);
 
 -- --------------------------------------------------------
 
@@ -816,13 +815,13 @@ INSERT INTO `job_positions_jobs` (`id`, `job_id`, `position_id`) VALUES
 (161, 23, 42),
 (162, 21, 40),
 (182, 87, 28),
-(200, 63, 5),
-(201, 63, 6),
-(202, 63, 9),
-(203, 63, 11),
-(204, 63, 8),
-(205, 63, 7),
-(206, 24, 57);
+(206, 24, 57),
+(216, 63, 5),
+(217, 63, 6),
+(218, 63, 9),
+(219, 63, 11),
+(220, 63, 8),
+(221, 63, 7);
 
 -- --------------------------------------------------------
 
@@ -835,15 +834,16 @@ CREATE TABLE `job_preferences` (
   `user_id` int(11) NOT NULL,
   `work_type` enum('remote','onsite','hybrid') NOT NULL DEFAULT 'onsite',
   `job_location` enum('local','overseas') NOT NULL,
-  `employment_type` enum('fulltime','parttime','self-employed','freelance','contract','internship','apprenticeship','seasonal','home-based','domestic','temporary','volunteer') NOT NULL
+  `employment_type` enum('fulltime','parttime','self-employed','freelance','contract','internship','apprenticeship','seasonal','home-based','domestic','temporary','volunteer') NOT NULL,
+  `position_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `job_preferences`
 --
 
-INSERT INTO `job_preferences` (`id`, `user_id`, `work_type`, `job_location`, `employment_type`) VALUES
-(2, 67, 'onsite', 'local', 'fulltime');
+INSERT INTO `job_preferences` (`id`, `user_id`, `work_type`, `job_location`, `employment_type`, `position_id`) VALUES
+(2, 67, 'onsite', 'local', 'fulltime', 0);
 
 -- --------------------------------------------------------
 
@@ -862,7 +862,8 @@ CREATE TABLE `job_preferences_positions` (
 --
 
 INSERT INTO `job_preferences_positions` (`id`, `job_preference_id`, `position_id`) VALUES
-(8, 2, 77);
+(17, 2, 167),
+(18, 2, 40);
 
 -- --------------------------------------------------------
 
@@ -882,8 +883,8 @@ CREATE TABLE `languages` (
 --
 
 INSERT INTO `languages` (`id`, `user_id`, `language_name`, `fluency`) VALUES
-(3, 67, 'English', 'Conversational'),
-(4, 67, 'Filipino', 'Fluent');
+(14, 67, 'Filipino', 'Native'),
+(17, 67, 'English', 'Basic');
 
 -- --------------------------------------------------------
 
@@ -1094,7 +1095,12 @@ INSERT INTO `skills` (`id`, `user_id`, `skill_id`, `proficiency`) VALUES
 (17, 67, 306, 'Beginner'),
 (18, 67, 312, 'Beginner'),
 (19, 67, 313, 'Beginner'),
-(20, 67, 308, 'Beginner');
+(26, 67, 308, 'Beginner'),
+(28, 67, 305, 'Beginner'),
+(30, 67, 491, 'Advanced'),
+(31, 57, 648, ''),
+(32, 57, 649, ''),
+(33, 57, 650, '');
 
 -- --------------------------------------------------------
 
@@ -1728,7 +1734,10 @@ INSERT INTO `skill_list` (`id`, `category_id`, `skill_name`) VALUES
 (644, 5, 'Portrait Drawing'),
 (645, 5, 'Product Sketching for Manufacturing'),
 (646, 5, 'Textile Design Drawing'),
-(647, 5, 'Furniture Design Sketching');
+(647, 5, 'Furniture Design Sketching'),
+(648, NULL, 'PHP'),
+(649, NULL, 'JavaScript'),
+(650, NULL, 'SQL');
 
 -- --------------------------------------------------------
 
@@ -1758,25 +1767,29 @@ CREATE TABLE `users` (
   `barangay` varchar(100) DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `uploaded_file` varchar(255) DEFAULT NULL,
-  `caption` varchar(255) DEFAULT NULL,
+  `caption` longtext DEFAULT NULL,
   `linkedin_profile` varchar(255) DEFAULT NULL,
   `portfolio_url` varchar(255) DEFAULT NULL,
   `resume_file` varchar(255) DEFAULT NULL,
   `cover_photo` varchar(255) DEFAULT NULL,
   `verification_token` varchar(32) DEFAULT NULL,
-  `is_verified` int(11) DEFAULT 0
+  `is_verified` int(11) DEFAULT 0,
+  `weight` decimal(5,2) DEFAULT NULL,
+  `height` decimal(5,2) DEFAULT NULL,
+  `religion` varchar(100) DEFAULT NULL,
+  `nationality` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password`, `role`, `created_at`, `username`, `first_name`, `middle_name`, `last_name`, `ext_name`, `gender`, `birth_date`, `age`, `phone_number`, `place_of_birth`, `civil_status`, `zip_code`, `street_address`, `barangay`, `city`, `uploaded_file`, `caption`, `linkedin_profile`, `portfolio_url`, `resume_file`, `cover_photo`, `verification_token`, `is_verified`) VALUES
-(4, 'admin@gmail.com', '$2y$10$SN/q1gAReCmS2Xp.db2AQOVa87BhCpCDSrarPVa3FsadL2d9H1yhy', 'admin', '2025-02-09 04:34:27', 'admin', 'Super ', NULL, 'Admin', NULL, 'Other', '1956-02-17', 69, '09058316452', '', 'Single', '7000', 'Gov. Alvarez Street', 'Barangay Zone II', 'Zamboanga City', '../uploads/profile_admin/anonymous-8291223_960_720.webp', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', '', '', NULL, '../uploads/cover_admin/67d6768ee144f_67d58bdcc3c36_anonymouse.png', NULL, 1),
-(21, 'venard@gmail.com', '$2y$10$6eeUccpKCoQi8PU1kuVTfuT9wgQEzsECkbISiMGZwQZT0XpHaJlsi', 'employer', '2025-02-12 07:38:43', 'venard', 'Venard Jhon', 'C.', 'Salido', NULL, 'Male', '1994-05-12', 30, '09351363586', 'ZC', 'Single', '7000', 'Kaputatan, Little Baguio', '64', 'Zamboanga City', '../uploads/profile_employer/465786029_9219920348037823_7671980852851727402_n.jpg', 'hehehehehe', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', '../uploads/company_docu/21_1742131644.pdf', '../uploads/cover_employer/venard.jpg', NULL, 1),
-(57, 'borat@gmail.com', '$2y$10$UCa0zO2ktIaQXhcCgbteG.4TiB/YpvKgSDECvTo4fEHDzWzpRNag6', 'user', '2025-02-19 13:40:41', 'borat', 'Borat', '', 'Sagdiyev', NULL, 'Male', '1980-05-12', 44, '09265605771', 'Zamboanga City', 'Widowed', '7000', 'Gov. Alvarez Street', '19', 'Zamboanga City', '../uploads/profile_user/borat.jpg', 'Very nice! how much?', '', '', NULL, '../uploads/cover_user/borat.jpg', NULL, 1),
-(61, 'juan@gmail.com', '$2y$10$KJzMMaHZCI0fkA7LdkfzVuJKkgCKPphStkQAUSyb6JA9HoAsTsoSa', 'user', '2025-03-03 10:56:31', 'Juan', 'Juan', 'Tamad', 'Pendeho', '', 'Male', '1995-03-03', 30, '09351363586', 'Zamboanga City', '', '7000', 'Gov. Alvarez Street!', '', 'Zamboanga City!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0),
-(67, 'sl201101795@wmsu.edu.ph', '$2y$10$xCM5uw39UdJOzH9bE2TBF.rceNM6FbEvdtWXbTaz0hoEf0eVzn88y', 'user', '2025-03-09 14:34:31', 'vengwapo', 'Venard Jhon', 'Cabahug', 'Salido', NULL, 'Male', '1999-05-12', 30, '09351363586', NULL, 'Single', '7000', 'Kaputatan, Little Baguio', '64', 'Zamboanga City', '../uploads/profile_user/vengwapo.jpg', 'Just a little boy', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', '../uploads/resumes/vengwapo.pdf', '../uploads/cover_user/vengwapo.jpg', NULL, 1);
+INSERT INTO `users` (`id`, `email`, `password`, `role`, `created_at`, `username`, `first_name`, `middle_name`, `last_name`, `ext_name`, `gender`, `birth_date`, `age`, `phone_number`, `place_of_birth`, `civil_status`, `zip_code`, `street_address`, `barangay`, `city`, `uploaded_file`, `caption`, `linkedin_profile`, `portfolio_url`, `resume_file`, `cover_photo`, `verification_token`, `is_verified`, `weight`, `height`, `religion`, `nationality`) VALUES
+(4, 'admin@gmail.com', '$2y$10$SN/q1gAReCmS2Xp.db2AQOVa87BhCpCDSrarPVa3FsadL2d9H1yhy', 'admin', '2025-02-09 04:34:27', 'admin', 'Super ', NULL, 'Admin', NULL, 'Other', '1956-02-17', 69, '09058316452', '', 'Single', '7000', 'Gov. Alvarez Street', 'Barangay Zone II', 'Zamboanga City', '../uploads/profile_admin/anonymous-8291223_960_720.webp', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', '', '', NULL, '../uploads/cover_admin/67d6768ee144f_67d58bdcc3c36_anonymouse.png', NULL, 1, NULL, NULL, NULL, NULL),
+(21, 'venard@gmail.com', '$2y$10$6eeUccpKCoQi8PU1kuVTfuT9wgQEzsECkbISiMGZwQZT0XpHaJlsi', 'employer', '2025-02-12 07:38:43', 'venard', 'Venard Jhon', 'C.', 'Salido', NULL, 'Male', '1994-05-12', 30, '09351363586', 'ZC', 'Single', '7000', 'Kaputatan, Little Baguio', '64', 'Zamboanga City', '../uploads/profile_employer/465786029_9219920348037823_7671980852851727402_n.jpg', 'hehehehehe', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', '../uploads/company_docu/21_1742131644.pdf', '../uploads/cover_employer/venard.jpg', NULL, 1, 70.00, 171.00, 'Christian', 'Filipino'),
+(57, 'borat@gmail.com', '$2y$10$UCa0zO2ktIaQXhcCgbteG.4TiB/YpvKgSDECvTo4fEHDzWzpRNag6', 'user', '2025-02-19 13:40:41', 'borat', 'Borat', '', 'Sagdiyev', NULL, 'Male', '1980-05-12', 44, '0935136358', NULL, 'Single', '7000', 'Gov. Alvarez St.', '6', 'Zamboanga City!', '../uploads/profile_user/borat.jpg', 'Very nice! how much?', '', '', '../uploads/resumes/borat.pdf', '../uploads/cover_user/borat.jpg', NULL, 1, 70.00, 171.00, 'Muslim', 'Filipino'),
+(61, 'juan@gmail.com', '$2y$10$KJzMMaHZCI0fkA7LdkfzVuJKkgCKPphStkQAUSyb6JA9HoAsTsoSa', 'user', '2025-03-03 10:56:31', 'Juan', 'Juan', 'Tamad', 'Pendeho', '', 'Male', '1995-03-03', 30, '09351363586', 'Zamboanga City', '', '7000', 'Gov. Alvarez Street!', '', 'Zamboanga City!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(67, 'sl201101795@wmsu.edu.ph', '$2y$10$xCM5uw39UdJOzH9bE2TBF.rceNM6FbEvdtWXbTaz0hoEf0eVzn88y', 'user', '2025-03-09 14:34:31', 'vengwapo', 'Venard Jhon', 'Cabahug', 'Salido', NULL, 'Male', '1994-05-12', 30, '09351363586', NULL, 'Single', '7000', 'Kaputatan, Little Baguio', '64', 'Zamboanga City', '../uploads/profile_user/vengwapo.jpg', 'Positive thinker, knows how to trouble-shoot, how to handle problems and how to manage \r\nfinances. Seeking a position in a dynamic organization where I can utilize my experience to \r\nenhance my professional capabilities. A hard-working individual looking for a challenging position \r\nwhere I can showcase my skills and contribute to the growth of the organization.', 'https://www.linkedin.com/in/venard-jhon-cabahug-salido-08041434b/', 'https://venardjhoncsalido.netlify.app/', NULL, '../uploads/cover_user/vengwapo.jpg', NULL, 1, 70.00, 171.00, 'Christian', 'Filipino');
 
 -- --------------------------------------------------------
 
@@ -1789,22 +1802,24 @@ CREATE TABLE `work_experience` (
   `user_id` int(11) NOT NULL,
   `job_title` varchar(100) NOT NULL,
   `company_name` varchar(255) NOT NULL,
-  `job_description` text NOT NULL,
+  `job_description` text DEFAULT NULL,
   `employment_type` enum('fulltime','parttime','self-employed','freelance','contract','internship','apprenticeship','seasonal','home-based','domestic','temporary','volunteer') NOT NULL,
   `job_location` enum('local','overseas') NOT NULL,
   `country` varchar(100) DEFAULT NULL,
   `work_type` enum('remote','onsite','hybrid') NOT NULL DEFAULT 'onsite',
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
-  `currently_working` tinyint(1) DEFAULT 0
+  `currently_working` tinyint(1) DEFAULT 0,
+  `address` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `work_experience`
 --
 
-INSERT INTO `work_experience` (`id`, `user_id`, `job_title`, `company_name`, `job_description`, `employment_type`, `job_location`, `country`, `work_type`, `start_date`, `end_date`, `currently_working`) VALUES
-(43, 67, 'Web Developer', 'TechTrek', 'Designed, developed, and maintained responsive websites and web applications.\r\nCollaborated with designers and cross-functional teams to implement user-friendly and visually appealing web solutions.', 'fulltime', 'local', NULL, 'onsite', '2025-03-18', '2025-03-21', 0);
+INSERT INTO `work_experience` (`id`, `user_id`, `job_title`, `company_name`, `job_description`, `employment_type`, `job_location`, `country`, `work_type`, `start_date`, `end_date`, `currently_working`, `address`) VALUES
+(48, 67, 'Web Developer', 'TechTrek', 'Designs, builds, and maintains websites and web applications. They use coding languages like HTML, CSS, JavaScript, and various frameworks to create responsive, user-friendly, and visually appealing websites. Web developers collaborate with designers and backend developers to ensure seamless functionality, performance, and optimal user experience across different devices and browsers.', 'fulltime', 'local', NULL, 'remote', '2025-03-25', '2026-12-26', 0, ''),
+(49, 67, 'Software Developer', 'Innovative Tech Solutions', 'Responsible for developing, testing, and maintaining high-quality software applications that meet the needs of our clients. As a Software Developer, you will work closely with other developers, designers, and stakeholders to deliver cutting-edge solutions and ensure the optimal performance of the software we create.', 'fulltime', 'local', NULL, 'remote', '2020-03-25', NULL, 1, '');
 
 --
 -- Indexes for dumped tables
@@ -2041,13 +2056,13 @@ ALTER TABLE `about`
 -- AUTO_INCREMENT for table `achievements`
 --
 ALTER TABLE `achievements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `ads`
 --
 ALTER TABLE `ads`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT for table `announcements`
@@ -2089,7 +2104,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `certificates`
 --
 ALTER TABLE `certificates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `contacts`
@@ -2101,7 +2116,7 @@ ALTER TABLE `contacts`
 -- AUTO_INCREMENT for table `education`
 --
 ALTER TABLE `education`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `employers`
@@ -2131,13 +2146,13 @@ ALTER TABLE `homepage`
 -- AUTO_INCREMENT for table `jobs`
 --
 ALTER TABLE `jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
 
 --
 -- AUTO_INCREMENT for table `job_categories`
 --
 ALTER TABLE `job_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=180;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=198;
 
 --
 -- AUTO_INCREMENT for table `job_positions`
@@ -2149,25 +2164,25 @@ ALTER TABLE `job_positions`
 -- AUTO_INCREMENT for table `job_positions_jobs`
 --
 ALTER TABLE `job_positions_jobs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=209;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=237;
 
 --
 -- AUTO_INCREMENT for table `job_preferences`
 --
 ALTER TABLE `job_preferences`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `job_preferences_positions`
 --
 ALTER TABLE `job_preferences_positions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `languages`
 --
 ALTER TABLE `languages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `languages_list`
@@ -2185,7 +2200,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `references`
 --
 ALTER TABLE `references`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `saved_jobs`
@@ -2197,13 +2212,13 @@ ALTER TABLE `saved_jobs`
 -- AUTO_INCREMENT for table `skills`
 --
 ALTER TABLE `skills`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `skill_list`
 --
 ALTER TABLE `skill_list`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=648;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=651;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -2215,7 +2230,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `work_experience`
 --
 ALTER TABLE `work_experience`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- Constraints for dumped tables

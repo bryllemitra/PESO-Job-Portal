@@ -151,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="bg-blue-900 flex flex-col justify-center px-8 py-6 text-white md:w-2/5">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 text-center md:text-left">Take the First Step...</h2><br>
         <p class="text-3xl md:text-5xl font-bold text-center md:text-right">
-            FIND YOUR <span class="text-red-500"> PLACE,</span>
+            FIND YOUR <span class="text-red-500"> PLACE</span>
         </p>
         <p class="text-3xl md:text-5xl font-bold text-center md:text-right mb-4">
         KICKSTART <span class="text-red-500">YOUR CAREER!</span>
