@@ -20,7 +20,7 @@ $row = mysqli_fetch_assoc($result);
 $cover_photo = $row ? "/JOB/uploads/index_cover/" . htmlspecialchars($row['cover_photo']) : "/JOB/uploads/default/COVER.jpg"; // Default if no cover photo is set
 
 
-
+// test three for this branch
 
 // Check if there is a login message to display
 if (isset($_SESSION['login_message'])) {
